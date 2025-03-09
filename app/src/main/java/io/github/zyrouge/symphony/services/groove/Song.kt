@@ -14,6 +14,7 @@ import io.github.zyrouge.symphony.utils.ImagePreserver
 import io.github.zyrouge.symphony.utils.Logger
 import io.github.zyrouge.symphony.utils.SimplePath
 import me.zyrouge.symphony.metaphony.AudioMetadataParser
+import java.io.File
 import java.io.FileOutputStream
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -127,7 +128,13 @@ data class Song(
                 ?.use { AudioMetadataParser.parse(file.name, it.detachFd()) }
                 ?: return null
             val id = symphony.groove.song.idGenerator.next()
+            //START cover art logic
             val coverFile = metadata.pictures.firstOrNull()?.let {
+                val cacheKey = "${metadata.album}_${metadata.artists.hashCode()}_${metadata.date.hashCode()}"
+                if (symphony.database.artworkCache.get(cacheKey).exists()){
+                    cacheKey
+                }
+
                 val extension = when (it.mimeType) {
                     "image/jpg", "image/jpeg" -> "jpg"
                     "image/png" -> "png"
@@ -143,14 +150,14 @@ data class Song(
                     return@let name
                 }
                 val bitmap = BitmapFactory.decodeByteArray(it.data, 0, it.data.size)
-                val name = "$id.jpg"
-                FileOutputStream(symphony.database.artworkCache.get(name)).use { writer ->
+                FileOutputStream(symphony.database.artworkCache.get(cacheKey)).use { writer ->
                     ImagePreserver
                         .resize(bitmap, quality)
                         .compress(Bitmap.CompressFormat.JPEG, 100, writer)
                 }
-                name
+                cacheKey
             }
+           // END cover art logic
             metadata.lyrics?.let {
                 symphony.database.lyricsCache.put(id, it)
             }
