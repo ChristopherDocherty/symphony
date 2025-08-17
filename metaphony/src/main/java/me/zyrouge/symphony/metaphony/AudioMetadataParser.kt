@@ -3,7 +3,9 @@ package me.zyrouge.symphony.metaphony
 import me.zyrouge.symphony.metaphony.AudioMetadata.Picture
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import kotlin.String
+import java.time.temporal.ChronoField
 
 class AudioMetadataParser private constructor() {
     // Tags keys can be found at https://taglib.org/api/p_propertymapping.html
@@ -80,16 +82,17 @@ class AudioMetadataParser private constructor() {
             return split[0].toIntOrNull() to split[1].toIntOrNull()
         }
 
-        val DATE_YEAR = DateTimeFormatter.ofPattern("yyyy")
-        val DATE_YEAR_MONTH = DateTimeFormatter.ofPattern("yyyy")
+        val DATE_YEAR  = DateTimeFormatterBuilder()
+        .appendPattern("yyyy")
+        .parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
+        .parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
+        .toFormatter()
+
         val DATE_YEAR_MONTH_DATE = DateTimeFormatter.ISO_LOCAL_DATE
 
         private fun parseDate(text: String): LocalDate? {
             runCatching {
                 return LocalDate.parse(text, DATE_YEAR)
-            }
-            runCatching {
-                return LocalDate.parse(text, DATE_YEAR_MONTH)
             }
             runCatching {
                 return LocalDate.parse(text, DATE_YEAR_MONTH_DATE)

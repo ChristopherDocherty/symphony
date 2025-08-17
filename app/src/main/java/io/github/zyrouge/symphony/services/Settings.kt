@@ -143,6 +143,11 @@ class Settings(private val symphony: Symphony) {
         "last_used_artists_vertical_grid_columns",
         ResponsiveGridColumns.DEFAULT_VERTICAL_COLUMNS,
     )
+    val lastUsedArtistAlbumsSortBy = EnumEntry(
+        "last_used_artist_albums_sort_by",
+        enumEntries<AlbumRepository.SortBy>(),
+        AlbumRepository.SortBy.YEAR,
+    )
     val lastUsedAlbumArtistsSortBy = EnumEntry(
         "last_used_album_artists_sort_by",
         enumEntries<AlbumArtistRepository.SortBy>(),
