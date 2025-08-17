@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
@@ -21,9 +22,19 @@ fun AlbumRow(context: ViewContext, albumIds: List<String>) {
         ).div(2f)
         val width = min(maxSize, 200.dp)
 
+        val sortBy = context.symphony.settings.lastUsedArtistAlbumsSortBy.value
+        val sortReverse = context.symphony.settings.lastUsedAlbumsSortReverse.value
+        val sortedAlbumIds = remember(albumIds, sortBy, sortReverse) {
+            context.symphony.groove.album.sort(
+                albumIds = albumIds,
+                by = sortBy,
+                reverse = sortReverse
+            )
+        }
+
         LazyRow {
             itemsIndexed(
-                albumIds,
+                sortedAlbumIds, // Use sorted list here
                 key = { i, x -> "$i-$x" },
                 contentType = { _, _ -> Groove.Kind.ALBUM }
             ) { _, albumId ->
@@ -36,3 +47,4 @@ fun AlbumRow(context: ViewContext, albumIds: List<String>) {
         }
     }
 }
+
