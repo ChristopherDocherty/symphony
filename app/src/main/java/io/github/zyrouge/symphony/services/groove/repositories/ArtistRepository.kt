@@ -12,6 +12,8 @@ import io.github.zyrouge.symphony.utils.concurrentSetOf
 import io.github.zyrouge.symphony.utils.withCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
@@ -101,6 +103,10 @@ class ArtistRepository(private val symphony: Symphony) {
             SortBy.ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
         }
         return if (reverse) sorted.reversed() else sorted
+    }
+
+    fun filterByTrackCount(artistNames: List<String>) : List<String> {
+        return artistNames.filter { (get(it)?.numberOfTracks ?: 0) > 3 }
     }
 
     fun count() = cache.size

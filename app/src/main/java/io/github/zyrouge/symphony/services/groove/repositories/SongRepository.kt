@@ -119,9 +119,25 @@ class SongRepository(private val symphony: Symphony) {
     fun get(id: String) = cache[id]
     fun get(ids: List<String>) = ids.mapNotNull { get(it) }
 
-    fun getArtworkUri(songId: String): Uri = get(songId)?.coverFile
-        ?.let { symphony.database.artworkCache.get(it) }?.toUri()
-        ?: getDefaultArtworkUri()
+    fun getArtworkUri(songId: String): Uri {
+        val song = get(songId) ?: return getDefaultArtworkUri()
+
+        song.path.let { songPath ->
+            SimplePath(songPath).parent?.pathString?.let { parentDir ->
+                symphony.database.directoryArtworkCache.get(parentDir)?.let {
+                    return it
+                }
+            }
+        }
+
+        song.coverFile?.let { coverFileKey ->
+            symphony.database.artworkCache.get(coverFileKey).toUri().let {
+                return it
+            }
+        }
+
+        return getDefaultArtworkUri()
+    }
 
     fun getDefaultArtworkUri() = Assets.getPlaceholderUri(symphony)
 

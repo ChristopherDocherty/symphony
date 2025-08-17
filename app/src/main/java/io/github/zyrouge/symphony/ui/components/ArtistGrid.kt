@@ -28,7 +28,8 @@ fun ArtistGrid(
     val sortReverse by context.symphony.settings.lastUsedArtistsSortReverse.flow.collectAsState()
     val sortedArtistNames by remember(artistName, sortBy, sortReverse) {
         derivedStateOf {
-            context.symphony.groove.artist.sort(artistName, sortBy, sortReverse)
+            val filteredArtistNames = context.symphony.groove.artist.filterByTrackCount(artistName)
+            context.symphony.groove.artist.sort(filteredArtistNames, sortBy, sortReverse)
         }
     }
     val horizontalGridColumns by context.symphony.settings.lastUsedArtistsHorizontalGridColumns.flow.collectAsState()

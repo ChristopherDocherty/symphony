@@ -2,6 +2,7 @@ package io.github.zyrouge.symphony.services.database
 
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.database.store.ArtworkCacheStore
+import io.github.zyrouge.symphony.services.database.store.DirectoryArtworkCacheStore
 import io.github.zyrouge.symphony.services.database.store.LyricsCacheStore
 
 class Database(symphony: Symphony) {
@@ -10,6 +11,7 @@ class Database(symphony: Symphony) {
 
     val artworkCache = ArtworkCacheStore(symphony)
     val lyricsCache = LyricsCacheStore(symphony)
+    val directoryArtworkCache =DirectoryArtworkCacheStore(symphony)
     val songCache get() = cache.songs()
     val playlists get() = persistent.playlists()
 }
