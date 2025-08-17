@@ -37,6 +37,7 @@ class MediaExposer(private val symphony: Symphony) {
         val songCacheUnused: ConcurrentSet<String>,
         val artworkCacheUnused: ConcurrentSet<String>,
         val lyricsCacheUnused: ConcurrentSet<String>,
+        val directoryArtworkCacheUnused: ConcurrentSet<String>,
         val filter: MediaFilter,
         val songParseOptions: Song.ParseOptions,
     ) {
@@ -46,6 +47,7 @@ class MediaExposer(private val symphony: Symphony) {
                 val songCacheUnused = concurrentSetOf(songCache.map { it.value.id })
                 val artworkCacheUnused = concurrentSetOf(symphony.database.artworkCache.all())
                 val lyricsCacheUnused = concurrentSetOf(symphony.database.lyricsCache.keys())
+                val directoryArtworkCacheUnused = concurrentSetOf(symphony.database.directoryArtworkCache.keys())
                 val filter = MediaFilter(
                     symphony.settings.songsFilterPattern.value,
                     symphony.settings.blacklistFolders.value.toSortedSet(),
@@ -56,6 +58,7 @@ class MediaExposer(private val symphony: Symphony) {
                     songCacheUnused = songCacheUnused,
                     artworkCacheUnused = artworkCacheUnused,
                     lyricsCacheUnused = lyricsCacheUnused,
+                    directoryArtworkCacheUnused = directoryArtworkCacheUnused,
                     filter = filter,
                     songParseOptions = Song.ParseOptions.create(symphony),
                 )
@@ -111,9 +114,12 @@ class MediaExposer(private val symphony: Symphony) {
     private suspend fun scanMediaFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX) {
         try {
             when {
+                //this is for lyrics files
                 path.extension == "lrc" -> scanLrcFile(cycle, path, file)
+                //this is for playlist files
                 file.mimeType == MIMETYPE_M3U -> scanM3UFile(cycle, path, file)
                 file.mimeType.startsWith("audio/") -> scanAudioFile(cycle, path, file)
+                file.mimeType.startsWith("image/") -> scanImageFile(cycle, path, file)
             }
         } catch (err: Exception) {
             Logger.error("MediaExposer", "scan media file failed", err)
@@ -172,6 +178,22 @@ class MediaExposer(private val symphony: Symphony) {
         explorer.addChildFile(path)
     }
 
+    private fun scanImageFile(
+        cycle: ScanCycle,
+        path: SimplePath,
+        file: DocumentFileX,
+    ) {
+        val pathString = path.pathString
+        uris[pathString] = file.uri
+        explorer.addChildFile(path)
+
+        val parentPath = path.parent?.pathString ?: return
+        if (symphony.database.directoryArtworkCache.get(parentPath) == null) {
+            symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
+        }
+        cycle.directoryArtworkCacheUnused.remove(parentPath)
+    }
+
     private suspend fun trimCache(cycle: ScanCycle) {
         try {
             symphony.database.songCache.delete(cycle.songCacheUnused)
@@ -190,6 +212,11 @@ class MediaExposer(private val symphony: Symphony) {
         } catch (err: Exception) {
             Logger.warn("MediaExposer", "trim lyrics cache failed", err)
         }
+        try {
+            symphony.database.directoryArtworkCache.delete(cycle.directoryArtworkCacheUnused)
+        } catch (err: Exception) {
+            Logger.warn("MediaExposer", "trim directory artwork cache failed", err)
+        }
     }
 
     suspend fun reset() {
@@ -197,6 +224,7 @@ class MediaExposer(private val symphony: Symphony) {
         uris.clear()
         explorer = SimpleFileSystem.Folder()
         symphony.database.songCache.clear()
+        symphony.database.directoryArtworkCache.clear() 
         emitUpdate(false)
     }
 
