@@ -330,6 +330,7 @@ class Settings(private val symphony: Symphony) {
         enumEntries<ImagePreserver.Quality>(),
         ImagePreserver.Quality.Medium,
     )
+    val hideCompilations = BooleanEntry("hide_compilations", false)
     val useMetaphony = BooleanEntry("use_metaphony", true)
     val gaplessPlayback = BooleanEntry("gapless_playback", true)
     val caseSensitiveSorting = BooleanEntry("case_sensitive_sorting", false)

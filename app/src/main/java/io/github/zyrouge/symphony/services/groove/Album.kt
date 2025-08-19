@@ -13,6 +13,7 @@ data class Album(
     var endYear: Int?,
     var numberOfTracks: Int,
     var duration: Duration,
+    var is_compilation: Boolean = false,
 ) {
     fun createArtworkImageRequest(symphony: Symphony) =
         symphony.groove.album.createArtworkImageRequest(id)

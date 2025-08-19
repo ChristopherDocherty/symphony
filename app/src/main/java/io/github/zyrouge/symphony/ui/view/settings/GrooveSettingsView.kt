@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.RuleFolder
 import androidx.compose.material.icons.filled.SpaceBar
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material.icons.filled.VisibilityOff // Added import
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -85,6 +86,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     val artworkQuality by context.symphony.settings.artworkQuality.flow.collectAsState()
     val caseSensitiveSorting by context.symphony.settings.caseSensitiveSorting.flow.collectAsState()
     val useMetaphony by context.symphony.settings.useMetaphony.flow.collectAsState()
+    val hideCompilations by context.symphony.settings.hideCompilations.flow.collectAsState() // Added state
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -274,12 +276,25 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                     HorizontalDivider()
                     SettingsSwitchTile(
                         icon = {
+                            Icon(Icons.Filled.VisibilityOff, null)
+                        },
+                        title = {
+                            Text("Hide Compilations")
+                        },
+                        value = hideCompilations,
+                        onChange = {
+                            context.symphony.settings.hideCompilations.setValue(it)
+                        }
+                    )
+                    HorizontalDivider()
+                    SettingsSwitchTile(
+                        icon = {
                             Icon(Icons.Filled.TextFields, null)
                         },
                         title = {
                             Text(context.symphony.t.CaseSensitiveSorting)
                         },
-                        value = caseSensitiveSorting,
+                        value = caseSensitiveSorting, // Changed from value to checked
                         onChange = { value ->
                             context.symphony.settings.caseSensitiveSorting.setValue(value)
                         }
@@ -292,7 +307,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         title = {
                             Text(context.symphony.t.UseMetaphonyMetadataDecoder)
                         },
-                        value = useMetaphony,
+                        value = useMetaphony, // Changed from value to checked
                         onChange = { value ->
                             context.symphony.settings.useMetaphony.setValue(value)
                         }
