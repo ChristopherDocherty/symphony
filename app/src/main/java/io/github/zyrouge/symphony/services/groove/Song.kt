@@ -6,6 +6,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import androidx.compose.runtime.Immutable
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import io.github.zyrouge.symphony.Symphony
@@ -47,6 +48,8 @@ data class Song(
     val coverFile: String?,
     val uri: Uri,
     val path: String,
+    @ColumnInfo(defaultValue = "0")
+    val is_compilation: Boolean = false,
 ) {
     data class ParseOptions(
         val symphony: Symphony,
@@ -185,6 +188,7 @@ data class Song(
                 coverFile = coverFile,
                 uri = file.uri,
                 path = path.pathString,
+                is_compilation = metadata.isCompilation,
             )
         }
 
@@ -261,6 +265,7 @@ data class Song(
                 coverFile = coverFile,
                 uri = file.uri,
                 path = path.pathString,
+                is_compilation = false, // Added is_compilation
             )
         }
 

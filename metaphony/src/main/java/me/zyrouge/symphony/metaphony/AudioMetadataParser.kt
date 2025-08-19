@@ -57,6 +57,7 @@ class AudioMetadataParser private constructor() {
             sampleRate = audioProperties["SAMPLE_RATE"],
             channels = audioProperties["CHANNELS"],
             pictures = pictures,
+            isCompilation = tags["COMPILATION"]?.firstOrNull() == "1",
         )
     }
 
