@@ -15,7 +15,6 @@ import io.github.zyrouge.symphony.utils.ImagePreserver
 import io.github.zyrouge.symphony.utils.Logger
 import io.github.zyrouge.symphony.utils.SimplePath
 import me.zyrouge.symphony.metaphony.AudioMetadataParser
-import java.io.File
 import java.io.FileOutputStream
 import java.math.RoundingMode
 import java.time.LocalDate
