@@ -12,8 +12,6 @@ import io.github.zyrouge.symphony.utils.concurrentSetOf
 import io.github.zyrouge.symphony.utils.withCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
@@ -71,6 +69,35 @@ class ArtistRepository(private val symphony: Symphony) {
                 }
             }
         }
+    }
+
+    internal fun rebuildFromSongs(songs: List<Song>) {
+        songs.forEach { song ->
+            song.artists.forEach { artist ->
+                songIdsCache.compute(artist) { _, value ->
+                    value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
+                }
+                symphony.groove.album.getIdFromSong(song)?.let { album ->
+                    albumIdsCache.compute(artist) { _, value ->
+                        value?.apply { add(album) } ?: concurrentSetOf(album)
+                    }
+                }
+                cache.compute(artist) { _, value ->
+                    value?.apply {
+                        numberOfAlbums = albumIdsCache[artist]?.size ?: 0
+                        numberOfTracks++
+                    } ?: Artist(
+                        name = artist,
+                        numberOfAlbums = albumIdsCache[artist]?.size ?: 0,
+                        numberOfTracks = 1,
+                    )
+                }
+            }
+        }
+        _all.update {
+            cache.keys.toList()
+        }
+        emitCount()
     }
 
     fun reset() {

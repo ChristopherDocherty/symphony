@@ -44,6 +44,14 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
         }.join()
     }
 
+    private suspend fun fetchFromCache() {
+        coroutineScope.launch {
+            awaitAll(
+                async { exposer.loadFromCache() },
+            )
+        }.join()
+    }
+
     private suspend fun reset() {
         coroutineScope.launch {
             awaitAll(
@@ -83,7 +91,7 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
 
     override fun onSymphonyReady() {
         coroutineScope.launch {
-            fetch()
+            fetchFromCache()
             readyDeferred.complete(true)
         }
     }

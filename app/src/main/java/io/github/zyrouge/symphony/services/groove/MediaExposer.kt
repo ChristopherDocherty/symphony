@@ -110,7 +110,25 @@ class MediaExposer(private val symphony: Symphony) {
             Logger.error("MediaExposer", "scan media tree failed", err)
         }
     }
+    suspend fun loadFromCache() {
+        emitUpdate(true)
+        try {
+            uris.clear()
+            explorer = SimpleFileSystem.Folder()
 
+            val cachedSongs = symphony.database.songCache.entriesPathMapped().values.toList()
+
+            if (cachedSongs.isEmpty()) {
+                Logger.warn("MediaExposer", "No songs found in cache to load.")
+            } else {
+                emitSongs(cachedSongs)
+            }
+        } catch (err: Exception) {
+            Logger.error("MediaExposer", "loadFromCache failed", err)
+        }
+        emitUpdate(false)
+        emitFinish()
+    }
     private suspend fun scanMediaFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX) {
         try {
             when {
@@ -234,6 +252,14 @@ class MediaExposer(private val symphony: Symphony) {
         symphony.groove.artist.onSong(song)
         symphony.groove.genre.onSong(song)
         symphony.groove.song.onSong(song)
+    }
+
+    private fun emitSongs(songs: List<Song>) {
+        // symphony.groove.albumArtist.rebuildFromSongs(songs) // Skipped as per request
+        symphony.groove.album.rebuildFromSongs(songs)
+        symphony.groove.artist.rebuildFromSongs(songs)
+        symphony.groove.song.setSongs(songs)
+        symphony.groove.genre.rebuildFromSongs(songs)
     }
 
     private fun emitFinish() {
