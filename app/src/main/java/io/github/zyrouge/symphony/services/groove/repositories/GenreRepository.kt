@@ -58,6 +58,34 @@ class GenreRepository(private val symphony: Symphony) {
         }
     }
 
+    internal fun rebuildFromSongs(songs: List<Song>) {
+        val newGenres = mutableListOf<String>()
+        songs.forEach { song ->
+            song.genres.forEach { genre ->
+                songIdsCache.compute(genre) { _, value ->
+                    value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
+                }
+                cache.compute(genre) { _, value ->
+                    value?.apply {
+                        numberOfTracks++
+                    } ?: run {
+                        newGenres.add(genre)
+                        Genre(
+                            name = genre,
+                            numberOfTracks = 1,
+                        )
+                    }
+                }
+            }
+        }
+        if (newGenres.isNotEmpty()) {
+            _all.update {
+                it + newGenres
+            }
+        }
+        emitCount()
+    }
+
     fun reset() {
         cache.clear()
         songIdsCache.clear()

@@ -72,6 +72,25 @@ class SongRepository(private val symphony: Symphony) {
         emitCount()
     }
 
+    internal fun setSongs(songsToSet: List<Song>) {
+        // Clear existing songs and related caches
+        cache.clear()
+        pathCache.clear()
+        explorer = SimpleFileSystem.Folder() // Reset explorer as well
+
+        val songIds = mutableListOf<String>()
+        songsToSet.forEach { song ->
+            cache[song.id] = song
+            pathCache[song.path] = song.id
+            explorer.addChildFile(SimplePath(song.path)).data = song.id
+            songIds.add(song.id)
+        }
+
+        _all.update { songIds } // Update with the new list of all song IDs
+        emitIds() // Emit that the IDs have changed (timestamp)
+        emitCount() // Emit the new count
+    }
+
     fun reset() {
         cache.clear()
         pathCache.clear()

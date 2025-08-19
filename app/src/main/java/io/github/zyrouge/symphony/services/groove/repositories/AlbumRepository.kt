@@ -83,6 +83,48 @@ class AlbumRepository(private val symphony: Symphony) {
         }
     }
 
+    internal fun rebuildFromSongs(songs: List<Song>) {
+        val newAlbumIds = mutableSetOf<String>()
+        songs.forEach { song ->
+            val albumId = getIdFromSong(song) ?: return@forEach
+            songIdsCache.compute(albumId) { _, value ->
+                value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
+            }
+            cache.compute(albumId) { _, value ->
+                value?.apply {
+                    artists.addAll(song.artists)
+                    song.year?.let {
+                        startYear = startYear?.let { old -> min(old, it) } ?: it
+                        endYear = endYear?.let { old -> max(old, it) } ?: it
+                    }
+                    numberOfTracks++
+                    duration += song.duration.milliseconds
+                } ?: run {
+                    newAlbumIds.add(albumId)
+                    Album(
+                        id = albumId,
+                        name = song.album!!,
+                        artists = mutableSetOf<String>().apply {
+                            // ensure that album artists are first
+                            addAll(song.albumArtists)
+                            addAll(song.artists)
+                        },
+                        startYear = song.year,
+                        endYear = song.year,
+                        numberOfTracks = 1,
+                        duration = song.duration.milliseconds,
+                    )
+                }
+            }
+        }
+        if (newAlbumIds.isNotEmpty()) {
+            _all.update {
+                it + newAlbumIds
+            }
+        }
+        emitCount()
+    }
+
     fun reset() {
         cache.clear()
         songIdsCache.clear()
