@@ -3,6 +3,7 @@ package io.github.zyrouge.symphony.ui.view
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -168,6 +169,178 @@ object HomeViewRoute
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun HomeTopAppBar(
+    context: ViewContext,
+    currentTab: HomePage,
+    onSearchClick: () -> Unit,
+    onMoreOptionsClick: () -> Unit, // Or manage dropdown state internally
+) {
+    var showOptionsDropdown by remember { mutableStateOf(false) } // Manage here or pass state
+
+    CenterAlignedTopAppBar(
+        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+            containerColor = Color.Transparent
+        ),
+        navigationIcon = {
+            IconButton(
+                onClick = onSearchClick,
+                content = { Icon(Icons.Filled.Search, null) }
+            )
+        },
+        title = {
+            Crossfade(
+                label = "home-title",
+                targetState = currentTab.label(context),
+            ) { pageTitle ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TopAppBarMinimalTitle { Text(pageTitle) }
+                }
+            }
+        },
+        actions = {
+            IconButton(
+                onClick = { showOptionsDropdown = !showOptionsDropdown },
+                content = {
+                    Icon(Icons.Filled.MoreVert, null)
+                    HomeTopAppBarDropdownMenu(
+                        context = context,
+                        expanded = showOptionsDropdown,
+                        onDismissRequest = { showOptionsDropdown = false },
+                        onRescanClick = {
+                            showOptionsDropdown = false
+                            context.symphony.radio.stop()
+                            context.symphony.groove.fetch(
+                                Groove.FetchOptions(resetInMemoryCache = true),
+                            )
+                        },
+                        onSettingsClick = {
+                            showOptionsDropdown = false
+                            context.navController.navigate(SettingsViewRoute())
+                        }
+                    )
+                }
+            )
+        }
+    )
+}
+
+@Composable
+private fun HomePageContent(
+    modifier: Modifier = Modifier,
+    context: ViewContext,
+    currentPage: HomePage,
+) {
+    AnimatedContent(
+        label = "home-content",
+        targetState = currentPage,
+        modifier = modifier,
+        transitionSpec = {
+            SlideTransition.slideUp.enterTransition()
+                .togetherWith(ScaleTransition.scaleDown.exitTransition())
+        },
+    ) { page ->
+        when (page) {
+            HomePage.ForYou -> ForYouView(context)
+            HomePage.Songs -> SongsView(context)
+            HomePage.Albums -> AlbumsView(context)
+            HomePage.Artists -> ArtistsView(context)
+            HomePage.AlbumArtists -> AlbumArtistsView(context)
+            HomePage.Genres -> GenresView(context)
+            HomePage.Browser -> BrowserView(context)
+            HomePage.Folders -> FoldersView(context)
+            HomePage.Playlists -> PlaylistsView(context)
+            HomePage.Tree -> TreeView(context)
+        }
+    }
+}
+
+@Composable
+private fun HomeTopAppBarDropdownMenu(
+    context: ViewContext,
+    expanded: Boolean,
+    onDismissRequest: () -> Unit,
+    onRescanClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismissRequest,
+    ) {
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(Icons.Filled.Refresh, context.symphony.t.Rescan)
+            },
+            text = { Text(context.symphony.t.Rescan) },
+            onClick = onRescanClick
+        )
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(Icons.Filled.Settings, context.symphony.t.Settings)
+            },
+            text = { Text(context.symphony.t.Settings) },
+            onClick = onSettingsClick
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class) // For detectTapGestures if still needed, or remove if swipeable is enough
+@Composable
+private fun HomeBottomBar(
+    context: ViewContext,
+    currentTab: HomePage,
+    tabs: Set<HomePage>,
+    labelVisibility: HomePageBottomBarLabelVisibility,
+    onTabClick: (HomePage) -> Unit, // For setting the current tab
+    onShowTabsSheet: () -> Unit, // To trigger the modal sheet
+) {
+    Column {
+        NowPlayingBottomBar(context, false)
+        NavigationBar(
+            modifier = Modifier
+                .pointerInput(Unit) { // Consider if this is still the best way to show tabs sheet
+                    detectTapGestures {
+                        onShowTabsSheet()
+                    }
+                }
+                .swipeable(onSwipeUp = { // swipeable is likely from your custom components
+                    onShowTabsSheet()
+                })
+        ) {
+            Spacer(modifier = Modifier.width(2.dp))
+            tabs.forEach { page -> // Use forEach for clarity if order doesn't change
+                val isSelected = currentTab == page
+                val label = page.label(context)
+
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = { onTabClick(page) }, // Update current tab
+                    icon = {
+                        Crossfade(
+                            label = "home-bottom-bar-icon-${page.name}", // More specific label
+                            targetState = isSelected,
+                        ) { selected ->
+                            Icon(
+                                if (selected) page.selectedIcon() else page.unselectedIcon(),
+                                contentDescription = label
+                            )
+                        }
+                    },
+                    label = if (labelVisibility != HomePageBottomBarLabelVisibility.INVISIBLE) {
+                        { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    } else null,
+                    alwaysShowLabel = labelVisibility == HomePageBottomBarLabelVisibility.ALWAYS_VISIBLE,
+                )
+            }
+            Spacer(modifier = Modifier.width(2.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun HomeView(context: ViewContext) {
     val coroutineScope = rememberCoroutineScope()
     val readIntroductoryMessage by context.symphony.settings.readIntroductoryMessage.flow.collectAsState()
@@ -180,168 +353,35 @@ fun HomeView(context: ViewContext) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                ),
-                navigationIcon = {
-                    IconButton(
-                        content = {
-                            Icon(Icons.Filled.Search, null)
-                        },
-                        onClick = {
-                            context.navController.navigate(SearchViewRoute(currentTab.kind?.name))
-                        }
-                    )
-                },
-                title = {
-                    Crossfade(
-                        label = "home-title",
-                        targetState = currentTab.label(context),
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            TopAppBarMinimalTitle { Text(it) }
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(
-                        content = {
-                            Icon(Icons.Filled.MoreVert, null)
-                            DropdownMenu(
-                                expanded = showOptionsDropdown,
-                                onDismissRequest = { showOptionsDropdown = false },
-                            ) {
-                                DropdownMenuItem(
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Filled.Refresh,
-                                            context.symphony.t.Rescan,
-                                        )
-                                    },
-                                    text = {
-                                        Text(context.symphony.t.Rescan)
-                                    },
-                                    onClick = {
-                                        showOptionsDropdown = false
-                                        context.symphony.radio.stop()
-                                        context.symphony.groove.fetch(
-                                            Groove.FetchOptions(resetInMemoryCache = true),
-                                        )
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Filled.Settings,
-                                            context.symphony.t.Settings,
-                                        )
-                                    },
-                                    text = {
-                                        Text(context.symphony.t.Settings)
-                                    },
-                                    onClick = {
-                                        showOptionsDropdown = false
-                                        context.navController.navigate(SettingsViewRoute())
-                                    }
-                                )
-                            }
-                        },
-                        onClick = {
-                            showOptionsDropdown = !showOptionsDropdown
-                        }
-                    )
-                }
-            )
+                HomeTopAppBar(
+                    context = context,
+                    currentTab = currentTab, // or currentTabState
+                    onSearchClick = {
+                        context.navController.navigate(SearchViewRoute(currentTab.kind?.name)) // or currentTabState.kind
+                    },
+                    onMoreOptionsClick = { /* Logic to show dropdown or handle directly in HomeTopAppBar */ }
+                )
         },
         content = { contentPadding ->
-            AnimatedContent(
-                label = "home-content",
-                targetState = currentTab,
+            HomePageContent(
                 modifier = Modifier
                     .padding(contentPadding)
                     .fillMaxSize(),
-                transitionSpec = {
-                    SlideTransition.slideUp.enterTransition()
-                        .togetherWith(ScaleTransition.scaleDown.exitTransition())
-                },
-            ) { page ->
-                when (page) {
-                    HomePage.ForYou -> ForYouView(context)
-                    HomePage.Songs -> SongsView(context)
-                    HomePage.Albums -> AlbumsView(context)
-                    HomePage.Artists -> ArtistsView(context)
-                    HomePage.AlbumArtists -> AlbumArtistsView(context)
-                    HomePage.Genres -> GenresView(context)
-                    HomePage.Browser -> BrowserView(context)
-                    HomePage.Folders -> FoldersView(context)
-                    HomePage.Playlists -> PlaylistsView(context)
-                    HomePage.Tree -> TreeView(context)
-                }
-            }
+                context = context,
+                currentPage = currentTab // or currentTabState
+            )
         },
         bottomBar = {
-            Column {
-                NowPlayingBottomBar(context, false)
-                NavigationBar(
-                    modifier = Modifier
-                        .pointerInput(Unit) {
-                            detectTapGestures {
-                                showTabsSheet = true
-                            }
-                        }
-                        .swipeable(onSwipeUp = {
-                            showTabsSheet = true
-                        })
-                ) {
-                    Spacer(modifier = Modifier.width(2.dp))
-                    tabs.map { x ->
-                        val isSelected = currentTab == x
-                        val label = x.label(context)
-
-                        NavigationBarItem(
-                            selected = isSelected,
-                            alwaysShowLabel = labelVisibility == HomePageBottomBarLabelVisibility.ALWAYS_VISIBLE,
-                            icon = {
-                                Crossfade(
-                                    label = "home-bottom-bar",
-                                    targetState = isSelected,
-                                ) {
-                                    Icon(
-                                        if (it) x.selectedIcon() else x.unselectedIcon(),
-                                        label,
-                                    )
-                                }
-                            },
-                            label = when (labelVisibility) {
-                                HomePageBottomBarLabelVisibility.INVISIBLE -> null
-                                else -> ({
-                                    Text(
-                                        label,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        textAlign = TextAlign.Center,
-                                        overflow = TextOverflow.Ellipsis,
-                                        softWrap = false,
-                                    )
-                                })
-                            },
-                            onClick = {
-                                when {
-                                    isSelected -> {
-                                        showTabsSheet = true
-                                    }
-
-                                    else -> context.symphony.settings.lastHomeTab.setValue(x)
-                                }
-                            }
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(2.dp))
-                }
-            }
+            HomeBottomBar(
+                context = context,
+                currentTab = currentTab, // or currentTabState
+                tabs = tabs,
+                labelVisibility = labelVisibility,
+                onTabClick = { newTab ->
+                    context.symphony.settings.lastHomeTab.setValue(newTab) // Persist the tab change
+                },
+                onShowTabsSheet = { showTabsSheet = true }
+            )
         }
     )
 
