@@ -26,9 +26,25 @@ fun AlbumGrid(
 ) {
     val sortBy by context.symphony.settings.lastUsedAlbumsSortBy.flow.collectAsState()
     val sortReverse by context.symphony.settings.lastUsedAlbumsSortReverse.flow.collectAsState()
-    val sortedAlbumIds by remember(albumIds, sortBy, sortReverse) {
+    val hideCompilations by context.symphony.settings.hideCompilations.flow.collectAsState()
+
+    val displayableAlbumIds by remember(albumIds, hideCompilations) {
         derivedStateOf {
-            context.symphony.groove.album.sort(albumIds, sortBy, sortReverse)
+            if (hideCompilations) {
+                albumIds.filter { albumId ->
+                    context.symphony.groove.album.get(albumId)?.let { album ->
+                        !album.is_compilation
+                    } ?: true
+                }
+            } else {
+                albumIds
+            }
+        }
+    }
+
+    val sortedAlbumIds by remember(displayableAlbumIds, sortBy, sortReverse) {
+        derivedStateOf {
+            context.symphony.groove.album.sort(displayableAlbumIds, sortBy, sortReverse)
         }
     }
     val horizontalGridColumns by context.symphony.settings.lastUsedAlbumsHorizontalGridColumns.flow.collectAsState()
@@ -56,7 +72,7 @@ fun AlbumGrid(
                     context.symphony.settings.lastUsedAlbumsSortBy.setValue(it)
                 },
                 label = {
-                    Text(context.symphony.t.XAlbums((albumsCount ?: albumIds.size).toString()))
+                    Text(context.symphony.t.XAlbums((albumsCount ?: displayableAlbumIds.size).toString()))
                 },
                 onShowModifyLayout = {
                     showModifyLayoutSheet = true
@@ -65,7 +81,7 @@ fun AlbumGrid(
         },
         content = {
             when {
-                albumIds.isEmpty() -> IconTextBody(
+                displayableAlbumIds.isEmpty() -> IconTextBody(
                     icon = { modifier ->
                         Icon(
                             Icons.Filled.Album,

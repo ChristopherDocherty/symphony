@@ -59,6 +59,9 @@ class AlbumRepository(private val symphony: Symphony) {
                     startYear = startYear?.let { old -> min(old, it) } ?: it
                     endYear = endYear?.let { old -> max(old, it) } ?: it
                 }
+                if (song.is_compilation) {
+                    is_compilation = true
+                }
                 numberOfTracks++
                 duration += song.duration.milliseconds
             } ?: run {
@@ -78,6 +81,7 @@ class AlbumRepository(private val symphony: Symphony) {
                     endYear = song.year,
                     numberOfTracks = 1,
                     duration = song.duration.milliseconds,
+                    is_compilation = song.is_compilation,
                 )
             }
         }
@@ -97,6 +101,9 @@ class AlbumRepository(private val symphony: Symphony) {
                         startYear = startYear?.let { old -> min(old, it) } ?: it
                         endYear = endYear?.let { old -> max(old, it) } ?: it
                     }
+                    if (song.is_compilation) {
+                        is_compilation = true
+                    }
                     numberOfTracks++
                     duration += song.duration.milliseconds
                 } ?: run {
@@ -113,6 +120,7 @@ class AlbumRepository(private val symphony: Symphony) {
                         endYear = song.year,
                         numberOfTracks = 1,
                         duration = song.duration.milliseconds,
+                        is_compilation = song.is_compilation,
                     )
                 }
             }

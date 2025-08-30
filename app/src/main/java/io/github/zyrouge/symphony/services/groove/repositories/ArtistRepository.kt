@@ -125,7 +125,15 @@ class ArtistRepository(private val symphony: Symphony) {
         val sensitive = symphony.settings.caseSensitiveSorting.value
         val sorted = when (by) {
             SortBy.CUSTOM -> artistNames
-            SortBy.ARTIST_NAME -> artistNames.sortedBy { get(it)?.name?.withCase(sensitive) }
+            SortBy.ARTIST_NAME -> artistNames.sortedBy {
+                get(it)?.name?.let { name ->
+                    if (name.startsWith("The ", ignoreCase = true)) {
+                        name.substring(4)
+                    } else {
+                        name
+                    }
+                }?.withCase(sensitive)
+            }
             SortBy.TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
             SortBy.ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
         }
