@@ -17,7 +17,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -69,47 +68,66 @@ class MediaExposer(private val symphony: Symphony) {
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun fetch() {
         emitUpdate(true)
+        val allCollectedSongs = mutableListOf<Song>()
         try {
             val context = symphony.applicationContext
             val folderUris = symphony.settings.mediaFolders.value
             val cycle = ScanCycle.create(symphony)
-            folderUris.map { x ->
-                ActivityUtils.makePersistableReadableUri(context, x)
-                DocumentFileX.fromTreeUri(context, x)?.let {
-                    val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(x) ?: it.name)
-                    with(Dispatchers.IO) {
-                        scanMediaTree(cycle, path, it)
+
+            coroutineScope {
+                val deferredSongLists = folderUris.mapNotNull { uri ->
+                    ActivityUtils.makePersistableReadableUri(context, uri)
+                    DocumentFileX.fromTreeUri(context, uri)?.let { docFile ->
+                        val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
+                        async(Dispatchers.IO) {
+                            scanMediaTree(cycle, path, docFile)
+                        }
                     }
                 }
+                deferredSongLists.awaitAll().forEach { songList ->
+                    allCollectedSongs.addAll(songList)
+                }
             }
+
+            emitSongs(allCollectedSongs)
             trimCache(cycle)
+
         } catch (err: Exception) {
             Logger.error("MediaExposer", "fetch failed", err)
+            emitSongs(emptyList())
         }
         emitUpdate(false)
         emitFinish()
     }
 
-    private suspend fun scanMediaTree(cycle: ScanCycle, path: SimplePath, file: DocumentFileX) {
+    private suspend fun scanMediaTree(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): List<Song> {
         try {
             if (!cycle.filter.isWhitelisted(path.pathString)) {
-                return
+                return emptyList()
             }
+            val songsFound = mutableListOf<Song>()
             coroutineScope {
-                file.list().map {
-                    val childPath = path.join(it.name)
+                val songLists = file.list().map { childFile ->
+                    val childPath = path.join(childFile.name)
                     async {
                         when {
-                            it.isDirectory -> scanMediaTree(cycle, childPath, it)
-                            else -> scanMediaFile(cycle, childPath, it)
+                            childFile.isDirectory -> scanMediaTree(cycle, childPath, childFile)
+                            else -> scanMediaFile(cycle, childPath, childFile)
                         }
                     }
                 }.awaitAll()
+
+                for (songList in songLists) {
+                    songsFound.addAll(songList)
+                }
             }
+            return songsFound
         } catch (err: Exception) {
-            Logger.error("MediaExposer", "scan media tree failed", err)
+            Logger.error("MediaExposer", "scan media tree failed for ${path.pathString}", err)
+            return emptyList()
         }
     }
+
     suspend fun loadFromCache() {
         emitUpdate(true)
         try {
@@ -120,45 +138,64 @@ class MediaExposer(private val symphony: Symphony) {
 
             if (cachedSongs.isEmpty()) {
                 Logger.warn("MediaExposer", "No songs found in cache to load.")
+                emitSongs(emptyList())
             } else {
                 emitSongs(cachedSongs)
             }
         } catch (err: Exception) {
             Logger.error("MediaExposer", "loadFromCache failed", err)
+            emitSongs(emptyList())
         }
         emitUpdate(false)
         emitFinish()
     }
-    private suspend fun scanMediaFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX) {
+
+    private suspend fun scanMediaFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): List<Song> {
         try {
             when {
-                //this is for lyrics files
-                path.extension == "lrc" -> scanLrcFile(cycle, path, file)
-                //this is for playlist files
-                file.mimeType == MIMETYPE_M3U -> scanM3UFile(cycle, path, file)
-                file.mimeType.startsWith("audio/") -> scanAudioFile(cycle, path, file)
-                file.mimeType.startsWith("image/") -> scanImageFile(cycle, path, file)
+                path.extension == "lrc" -> {
+                    scanLrcFile(cycle, path, file)
+                    return emptyList()
+                }
+                file.mimeType == MIMETYPE_M3U -> {
+                    scanM3UFile(cycle, path, file)
+                    return emptyList()
+                }
+                file.mimeType.startsWith("audio/") -> {
+                    val song = scanAudioFile(cycle, path, file)
+                    return song?.let { listOf(it) } ?: emptyList()
+                }
+                file.mimeType.startsWith("image/") -> {
+                    scanImageFile(cycle, path, file)
+                    return emptyList()
+                }
+                else -> return emptyList()
             }
         } catch (err: Exception) {
-            Logger.error("MediaExposer", "scan media file failed", err)
+            val pathString = path.pathString
+            Logger.error("MediaExposer", "scan media file failed for $pathString", err)
+            return emptyList()
         }
     }
 
-    private suspend fun scanAudioFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX) {
+    private suspend fun scanAudioFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): Song? {
         val pathString = path.pathString
         uris[pathString] = file.uri
         val lastModified = file.lastModified
         val cached = cycle.songCache[pathString]
-        val cacheHit = cached != null
-                && cached.dateModified == lastModified
-                && (cached.coverFile?.let { cycle.artworkCacheUnused.contains(it) } != false)
+        val cacheHit = cached != null &&
+                cached.dateModified == lastModified &&
+                (cached.coverFile?.let { cycle.artworkCacheUnused.contains(it) } != false)
+        
         val song = when {
-            cacheHit -> cached
+            cacheHit -> cached!!
             else -> Song.parse(path, file, cycle.songParseOptions)
         }
+
         if (song.duration.milliseconds < symphony.settings.minSongDuration.value.seconds) {
-            return
+            return null
         }
+
         if (!cacheHit) {
             symphony.database.songCache.insert(song)
             cached?.coverFile?.let {
@@ -173,9 +210,7 @@ class MediaExposer(private val symphony: Symphony) {
         }
         cycle.lyricsCacheUnused.remove(song.id)
         explorer.addChildFile(path)
-        withContext(Dispatchers.Main) {
-            emitSong(song)
-        }
+        return song
     }
 
     private fun scanLrcFile(
@@ -242,20 +277,13 @@ class MediaExposer(private val symphony: Symphony) {
         uris.clear()
         explorer = SimpleFileSystem.Folder()
         symphony.database.songCache.clear()
-        symphony.database.directoryArtworkCache.clear() 
+        symphony.database.directoryArtworkCache.clear()
+        emitSongs(emptyList())
         emitUpdate(false)
-    }
-
-    private fun emitSong(song: Song) {
-        symphony.groove.albumArtist.onSong(song)
-        symphony.groove.album.onSong(song)
-        symphony.groove.artist.onSong(song)
-        symphony.groove.genre.onSong(song)
-        symphony.groove.song.onSong(song)
+        emitFinish()
     }
 
     private fun emitSongs(songs: List<Song>) {
-        // symphony.groove.albumArtist.rebuildFromSongs(songs) // Skipped as per request
         symphony.groove.album.rebuildFromSongs(songs)
         symphony.groove.artist.rebuildFromSongs(songs)
         symphony.groove.song.setSongs(songs)

@@ -212,9 +212,7 @@ private fun HomeTopAppBar(
                         onRescanClick = {
                             showOptionsDropdown = false
                             context.symphony.radio.stop()
-                            context.symphony.groove.fetch(
-                                Groove.FetchOptions(resetInMemoryCache = true),
-                            )
+                            context.symphony.groove.fetch(Groove.FetchOptions())
                         },
                         onSettingsClick = {
                             showOptionsDropdown = false
