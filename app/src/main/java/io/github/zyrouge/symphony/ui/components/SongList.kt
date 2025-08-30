@@ -57,6 +57,11 @@ fun SongList(
             context.symphony.groove.song.sort(songIds, sortBy, sortReverse)
         }
     }
+    val albumCount by remember(songIds) {
+        derivedStateOf {
+            songIds.mapNotNull { context.symphony.groove.song.get(it)?.album }.distinct().size
+        }
+    }
 
     MediaSortBarScaffold(
         mediaSortBar = {
@@ -73,7 +78,8 @@ fun SongList(
                     type.setLastUsedSortBy(context, it)
                 },
                 label = {
-                    Text(context.symphony.t.XSongs((songsCount ?: songIds.size).toString()))
+                    Text(context.symphony.t.XAlbums((albumCount).toString()) + ", " +
+                        context.symphony.t.XSongs((songsCount ?: songIds.size).toString()))
                 },
                 onShufflePlay = {
                     context.symphony.radio.shorty.playQueue(sortedSongIds, shuffle = true)
