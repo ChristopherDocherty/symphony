@@ -135,7 +135,7 @@ class ArtistRepository(private val symphony: Symphony) {
                 }?.withCase(sensitive)
             }
             SortBy.TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
-            SortBy.ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
+            SortBy.ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfAlbums }
         }
         return if (reverse) sorted.reversed() else sorted
     }
