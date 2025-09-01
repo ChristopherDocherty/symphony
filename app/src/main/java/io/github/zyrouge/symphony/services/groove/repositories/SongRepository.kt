@@ -168,17 +168,12 @@ class SongRepository(private val symphony: Symphony) {
 
     suspend fun getLyrics(song: Song): String? {
         try {
-            val lrcPath = SimplePath(song.path).let {
-                it.parent?.join(it.nameWithoutExtension + ".lrc")?.pathString
-            }
-            symphony.groove.exposer.uris[lrcPath]?.let { uri ->
-                symphony.applicationContext.contentResolver.openInputStream(uri)?.use {
-                    return String(it.readBytes())
-                }
-            }
-            return symphony.database.lyricsCache.get(song.id)
+            // The key for the lyrics cache is the song's path without its file extension.
+            val lyricsKey = song.path.substringBeforeLast('.', song.path)
+            return symphony.database.lyricsCache.get(lyricsKey)
         } catch (err: Exception) {
-            Logger.error("LyricsRepository", "fetch lyrics failed", err)
+            // It's helpful to log which song's lyrics fetching failed.
+            Logger.error("LyricsRepository", "fetch lyrics failed for ${song.path}", err)
         }
         return null
     }

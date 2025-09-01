@@ -131,10 +131,12 @@ class MediaExposer(private val symphony: Symphony) {
     suspend fun loadFromCache() {
         emitUpdate(true)
         try {
-            uris.clear()
+            // uris map will not be populated when loading from cache, lyrics are fetched from lyricsCache
             explorer = SimpleFileSystem.Folder()
 
             val cachedSongs = symphony.database.songCache.entriesPathMapped().values.toList()
+            //cachedSongs.forEach { explorer.addChildFile(SimplePath(it.path)) }
+
 
             if (cachedSongs.isEmpty()) {
                 Logger.warn("MediaExposer", "No songs found in cache to load.")
@@ -208,18 +210,29 @@ class MediaExposer(private val symphony: Symphony) {
         song.coverFile?.let {
             cycle.artworkCacheUnused.remove(it)
         }
-        cycle.lyricsCacheUnused.remove(song.id)
+        val lyricsKey = song.path.substringBeforeLast('.', song.path)
+        cycle.lyricsCacheUnused.remove(lyricsKey)
         explorer.addChildFile(path)
         return song
     }
 
-    private fun scanLrcFile(
-        @Suppress("Unused") cycle: ScanCycle,
+    private suspend fun scanLrcFile(
+        cycle: ScanCycle,
         path: SimplePath,
         file: DocumentFileX,
     ) {
         uris[path.pathString] = file.uri
         explorer.addChildFile(path)
+        try {
+            val lyricsContent = symphony.applicationContext.contentResolver.openInputStream(file.uri)?.bufferedReader()?.use { it.readText() }
+            if (lyricsContent != null) {
+                val key = path.pathString.substringBeforeLast(".lrc", path.pathString)
+                symphony.database.lyricsCache.put(key, lyricsContent)
+                cycle.lyricsCacheUnused.remove(key)
+            }
+        } catch (e: Exception) {
+            Logger.error("MediaExposer", "Failed to read or cache LRC file: ${path.pathString}", e)
+        }
     }
 
     private fun scanM3UFile(
@@ -277,6 +290,8 @@ class MediaExposer(private val symphony: Symphony) {
         uris.clear()
         explorer = SimpleFileSystem.Folder()
         symphony.database.songCache.clear()
+        symphony.database.artworkCache.clear() // Added to ensure artwork cache is cleared
+        symphony.database.lyricsCache.clear() // Added to ensure lyrics cache is cleared
         symphony.database.directoryArtworkCache.clear()
         emitSongs(emptyList())
         emitUpdate(false)
