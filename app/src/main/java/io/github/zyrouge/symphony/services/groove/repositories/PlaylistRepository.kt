@@ -30,7 +30,7 @@ class PlaylistRepository(private val symphony: Symphony) {
         options = listOf(FuzzySearchOption({ v -> get(v)?.title?.let { compareString(it) } }))
     )
 
-    private val _isUpdating = MutableStateFlow(false)
+    private val _isUpdating = MutableStateFlow<Float?>(null)
     val isUpdating = _isUpdating.asStateFlow()
     private val _updateId = MutableStateFlow(0L)
     val updateId = _updateId.asStateFlow()
@@ -41,7 +41,7 @@ class PlaylistRepository(private val symphony: Symphony) {
     private val _favorites = MutableStateFlow<List<String>>(emptyList())
     val favorites = _favorites.asStateFlow()
 
-    private fun emitUpdate(value: Boolean) = _isUpdating.update {
+    private fun emitUpdate(value: Float?) = _isUpdating.update {
         value
     }
 
@@ -54,11 +54,13 @@ class PlaylistRepository(private val symphony: Symphony) {
     }
 
     suspend fun fetch() {
-        emitUpdate(true)
+        emitUpdate(0.0f)
         try {
             val context = symphony.applicationContext
             val playlists = symphony.database.playlists.entries()
-            playlists.values.map { x ->
+            val totalPlaylists = playlists.size
+            var processedPlaylists = 0
+            playlists.values.forEach { x ->
                 val playlist = when {
                     x.isLocal -> {
                         ActivityUtils.makePersistableReadableUri(context, x.uri!!)
@@ -73,33 +75,47 @@ class PlaylistRepository(private val symphony: Symphony) {
                 }
                 emitUpdateId()
                 emitCount()
+                processedPlaylists++
+                if (totalPlaylists > 0) {
+                    emitUpdate(0.9f * processedPlaylists / totalPlaylists)
+                }
             }
             if (!cache.containsKey(FAVORITE_PLAYLIST)) {
                 add(getFavorites())
             }
+            _favorites.update {
+                getFavorites().getSongIds(symphony)
+            }
+            emitUpdateId()
+            emitUpdate(1.0f)
         } catch (_: FileNotFoundException) {
+            // Potentially emit an error state or log, then emit 1.0f or null
+             emitUpdate(1.0f)
         } catch (err: Exception) {
             Logger.error("PlaylistRepository", "fetch failed", err)
+            // Potentially emit an error state or log, then emit 1.0f or null
+             emitUpdate(1.0f)
+        } finally {
+            emitUpdate(null)
         }
-        _favorites.update {
-            getFavorites().getSongIds(symphony)
-        }
-        emitUpdateId()
-        emitUpdate(false)
     }
 
     fun reset() {
-        emitUpdate(true)
-        cache.clear()
-        _all.update {
-            emptyList()
+        emitUpdate(0.0f)
+        try {
+            cache.clear()
+            _all.update {
+                emptyList()
+            }
+            emitCount()
+            _favorites.update {
+                emptyList()
+            }
+            emitUpdateId()
+            emitUpdate(1.0f)
+        } finally {
+            emitUpdate(null)
         }
-        emitCount()
-        _favorites.update {
-            emptyList()
-        }
-        emitUpdateId()
-        emitUpdate(false)
     }
 
     fun search(playlistIds: List<String>, terms: String, limit: Int = 7) = searcher
@@ -219,7 +235,7 @@ class PlaylistRepository(private val symphony: Symphony) {
     fun savePlaylistToUri(playlist: Playlist, uri: Uri) {
         val outputStream = symphony.applicationContext.contentResolver.openOutputStream(uri, "w")
         outputStream?.use {
-            val content = playlist.songPaths.joinToString("\n")
+            val content = playlist.songPaths.joinToString(" ")
             it.write(content.toByteArray())
         }
     }

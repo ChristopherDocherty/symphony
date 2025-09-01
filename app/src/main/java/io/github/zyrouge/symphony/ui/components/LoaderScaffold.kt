@@ -33,7 +33,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 @Composable
 fun LoaderScaffold(
     context: ViewContext,
-    isLoading: Boolean,
+    isLoading: Float?,
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -44,14 +44,14 @@ fun LoaderScaffold(
             modifier = Modifier
                 .padding(
                     bottom = with(density) {
-                        if (isLoading) height.toDp() else 0.dp
+                        if (isLoading != null) height.toDp() else 0.dp
                     }
                 )
         ) {
             content()
         }
         AnimatedVisibility(
-            visible = isLoading,
+            visible = isLoading != null,
             enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
             exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
             modifier = Modifier
@@ -78,7 +78,7 @@ fun LoaderScaffold(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        context.symphony.t.Loading,
+                        "Loading - Progress: ${isLoading?.toInt()}",
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }

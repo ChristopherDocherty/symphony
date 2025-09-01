@@ -18,16 +18,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger // Added import
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class MediaExposer(private val symphony: Symphony) {
     internal val uris = ConcurrentHashMap<String, Uri>()
     var explorer = SimpleFileSystem.Folder()
-    private val _isUpdating = MutableStateFlow(false)
+    private val _isUpdating = MutableStateFlow<Float?>(null) // Changed type and initial value
     val isUpdating = _isUpdating.asStateFlow()
 
-    private fun emitUpdate(value: Boolean) = _isUpdating.update {
+    private fun emitUpdate(value: Float?) = _isUpdating.update { // Changed parameter type
         value
     }
 
@@ -67,20 +68,41 @@ class MediaExposer(private val symphony: Symphony) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun fetch() {
-        emitUpdate(true)
+        emitUpdate(0.0f) // Emit start
         val allCollectedSongs = mutableListOf<Song>()
+        var finished = false
         try {
             val context = symphony.applicationContext
             val folderUris = symphony.settings.mediaFolders.value
             val cycle = ScanCycle.create(symphony)
 
+            val totalFolders = folderUris.size
+            val processedRootFoldersCount = AtomicInteger(0) // For multi-folder progress
+
+            if (totalFolders == 0) {
+                 emitUpdate(0.9f) // Progress if no folders, then 1.0f later
+            }
+
             coroutineScope {
-                val deferredSongLists = folderUris.mapNotNull { uri ->
+                val deferredSongLists = folderUris.mapIndexedNotNull { _, uri -> // index not used directly here
                     ActivityUtils.makePersistableReadableUri(context, uri)
                     DocumentFileX.fromTreeUri(context, uri)?.let { docFile ->
                         val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
                         async(Dispatchers.IO) {
-                            scanMediaTree(cycle, path, docFile)
+                            progressFractionCpunter
+                            val songs = if (totalFolders == 1) {
+                                scanMediaTree(cycle, path, docFile, progressFractionConsumer = { fraction ->
+                                    emitUpdate(fraction * 0.9f)
+                                })
+                            } else {
+                                scanMediaTree(cycle, path, docFile, null)
+                            }
+
+                            if (totalFolders > 1) {
+                                val currentProcessed = processedRootFoldersCount.incrementAndGet()
+                                emitUpdate(currentProcessed.toFloat() / totalFolders.toFloat() * 0.9f)
+                            }
+                            songs
                         }
                     }
                 }
@@ -91,52 +113,80 @@ class MediaExposer(private val symphony: Symphony) {
 
             emitSongs(allCollectedSongs)
             trimCache(cycle)
-
+            emitUpdate(1.0f) // Emit work complete (covers the final 10% for song emission/cache trim)
+            finished = true
         } catch (err: Exception) {
             Logger.error("MediaExposer", "fetch failed", err)
             emitSongs(emptyList())
+            emitUpdate(1.0f) // Emit work complete even on error, before idling
+            finished = true
+        } finally {
+            if (!finished) { // Ensure 1.0f is emitted if an exception occurred before it
+                emitUpdate(1.0f)
+            }
+            emitUpdate(null) // Emit idle
+            emitFinish() // Call finish after idling
         }
-        emitUpdate(false)
-        emitFinish()
     }
 
-    private suspend fun scanMediaTree(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): List<Song> {
+    private suspend fun scanMediaTree(
+        cycle: ScanCycle,
+        path: SimplePath,
+        file: DocumentFileX,
+        progressFractionConsumer: ((Float) -> Unit)? = null // New parameter
+    ): List<Song> {
         try {
             if (!cycle.filter.isWhitelisted(path.pathString)) {
+                progressFractionConsumer?.invoke(1.0f) // Consider filtered path as "processed" for this level's progress
                 return emptyList()
             }
             val songsFound = mutableListOf<Song>()
+            val children = file.list()
+            val totalChildren = children.size
+            val processedChildrenCount = AtomicInteger(0)
+
+            if (totalChildren == 0) {
+                progressFractionConsumer?.invoke(1.0f)
+                return emptyList()
+            }
+
             coroutineScope {
-                val songLists = file.list().map { childFile ->
-                    val childPath = path.join(childFile.name)
-                    async {
-                        when {
-                            childFile.isDirectory -> scanMediaTree(cycle, childPath, childFile)
+                val deferredSongLists = children.map { childFile ->
+                    async(Dispatchers.IO) {
+                        val childPath = path.join(childFile.name)
+                        val songsFromChild = when {
+                            childFile.isDirectory -> scanMediaTree(cycle, childPath, childFile, null) // Recursive calls don't pass consumer
                             else -> scanMediaFile(cycle, childPath, childFile)
                         }
+                        // Report progress after this child is done
+                        val currentProcessed = processedChildrenCount.incrementAndGet()
+                        progressFractionConsumer?.invoke(currentProcessed.toFloat() / totalChildren.toFloat())
+                        songsFromChild
                     }
-                }.awaitAll()
-
-                for (songList in songLists) {
+                }
+                deferredSongLists.awaitAll().forEach { songList ->
                     songsFound.addAll(songList)
                 }
+            }
+            // Ensure 1.0f is reported if all children processed (might be slightly off due to float division)
+            // or if loop finishes. The last increment should ideally make it 1.0f.
+            if (processedChildrenCount.get() == totalChildren && totalChildren > 0) {
+                 progressFractionConsumer?.invoke(1.0f)
             }
             return songsFound
         } catch (err: Exception) {
             Logger.error("MediaExposer", "scan media tree failed for ${path.pathString}", err)
+            progressFractionConsumer?.invoke(1.0f) // Ensure progress indicates completion on error
             return emptyList()
         }
     }
 
     suspend fun loadFromCache() {
-        emitUpdate(true)
+        emitUpdate(0.0f) // Emit start
+        var finished = false
         try {
-            // uris map will not be populated when loading from cache, lyrics are fetched from lyricsCache
             explorer = SimpleFileSystem.Folder()
-
             val cachedSongs = symphony.database.songCache.entriesPathMapped().values.toList()
-            //cachedSongs.forEach { explorer.addChildFile(SimplePath(it.path)) }
-
 
             if (cachedSongs.isEmpty()) {
                 Logger.warn("MediaExposer", "No songs found in cache to load.")
@@ -144,12 +194,20 @@ class MediaExposer(private val symphony: Symphony) {
             } else {
                 emitSongs(cachedSongs)
             }
+            emitUpdate(1.0f) // Emit work complete
+            finished = true
         } catch (err: Exception) {
             Logger.error("MediaExposer", "loadFromCache failed", err)
             emitSongs(emptyList())
+            emitUpdate(1.0f) // Emit work complete even on error
+            finished = true
+        } finally {
+             if (!finished) {
+                emitUpdate(1.0f)
+            }
+            emitUpdate(null) // Emit idle
+            emitFinish() // Call finish after idling
         }
-        emitUpdate(false)
-        emitFinish()
     }
 
     private suspend fun scanMediaFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): List<Song> {
@@ -188,7 +246,7 @@ class MediaExposer(private val symphony: Symphony) {
         val cacheHit = cached != null &&
                 cached.dateModified == lastModified &&
                 (cached.coverFile?.let { cycle.artworkCacheUnused.contains(it) } != false)
-        
+
         val song = when {
             cacheHit -> cached!!
             else -> Song.parse(path, file, cycle.songParseOptions)
@@ -286,16 +344,30 @@ class MediaExposer(private val symphony: Symphony) {
     }
 
     suspend fun reset() {
-        emitUpdate(true)
-        uris.clear()
-        explorer = SimpleFileSystem.Folder()
-        symphony.database.songCache.clear()
-        symphony.database.artworkCache.clear() // Added to ensure artwork cache is cleared
-        symphony.database.lyricsCache.clear() // Added to ensure lyrics cache is cleared
-        symphony.database.directoryArtworkCache.clear()
-        emitSongs(emptyList())
-        emitUpdate(false)
-        emitFinish()
+        emitUpdate(0.0f) // Emit start
+        var finished = false
+        try {
+            uris.clear()
+            explorer = SimpleFileSystem.Folder()
+            symphony.database.songCache.clear()
+            symphony.database.artworkCache.clear()
+            symphony.database.lyricsCache.clear()
+            symphony.database.directoryArtworkCache.clear()
+            emitSongs(emptyList())
+            emitUpdate(1.0f) // Emit work complete
+            finished = true
+        } catch (e: Exception) { // Added general exception catch for safety, though original didn't have it explicitly here.
+            Logger.error("MediaExposer", "reset failed", e)
+            emitUpdate(1.0f) // Emit work complete even on error
+            finished = true
+        }
+        finally {
+             if (!finished) {
+                emitUpdate(1.0f)
+            }
+            emitUpdate(null) // Emit idle
+            emitFinish() // Call finish after idling
+        }
     }
 
     private fun emitSongs(songs: List<Song>) {
