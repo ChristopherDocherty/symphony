@@ -89,7 +89,6 @@ class MediaExposer(private val symphony: Symphony) {
                     DocumentFileX.fromTreeUri(context, uri)?.let { docFile ->
                         val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
                         async(Dispatchers.IO) {
-                            progressFractionCpunter
                             val songs = if (totalFolders == 1) {
                                 scanMediaTree(cycle, path, docFile, progressFractionConsumer = { fraction ->
                                     emitUpdate(fraction * 0.9f)

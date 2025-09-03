@@ -4,8 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
@@ -23,12 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import io.github.zyrouge.symphony.ui.helpers.ScreenOrientation
 
 @Composable
 fun GenericGrooveBanner(
@@ -37,19 +36,12 @@ fun GenericGrooveBanner(
     content: @Composable () -> Unit,
 ) {
     val defaultHorizontalPadding = 20.dp
-    BoxWithConstraints {
+    Box{
         AsyncImage(
             image,
             null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(
-                    when (ScreenOrientation.fromConfiguration(LocalConfiguration.current)) {
-                        ScreenOrientation.PORTRAIT -> this@BoxWithConstraints.maxWidth.times(0.7f)
-                        ScreenOrientation.LANDSCAPE -> this@BoxWithConstraints.maxWidth.times(0.25f)
-                    }
-                )
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxWidth().aspectRatio(1f)
         )
         Row(
             modifier = Modifier
