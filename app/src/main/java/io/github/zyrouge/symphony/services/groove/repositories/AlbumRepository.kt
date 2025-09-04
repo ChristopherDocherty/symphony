@@ -59,6 +59,9 @@ class AlbumRepository(private val symphony: Symphony) {
                     startYear = startYear?.let { old -> min(old, it) } ?: it
                     endYear = endYear?.let { old -> max(old, it) } ?: it
                 }
+                if(song.date != null){
+                    date = song.date
+                }
                 if (song.is_compilation) {
                     is_compilation = true
                 }
@@ -73,15 +76,17 @@ class AlbumRepository(private val symphony: Symphony) {
                     id = albumId,
                     name = song.album!!,
                     artists = mutableSetOf<String>().apply {
-                        // ensure that album artists are first
-                        addAll(song.albumArtists)
                         addAll(song.artists)
+                    },
+                    albumArtists = mutableSetOf<String>().apply {
+                        addAll(song.albumArtists)
                     },
                     startYear = song.year,
                     endYear = song.year,
                     numberOfTracks = 1,
                     duration = song.duration.milliseconds,
                     is_compilation = song.is_compilation,
+                    date = song.date,
                 )
             }
         }
@@ -115,9 +120,10 @@ class AlbumRepository(private val symphony: Symphony) {
                         id = albumId,
                         name = song.album!!,
                         artists = mutableSetOf<String>().apply {
-                            // ensure that album artists are first
-                            addAll(song.albumArtists)
                             addAll(song.artists)
+                        },
+                        albumArtists = mutableSetOf<String>().apply {
+                            addAll(song.albumArtists)
                         },
                         startYear = song.year,
                         endYear = song.year,

@@ -140,7 +140,14 @@ private fun AlbumHero(context: ViewContext, album: Album) {
         content = {
             Column {
                 Text(album.name)
-                if (album.artists.isNotEmpty()) {
+                if (album.albumArtists.firstOrNull()?.lowercase() == "various artists"){
+                    ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)) {
+                        FlowRow { Text(album.albumArtists.first() )}
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                }
+                else if (album.artists.isNotEmpty()) {
+
                     ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)) {
                         FlowRow {
                             album.artists.forEachIndexed { i, it ->
