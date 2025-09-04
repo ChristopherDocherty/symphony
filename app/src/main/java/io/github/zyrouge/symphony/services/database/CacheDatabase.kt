@@ -31,6 +31,7 @@ abstract class CacheDatabase : RoomDatabase() {
                 CacheDatabase::class.java,
                 "cache"
             )
+            .fallbackToDestructiveMigration()
             .build()
     }
 

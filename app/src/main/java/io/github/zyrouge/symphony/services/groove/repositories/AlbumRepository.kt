@@ -101,6 +101,9 @@ class AlbumRepository(private val symphony: Symphony) {
                         startYear = startYear?.let { old -> min(old, it) } ?: it
                         endYear = endYear?.let { old -> max(old, it) } ?: it
                     }
+                    if(song.date != null){
+                        date = song.date
+                    }
                     if (song.is_compilation) {
                         is_compilation = true
                     }
@@ -173,7 +176,7 @@ class AlbumRepository(private val symphony: Symphony) {
             }
 
             SortBy.TRACKS_COUNT -> albumIds.sortedBy { get(it)?.numberOfTracks }
-            SortBy.YEAR -> albumIds.sortedBy { get(it)?.startYear }
+            SortBy.YEAR -> albumIds.sortedBy { get(it)?.date }
         }
         return if (reverse) sorted.reversed() else sorted
     }
