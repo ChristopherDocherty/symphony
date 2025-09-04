@@ -3,6 +3,7 @@ package io.github.zyrouge.symphony.ui.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.Album // Added import
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -20,6 +21,7 @@ import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
+import io.github.zyrouge.symphony.ui.components.SelectAlbumDiscDialog // Added import
 
 @Composable
 fun AlbumTile(context: ViewContext, album: Album) {
@@ -68,6 +70,7 @@ fun AlbumDropdownMenu(
     onDismissRequest: () -> Unit,
 ) {
     var showAddToPlaylistDialog by remember { mutableStateOf(false) }
+    var showSelectDiscDialog by remember { mutableStateOf(false) } // Added state
 
     DropdownMenu(
         expanded = expanded,
@@ -127,6 +130,18 @@ fun AlbumDropdownMenu(
                 showAddToPlaylistDialog = true
             }
         )
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(Icons.Filled.Album, null)
+            },
+            text = {
+                Text("Play from disc...")
+            },
+            onClick = {
+                onDismissRequest()
+                showSelectDiscDialog = true
+            }
+        )
         album.artists.forEach { artistName ->
             DropdownMenuItem(
                 leadingIcon = {
@@ -149,6 +164,16 @@ fun AlbumDropdownMenu(
             songIds = album.getSongIds(context.symphony),
             onDismissRequest = {
                 showAddToPlaylistDialog = false
+            }
+        )
+    }
+
+    if (showSelectDiscDialog) {
+        SelectAlbumDiscDialog(
+            context = context,
+            album = album,
+            onDismissRequest = {
+                showSelectDiscDialog = false
             }
         )
     }
