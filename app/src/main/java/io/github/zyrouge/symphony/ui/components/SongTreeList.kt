@@ -55,6 +55,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
 import io.github.zyrouge.symphony.services.radio.Radio
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
@@ -357,11 +358,11 @@ private fun SongTreeListMediaSortBar(
     songsCount: Int,
     pathsSortBy: StringListUtils.SortBy,
     pathsSortReverse: Boolean,
-    songsSortBy: SongRepository.SortBy,
+    songsSortBy: SongSortBy,
     songsSortReverse: Boolean,
     setPathsSortBy: (StringListUtils.SortBy) -> Unit,
     setPathsSortReverse: (Boolean) -> Unit,
-    setSongsSortBy: (SongRepository.SortBy) -> Unit,
+    setSongsSortBy: (SongSortBy) -> Unit,
     setSongsSortReverse: (Boolean) -> Unit,
 ) {
     val currentTextStyle = MaterialTheme.typography.bodySmall.run {
@@ -447,7 +448,7 @@ private fun SongTreeListMediaSortBar(
                             style = currentTextStyle,
                             modifier = Modifier.padding(16.dp, 8.dp),
                         )
-                        SongRepository.SortBy.entries.forEach { sortBy ->
+                        SongSortBy.entries.forEach { sortBy ->
                             SongTreeListMediaSortBarDropdownMenuItem(
                                 selected = songsSortBy == sortBy,
                                 reversed = songsSortReverse,

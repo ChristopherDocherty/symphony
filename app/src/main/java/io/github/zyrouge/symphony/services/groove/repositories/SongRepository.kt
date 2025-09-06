@@ -2,6 +2,7 @@ package io.github.zyrouge.symphony.services.groove.repositories
 
 import android.net.Uri
 import androidx.core.net.toUri
+import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.Assets
@@ -20,19 +21,6 @@ import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
 class SongRepository(private val symphony: Symphony) {
-    enum class SortBy {
-        CUSTOM,
-        TITLE,
-        ARTIST,
-        ALBUM,
-        DURATION,
-        DATE_MODIFIED,
-        COMPOSER,
-        ALBUM_ARTIST,
-        YEAR,
-        FILENAME,
-        TRACK_NUMBER,
-    }
 
     private val cache = ConcurrentHashMap<String, Song>()
     internal val pathCache = ConcurrentHashMap<String, String>()
@@ -105,28 +93,25 @@ class SongRepository(private val symphony: Symphony) {
     fun search(songIds: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, songIds, maxLength = limit)
 
-    fun sort(songIds: List<String>, by: SortBy, reverse: Boolean): List<String> {
+    fun sort(songIds: List<String>, by: SongSortBy, reverse: Boolean): List<String> {
         val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
         val sorted = when (by) {
-            SortBy.CUSTOM -> songIds
-            SortBy.TITLE -> songIds.sortedBy { get(it)?.title?.withCase(sensitive) }
-            SortBy.ARTIST -> songIds.sortedBy { get(it)?.artists?.joinToStringIfNotEmpty(sensitive) }
-            SortBy.ALBUM -> songIds.sortedBy { get(it)?.album?.withCase(sensitive) }
-            SortBy.DURATION -> songIds.sortedBy { get(it)?.duration }
-            SortBy.DATE_MODIFIED -> songIds.sortedBy { get(it)?.dateModified }
-            SortBy.COMPOSER -> songIds.sortedBy {
+            SongSortBy.SONG_CUSTOM -> songIds
+            SongSortBy.SONG_TITLE -> songIds.sortedBy { get(it)?.title?.withCase(sensitive) }
+            SongSortBy.SONG_ARTIST -> songIds.sortedBy { get(it)?.artists?.joinToStringIfNotEmpty(sensitive) }
+            SongSortBy.SONG_ALBUM -> songIds.sortedBy { get(it)?.album?.withCase(sensitive) }
+            SongSortBy.SONG_DURATION -> songIds.sortedBy { get(it)?.duration }
+            SongSortBy.SONG_DATE_ADDED -> songIds.sortedBy { get(it)?.dateModified }
+            SongSortBy.SONG_COMPOSER -> songIds.sortedBy {
                 get(it)?.composers?.joinToStringIfNotEmpty(sensitive)
             }
-
-            SortBy.ALBUM_ARTIST -> songIds.sortedBy {
-                get(it)?.albumArtists?.joinToStringIfNotEmpty(sensitive)
-            }
-
-            SortBy.YEAR -> songIds.sortedBy { get(it)?.year }
-            SortBy.FILENAME -> songIds.sortedBy { get(it)?.filename?.withCase(sensitive) }
-            SortBy.TRACK_NUMBER -> songIds.sortedWith(
+            SongSortBy.SONG_YEAR -> songIds.sortedBy { get(it)?.year }
+            SongSortBy.SONG_FILENAME -> songIds.sortedBy { get(it)?.filename?.withCase(sensitive) }
+            SongSortBy.SONG_TRACK_NUMBER -> songIds.sortedWith(
                 compareBy({ get(it)?.discNumber }, { get(it)?.trackNumber }),
             )
+            SongSortBy.SONG_DATE_MODIFIED -> songIds.sortedBy { get(it)?.dateModified }
+            SongSortBy.UNRECOGNIZED -> songIds
         }
         return if (reverse) sorted.reversed() else sorted
     }

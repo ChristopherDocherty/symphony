@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
@@ -72,7 +73,7 @@ fun SongList(
                     type.setLastUsedSortReverse(context, it)
                 },
                 sort = sortBy,
-                sorts = SongRepository.SortBy.entries
+                sorts = SongSortBy.entries
                     .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                 onSortChange = {
                     type.setLastUsedSortBy(context, it)
@@ -153,18 +154,19 @@ fun SongList(
     )
 }
 
-fun SongRepository.SortBy.label(context: ViewContext) = when (this) {
-    SongRepository.SortBy.CUSTOM -> context.symphony.t.Custom
-    SongRepository.SortBy.TITLE -> context.symphony.t.Title
-    SongRepository.SortBy.ARTIST -> context.symphony.t.Artist
-    SongRepository.SortBy.ALBUM -> context.symphony.t.Album
-    SongRepository.SortBy.DURATION -> context.symphony.t.Duration
-    SongRepository.SortBy.DATE_MODIFIED -> context.symphony.t.LastModified
-    SongRepository.SortBy.COMPOSER -> context.symphony.t.Composer
-    SongRepository.SortBy.ALBUM_ARTIST -> context.symphony.t.AlbumArtist
-    SongRepository.SortBy.YEAR -> context.symphony.t.Year
-    SongRepository.SortBy.FILENAME -> context.symphony.t.Filename
-    SongRepository.SortBy.TRACK_NUMBER -> context.symphony.t.TrackNumber
+fun SongSortBy.label(context: ViewContext) = when (this) {
+    SongSortBy.SONG_CUSTOM -> context.symphony.t.Custom
+    SongSortBy.SONG_TITLE -> context.symphony.t.Title
+    SongSortBy.SONG_ARTIST -> context.symphony.t.Artist
+    SongSortBy.SONG_ALBUM -> context.symphony.t.Album
+    SongSortBy.SONG_DURATION -> context.symphony.t.Duration
+    SongSortBy.SONG_COMPOSER -> context.symphony.t.Composer
+    SongSortBy.SONG_YEAR -> context.symphony.t.Year
+    SongSortBy.SONG_FILENAME -> context.symphony.t.Filename
+    SongSortBy.SONG_TRACK_NUMBER -> context.symphony.t.TrackNumber
+    SongSortBy.SONG_DATE_ADDED -> "Date Added"
+    SongSortBy.SONG_DATE_MODIFIED -> "Date Modified"
+    SongSortBy.UNRECOGNIZED -> "???"
 }
 
 fun SongListType.getLastUsedSortBy(context: ViewContext) = when (this) {
@@ -173,7 +175,7 @@ fun SongListType.getLastUsedSortBy(context: ViewContext) = when (this) {
     SongListType.Playlist -> context.symphony.settingsOLD.lastUsedPlaylistSongsSortBy
 }
 
-fun SongListType.setLastUsedSortBy(context: ViewContext, sort: SongRepository.SortBy) =
+fun SongListType.setLastUsedSortBy(context: ViewContext, sort: SongSortBy) =
     when (this) {
         SongListType.Default -> context.symphony.settingsOLD.lastUsedSongsSortBy.setValue(sort)
         SongListType.Playlist -> context.symphony.settingsOLD.lastUsedPlaylistSongsSortBy.setValue(sort)

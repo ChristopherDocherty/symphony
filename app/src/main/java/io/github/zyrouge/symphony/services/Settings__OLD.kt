@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.edit
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.repositories.AlbumArtistRepository
 import io.github.zyrouge.symphony.services.groove.repositories.AlbumRepository
 import io.github.zyrouge.symphony.services.groove.repositories.ArtistRepository
@@ -125,8 +126,8 @@ class Settings__OLD(private val symphony: Symphony) {
     val useMaterialYou = BooleanEntry("material_you", true)
     val lastUsedSongsSortBy = EnumEntry(
         "last_used_song_sort_by",
-        enumEntries<SongRepository.SortBy>(),
-        SongRepository.SortBy.TITLE,
+        enumEntries<SongSortBy>(),
+        SongSortBy.SONG_TITLE,
     )
     val lastUsedSongsSortReverse = BooleanEntry("last_used_song_sort_reverse", false)
     val lastUsedArtistsSortBy = EnumEntry(
@@ -193,8 +194,8 @@ class Settings__OLD(private val symphony: Symphony) {
     )
     val lastUsedBrowserSortBy = EnumEntry(
         "last_used_folder_sort_by",
-        enumEntries<SongRepository.SortBy>(),
-        SongRepository.SortBy.FILENAME,
+        enumEntries<SongSortBy>(),
+        SongSortBy.SONG_FILENAME,
     )
     val lastUsedBrowserSortReverse = BooleanEntry("last_used_folder_sort_reverse", false)
     val lastUsedBrowserPath = NullableStringEntry("last_used_folder_path")
@@ -214,15 +215,15 @@ class Settings__OLD(private val symphony: Symphony) {
     )
     val lastUsedPlaylistSongsSortBy = EnumEntry(
         "last_used_playlist_songs_sort_by",
-        enumEntries<SongRepository.SortBy>(),
-        SongRepository.SortBy.CUSTOM,
+        enumEntries<SongSortBy>(),
+        SongSortBy.SONG_CUSTOM,
     )
     val lastUsedPlaylistSongsSortReverse =
         BooleanEntry("last_used_playlist_songs_sort_reverse", false)
     val lastUsedAlbumSongsSortBy = EnumEntry(
         "last_used_album_songs_sort_by",
-        enumEntries<SongRepository.SortBy>(),
-        SongRepository.SortBy.TRACK_NUMBER,
+        enumEntries<SongSortBy>(),
+        SongSortBy.SONG_TRACK_NUMBER,
     )
     val lastUsedAlbumSongsSortReverse = BooleanEntry("last_used_album_songs_sort_reverse", false)
     val lastUsedTreePathSortBy = EnumEntry(

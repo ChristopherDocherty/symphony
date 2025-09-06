@@ -5,10 +5,67 @@ option java_multiple_files = true;
 
 package settings;
 
+enum SongSortBy {
+  SONG_CUSTOM = 0;
+  SONG_TITLE = 1;
+  SONG_ALBUM = 2;
+  SONG_ARTIST = 3;
+  SONG_DURATION = 4;
+  SONG_DATE_ADDED = 5;
+  SONG_COMPOSER = 6;
+  SONG_YEAR = 7;
+  SONG_FILENAME = 8;
+  SONG_TRACK_NUMBER = 9;
+  SONG_DATE_MODIFIED = 10;
+}
+
+message SongSortPreference {
+SongSortBy sort_by = 1;
+    bool sort_reverse = 2;
+}
+
+enum AlbumSortBy {
+  ALBUM_CUSTOM= 0;
+  ALBUM_ALBUM_NAME= 1;
+  ALBUM_ARTIST_NAME= 2;
+  ALBUM_TRACKS_COUNT= 3;
+  ALBUM_YEAR= 4;
+}
+
+message AlbumSortPreference {
+  AlbumSortBy sort_by = 1;
+  bool sort_reverse = 2;
+}
+
+enum ArtistSortBy {
+    ARTIST_CUSTOM= 0;
+    ARTIST_ALBUM_NAME= 1;
+    ARTIST_ARTIST_NAME= 2;
+    ARTIST_TRACKS_COUNT= 3;
+    ARTIST_ALBUMS_COUNT = 4;
+}
+
+message ArtistSortPreference {
+  AlbumSortBy sort_by = 1;
+  bool sort_reverse = 2;
+}
+
+
 message Settings {
 
-  
+
   bool ui_album_grid_hide_compilations = 1;
+
+  SongSortBy ui_default_song_sort_by = 2;
+  SongSortBy ui_album_view_songs_sort_by = 3;
+  SongSortBy ui_artist_view_songs_sort_by = 4;
+  SongSortBy ui_playlist_view_songs_sort_by = 5;
+
+  AlbumSortBy ui_default_album_sort_by = 6;
+  AlbumSortBy  ui_artist_view_album_sort_by = 7;
+
+  ArtistSortBy ui_default_artist_sort_by = 8;
+
 
 
 }

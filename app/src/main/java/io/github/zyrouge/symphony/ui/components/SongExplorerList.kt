@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
 import io.github.zyrouge.symphony.services.radio.Radio
@@ -82,8 +83,8 @@ fun SongExplorerList(
             SongExplorerResult(
                 folders = run {
                     val sorted = when (sortBy) {
-                        SongRepository.SortBy.TITLE,
-                        SongRepository.SortBy.FILENAME,
+                        SongSortBy.SONG_TITLE,
+                        SongSortBy.SONG_FILENAME,
                             -> categorized.folders.sortedBy { it.name }
 
                         else -> categorized.folders
@@ -156,7 +157,7 @@ fun SongExplorerList(
                         context.symphony.settingsOLD.lastUsedBrowserSortReverse.setValue(it)
                     },
                     sort = sortBy,
-                    sorts = SongRepository.SortBy.entries
+                    sorts = SongSortBy.entries
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
                         context.symphony.settingsOLD.lastUsedBrowserSortBy.setValue(it)
