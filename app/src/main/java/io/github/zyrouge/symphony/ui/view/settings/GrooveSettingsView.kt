@@ -44,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.copy
+import io.github.zyrouge.symphony.Settings
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.components.AdaptiveSnackbar
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
@@ -63,6 +65,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.SettingsViewRoute
 import io.github.zyrouge.symphony.utils.ImagePreserver
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
@@ -86,7 +89,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     val artworkQuality by context.symphony.settingsOLD.artworkQuality.flow.collectAsState()
     val caseSensitiveSorting by context.symphony.settingsOLD.caseSensitiveSorting.flow.collectAsState()
     val useMetaphony by context.symphony.settingsOLD.useMetaphony.flow.collectAsState()
-    val hideCompilations by context.symphony.settingsOLD.hideCompilations.flow.collectAsState() // Added state
+    val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -281,9 +284,11 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         title = {
                             Text("Hide Compilations")
                         },
-                        value = hideCompilations,
-                        onChange = {
-                            context.symphony.settingsOLD.hideCompilations.setValue(it)
+                        value = isHideCompilations,
+                        onChange = { value ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { uiAlbumGridHideCompilations = value} }
+                            }
                         }
                     )
                     HorizontalDivider()

@@ -6,6 +6,10 @@ option java_multiple_files = true;
 package settings;
 
 message Settings {
-  bool test = 1;
+
+  
+  bool ui_album_grid_hide_compilations = 1;
+
+
 }
 

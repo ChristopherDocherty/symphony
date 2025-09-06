@@ -13,9 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import io.github.zyrouge.symphony.Settings
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.repositories.AlbumRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,11 +28,11 @@ fun AlbumGrid(
 ) {
     val sortBy by context.symphony.settingsOLD.lastUsedAlbumsSortBy.flow.collectAsState()
     val sortReverse by context.symphony.settingsOLD.lastUsedAlbumsSortReverse.flow.collectAsState()
-    val hideCompilations by context.symphony.settingsOLD.hideCompilations.flow.collectAsState()
+    val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
 
-    val displayableAlbumIds by remember(albumIds, hideCompilations) {
+    val displayableAlbumIds by remember(albumIds, isHideCompilations) {
         derivedStateOf {
-            if (hideCompilations) {
+            if (isHideCompilations) {
                 albumIds.filter { albumId ->
                     context.symphony.groove.album.get(albumId)?.let { album ->
                         !album.is_compilation

@@ -35,7 +35,7 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
     val groove = Groove(this)
     val radio = Radio(this)
     val translator = Translator(this)
-    val settingsStore: DataStore<Settings> = applicationContext.settingsDataStore
+    val settings: DataStore<Settings> = applicationContext.settingsDataStore
 
     var t by mutableStateOf(translator.getCurrentTranslation())
 
