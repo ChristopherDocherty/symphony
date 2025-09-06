@@ -12,15 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.zyrouge.symphony.services.groove.Artist
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
+import kotlinx.coroutines.launch
 
 @Composable
 fun ArtistTile(context: ViewContext, artist: Artist) {
+    val scope = rememberCoroutineScope()
     SquareGrooveTile(
         image = artist.createArtworkImageRequest(context.symphony).build(),
         options = { expanded, onDismissRequest ->
@@ -41,7 +44,9 @@ fun ArtistTile(context: ViewContext, artist: Artist) {
             )
         },
         onPlay = {
-            context.symphony.radio.shorty.playQueue(artist.getSortedSongIds(context.symphony))
+            scope.launch {
+                context.symphony.radio.shorty.playQueue(artist.getSortedSongIds(context.symphony))
+            }
         },
         onClick = {
             context.navController.navigate(ArtistViewRoute(artist.name))
@@ -57,6 +62,7 @@ fun ArtistDropdownMenu(
     onDismissRequest: () -> Unit,
 ) {
     var showAddToPlaylistDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     DropdownMenu(
         expanded = expanded,
@@ -71,10 +77,12 @@ fun ArtistDropdownMenu(
             },
             onClick = {
                 onDismissRequest()
-                context.symphony.radio.shorty.playQueue(
-                    artist.getSortedSongIds(context.symphony),
-                    shuffle = true
-                )
+                scope.launch {
+                    context.symphony.radio.shorty.playQueue(
+                        artist.getSortedSongIds(context.symphony),
+                        shuffle = true
+                    )
+                }
             }
         )
         DropdownMenuItem(
@@ -86,10 +94,12 @@ fun ArtistDropdownMenu(
             },
             onClick = {
                 onDismissRequest()
-                context.symphony.radio.queue.add(
-                    artist.getSortedSongIds(context.symphony),
-                    context.symphony.radio.queue.currentSongIndex + 1
-                )
+                scope.launch {
+                    context.symphony.radio.queue.add(
+                        artist.getSortedSongIds(context.symphony),
+                        context.symphony.radio.queue.currentSongIndex + 1
+                    )
+                }
             }
         )
         DropdownMenuItem(
@@ -101,7 +111,9 @@ fun ArtistDropdownMenu(
             },
             onClick = {
                 onDismissRequest()
-                context.symphony.radio.queue.add(artist.getSortedSongIds(context.symphony))
+                scope.launch {
+                    context.symphony.radio.queue.add(artist.getSortedSongIds(context.symphony))
+                }
             }
         )
         DropdownMenuItem(
@@ -121,6 +133,11 @@ fun ArtistDropdownMenu(
     if (showAddToPlaylistDialog) {
         AddToPlaylistDialog(
             context,
+            // This still uses getSongIds, which is not a suspend function.
+            // If getSongIds also becomes a suspend function in the future,
+            // this will need to be adjusted similarly, possibly by making
+            // this part of the composable also launch a coroutine or
+            // by passing the songIds fetched from a coroutine.
             songIds = artist.getSongIds(context.symphony),
             onDismissRequest = {
                 showAddToPlaylistDialog = false

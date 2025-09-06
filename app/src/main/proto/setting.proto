@@ -20,8 +20,8 @@ enum SongSortBy {
 }
 
 message SongSortPreference {
-SongSortBy sort_by = 1;
-    bool sort_reverse = 2;
+  SongSortBy by = 1;
+  bool reverse = 2;
 }
 
 enum AlbumSortBy {
@@ -33,8 +33,8 @@ enum AlbumSortBy {
 }
 
 message AlbumSortPreference {
-  AlbumSortBy sort_by = 1;
-  bool sort_reverse = 2;
+  AlbumSortBy by = 1;
+  bool reverse = 2;
 }
 
 enum ArtistSortBy {
@@ -46,8 +46,8 @@ enum ArtistSortBy {
 }
 
 message ArtistSortPreference {
-  AlbumSortBy sort_by = 1;
-  bool sort_reverse = 2;
+  AlbumSortBy by = 1;
+  bool reverse = 2;
 }
 
 
@@ -56,10 +56,10 @@ message Settings {
 
   bool ui_album_grid_hide_compilations = 1;
 
-  SongSortBy ui_default_song_sort_by = 2;
-  SongSortBy ui_album_view_songs_sort_by = 3;
-  SongSortBy ui_artist_view_songs_sort_by = 4;
-  SongSortBy ui_playlist_view_songs_sort_by = 5;
+  SongSortPreference ui_default_song_sort = 2;
+  SongSortPreference ui_album_view_songs_sort = 3;
+  SongSortPreference ui_artist_view_songs_sort = 4;
+  SongSortPreference ui_playlist_view_songs_sort = 5;
 
   AlbumSortBy ui_default_album_sort_by = 6;
   AlbumSortBy  ui_artist_view_album_sort_by = 7;

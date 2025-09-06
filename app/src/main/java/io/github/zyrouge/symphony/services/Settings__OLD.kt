@@ -124,12 +124,6 @@ class Settings__OLD(private val symphony: Symphony) {
     val themeMode = EnumEntry("theme_mode", enumEntries<ThemeMode>(), ThemeMode.SYSTEM)
     val language = NullableStringEntry("language")
     val useMaterialYou = BooleanEntry("material_you", true)
-    val lastUsedSongsSortBy = EnumEntry(
-        "last_used_song_sort_by",
-        enumEntries<SongSortBy>(),
-        SongSortBy.SONG_TITLE,
-    )
-    val lastUsedSongsSortReverse = BooleanEntry("last_used_song_sort_reverse", false)
     val lastUsedArtistsSortBy = EnumEntry(
         "last_used_artists_sort_by",
         enumEntries<ArtistRepository.SortBy>(),

@@ -59,6 +59,7 @@ import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.utils.randomSubList
 import io.github.zyrouge.symphony.utils.runIfOrDefault
 import io.github.zyrouge.symphony.utils.subListNonStrict
+import kotlinx.coroutines.flow.map
 
 enum class ForYou(val label: (context: ViewContext) -> String) {
     Albums(label = { it.symphony.t.SuggestedAlbums }),
@@ -77,8 +78,8 @@ fun ForYouView(context: ViewContext) {
     val albumIds by context.symphony.groove.album.all.collectAsState()
     val artistNames by context.symphony.groove.artist.all.collectAsState()
     val songIds by context.symphony.groove.song.all.collectAsState()
-    val sortBy by context.symphony.settingsOLD.lastUsedSongsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settingsOLD.lastUsedSongsSortReverse.flow.collectAsState()
+    val sortBy by context.symphony.settings.data.map { it.uiDefaultSongSort.by }.collectAsState(SongSortBy.SONG_TITLE)
+    val sortReverse by context.symphony.settings.data.map { it.uiDefaultSongSort.reverse }.collectAsState(false)
 
     when {
         songIds.isNotEmpty() -> {

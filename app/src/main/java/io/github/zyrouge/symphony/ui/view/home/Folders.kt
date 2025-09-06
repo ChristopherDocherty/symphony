@@ -24,6 +24,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +49,8 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.nowPlaying.defaultHorizontalPadding
 import io.github.zyrouge.symphony.utils.SimpleFileSystem
 import io.github.zyrouge.symphony.utils.StringListUtils
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.util.Stack
 
 @Composable
@@ -246,11 +249,13 @@ private fun FolderTile(
     folder: SimpleFileSystem.Folder,
     onClick: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    var showAddToPlaylistDialog by remember { mutableStateOf(false) }
+    var playlistSongIds by remember { mutableStateOf<List<String>>(emptyList()) }
+
     SquareGrooveTile(
         image = folder.createArtworkImageRequest(context).build(),
         options = { expanded, onDismissRequest ->
-            var showAddToPlaylistDialog by remember { mutableStateOf(false) }
-
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = onDismissRequest
@@ -264,10 +269,12 @@ private fun FolderTile(
                     },
                     onClick = {
                         onDismissRequest()
-                        context.symphony.radio.shorty.playQueue(
-                            folder.getSortedSongIds(context),
-                            shuffle = true,
-                        )
+                        scope.launch {
+                            context.symphony.radio.shorty.playQueue(
+                                folder.getSortedSongIds(context),
+                                shuffle = true,
+                            )
+                        }
                     }
                 )
                 DropdownMenuItem(
@@ -279,10 +286,12 @@ private fun FolderTile(
                     },
                     onClick = {
                         onDismissRequest()
-                        context.symphony.radio.queue.add(
-                            folder.getSortedSongIds(context),
-                            context.symphony.radio.queue.currentSongIndex + 1
-                        )
+                        scope.launch {
+                            context.symphony.radio.queue.add(
+                                folder.getSortedSongIds(context),
+                                context.symphony.radio.queue.currentSongIndex + 1
+                            )
+                        }
                     }
                 )
                 DropdownMenuItem(
@@ -294,7 +303,10 @@ private fun FolderTile(
                     },
                     onClick = {
                         onDismissRequest()
-                        showAddToPlaylistDialog = true
+                        scope.launch {
+                            playlistSongIds = folder.getSortedSongIds(context)
+                            showAddToPlaylistDialog = true
+                        }
                     }
                 )
             }
@@ -302,7 +314,7 @@ private fun FolderTile(
             if (showAddToPlaylistDialog) {
                 AddToPlaylistDialog(
                     context,
-                    songIds = folder.getSortedSongIds(context),
+                    songIds = playlistSongIds,
                     onDismissRequest = {
                         showAddToPlaylistDialog = false
                     }
@@ -319,8 +331,10 @@ private fun FolderTile(
             )
         },
         onPlay = {
-            val sortedSongIds = folder.getSortedSongIds(context)
-            context.symphony.radio.shorty.playQueue(sortedSongIds)
+            scope.launch {
+                val sortedSongIds = folder.getSortedSongIds(context)
+                context.symphony.radio.shorty.playQueue(sortedSongIds)
+            }
         },
         onClick = onClick,
     )
@@ -335,16 +349,18 @@ private fun SimpleFileSystem.Folder.createArtworkImageRequest(context: ViewConte
         }
         ?: Assets.createPlaceholderImageRequest(context.symphony)
 
-private fun SimpleFileSystem.Folder.getSortedSongIds(context: ViewContext): List<String> {
+private suspend fun SimpleFileSystem.Folder.getSortedSongIds(context: ViewContext): List<String> {
     val songIds = children.values.mapNotNull {
         when (it) {
             is SimpleFileSystem.File -> it.data as String
             else -> null
         }
     }
+
+     val currentSettings = context.symphony.settings.data.first()
     return context.symphony.groove.song.sort(
         songIds,
-        context.symphony.settingsOLD.lastUsedSongsSortBy.value,
-        context.symphony.settingsOLD.lastUsedSongsSortReverse.value,
+        currentSettings.uiDefaultSongSort.by,
+        currentSettings.uiDefaultSongSort.reverse
     )
 }

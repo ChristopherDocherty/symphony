@@ -1,6 +1,7 @@
 package io.github.zyrouge.symphony.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import kotlinx.coroutines.flow.map
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,11 +58,13 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import io.github.zyrouge.symphony.SongSortBy
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
 import io.github.zyrouge.symphony.services.radio.Radio
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.utils.SimplePath
 import io.github.zyrouge.symphony.utils.StringListUtils
+import kotlinx.coroutines.launch
 
 @Composable
 fun SongTreeList(
@@ -80,8 +84,8 @@ fun SongTreeList(
     }
     val pathsSortBy by context.symphony.settingsOLD.lastUsedTreePathSortBy.flow.collectAsState()
     val pathsSortReverse by context.symphony.settingsOLD.lastUsedTreePathSortReverse.flow.collectAsState()
-    val songsSortBy by context.symphony.settingsOLD.lastUsedSongsSortBy.flow.collectAsState()
-    val songsSortReverse by context.symphony.settingsOLD.lastUsedSongsSortReverse.flow.collectAsState()
+    val songsSortBy by context.symphony.settings.data.map{it.uiDefaultSongSort.by}.collectAsState(SongSortBy.SONG_TITLE)
+    val songsSortReverse by context.symphony.settings.data.map{it.uiDefaultSongSort.reverse}.collectAsState(false)
     val sortedTree by remember(tree, pathsSortBy, pathsSortReverse, songsSortBy, songsSortReverse) {
         derivedStateOf {
             val pairs = StringListUtils.sort(tree.keys.toList(), pathsSortBy, pathsSortReverse)
@@ -98,6 +102,7 @@ fun SongTreeList(
     val sortedSongIds by remember(sortedTree) {
         derivedStateOf { sortedTree.values.flatten() }
     }
+    val coroutineScope = rememberCoroutineScope()
 
     MediaSortBarScaffold(
         mediaSortBar = {
@@ -114,11 +119,15 @@ fun SongTreeList(
                 setPathsSortReverse = {
                     context.symphony.settingsOLD.lastUsedTreePathSortReverse.setValue(it)
                 },
-                setSongsSortBy = {
-                    context.symphony.settingsOLD.lastUsedSongsSortBy.setValue(it)
+                setSongsSortBy = { sort ->
+                    coroutineScope.launch {
+                        context.symphony.settings.updateData { it.copy { uiDefaultSongSort = uiDefaultSongSort.copy { by = sort } } }
+                    }
                 },
                 setSongsSortReverse = {
-                    context.symphony.settingsOLD.lastUsedSongsSortReverse.setValue(it)
+                    coroutineScope.launch {
+                        context.symphony.settings.updateData { it.copy { uiDefaultSongSort = uiDefaultSongSort.copy { reverse = !reverse  } } }
+                    }
                 },
             )
         },
