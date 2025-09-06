@@ -56,13 +56,13 @@ object AppearanceSettingsViewRoute
 @Composable
 fun AppearanceSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val language by context.symphony.settings.language.flow.collectAsState()
-    val fontFamily by context.symphony.settings.fontFamily.flow.collectAsState()
-    val themeMode by context.symphony.settings.themeMode.flow.collectAsState()
-    val useMaterialYou by context.symphony.settings.useMaterialYou.flow.collectAsState()
-    val primaryColor by context.symphony.settings.primaryColor.flow.collectAsState()
-    val fontScale by context.symphony.settings.fontScale.flow.collectAsState()
-    val contentScale by context.symphony.settings.contentScale.flow.collectAsState()
+    val language by context.symphony.settingsOLD.language.flow.collectAsState()
+    val fontFamily by context.symphony.settingsOLD.fontFamily.flow.collectAsState()
+    val themeMode by context.symphony.settingsOLD.themeMode.flow.collectAsState()
+    val useMaterialYou by context.symphony.settingsOLD.useMaterialYou.flow.collectAsState()
+    val primaryColor by context.symphony.settingsOLD.primaryColor.flow.collectAsState()
+    val fontScale by context.symphony.settingsOLD.fontScale.flow.collectAsState()
+    val contentScale by context.symphony.settingsOLD.contentScale.flow.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -122,7 +122,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                             ) + context.symphony.translator.translations.localeDisplayNames
                         },
                         onChange = { value ->
-                            context.symphony.settings.language.setValue(value.takeUnless { it == "" })
+                            context.symphony.settingsOLD.language.setValue(value.takeUnless { it == "" })
                         }
                     )
                     HorizontalDivider()
@@ -136,7 +136,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                         value = SymphonyTypography.resolveFont(fontFamily).fontName,
                         values = SymphonyTypography.all.keys.associateWith { it },
                         onChange = { value ->
-                            context.symphony.settings.fontFamily.setValue(value)
+                            context.symphony.settingsOLD.fontFamily.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -152,12 +152,12 @@ fun AppearanceSettingsView(context: ViewContext) {
                         presets = scalingPresets,
                         labelText = { "x$it" },
                         onReset = {
-                            context.symphony.settings.fontScale.setValue(
-                                context.symphony.settings.fontScale.defaultValue,
+                            context.symphony.settingsOLD.fontScale.setValue(
+                                context.symphony.settingsOLD.fontScale.defaultValue,
                             )
                         },
                         onChange = { value ->
-                            context.symphony.settings.fontScale.setValue(value)
+                            context.symphony.settingsOLD.fontScale.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -173,12 +173,12 @@ fun AppearanceSettingsView(context: ViewContext) {
                         presets = scalingPresets,
                         labelText = { "x$it" },
                         onReset = {
-                            context.symphony.settings.contentScale.setValue(
-                                context.symphony.settings.contentScale.defaultValue,
+                            context.symphony.settingsOLD.contentScale.setValue(
+                                context.symphony.settingsOLD.contentScale.defaultValue,
                             )
                         },
                         onChange = { value ->
-                            context.symphony.settings.contentScale.setValue(value)
+                            context.symphony.settingsOLD.contentScale.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -198,7 +198,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                             ThemeMode.BLACK to context.symphony.t.Black,
                         ),
                         onChange = { value ->
-                            context.symphony.settings.themeMode.setValue(value)
+                            context.symphony.settingsOLD.themeMode.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -211,7 +211,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                         },
                         value = useMaterialYou,
                         onChange = { value ->
-                            context.symphony.settings.useMaterialYou.setValue(value)
+                            context.symphony.settingsOLD.useMaterialYou.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -226,7 +226,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                         values = PrimaryThemeColor.entries.associateWith { it.label(context) },
                         enabled = !useMaterialYou,
                         onChange = { value ->
-                            context.symphony.settings.primaryColor.setValue(value.name)
+                            context.symphony.settingsOLD.primaryColor.setValue(value.name)
                         }
                     )
                 }

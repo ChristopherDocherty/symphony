@@ -45,7 +45,7 @@ class RadioNativeReceiver(private val symphony: Symphony) : BroadcastReceiver() 
         if (!symphony.radio.hasPlayer) {
             return
         }
-        if (!symphony.radio.isPlaying && symphony.settings.playOnHeadphonesConnect.value) {
+        if (!symphony.radio.isPlaying && symphony.settingsOLD.playOnHeadphonesConnect.value) {
             symphony.radio.resume()
         }
     }
@@ -54,7 +54,7 @@ class RadioNativeReceiver(private val symphony: Symphony) : BroadcastReceiver() 
         if (!symphony.radio.hasPlayer) {
             return
         }
-        if (symphony.radio.isPlaying && symphony.settings.pauseOnHeadphonesDisconnect.value) {
+        if (symphony.radio.isPlaying && symphony.settingsOLD.pauseOnHeadphonesDisconnect.value) {
             symphony.radio.pauseInstant()
         }
     }

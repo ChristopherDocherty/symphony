@@ -106,7 +106,7 @@ class SongRepository(private val symphony: Symphony) {
         .search(terms, songIds, maxLength = limit)
 
     fun sort(songIds: List<String>, by: SortBy, reverse: Boolean): List<String> {
-        val sensitive = symphony.settings.caseSensitiveSorting.value
+        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
         val sorted = when (by) {
             SortBy.CUSTOM -> songIds
             SortBy.TITLE -> songIds.sortedBy { get(it)?.title?.withCase(sensitive) }

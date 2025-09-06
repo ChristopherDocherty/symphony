@@ -122,7 +122,7 @@ class PlaylistRepository(private val symphony: Symphony) {
         .search(terms, playlistIds, maxLength = limit)
 
     fun sort(playlistIds: List<String>, by: SortBy, reverse: Boolean): List<String> {
-        val sensitive = symphony.settings.caseSensitiveSorting.value
+        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
         val sorted = when (by) {
             SortBy.CUSTOM -> {
                 val prefix = listOfNotNull(FAVORITE_PLAYLIST)

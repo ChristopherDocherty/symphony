@@ -106,10 +106,10 @@ fun NowPlayingBottomBar(context: ViewContext, insetPadding: Boolean = true) {
     }
     val isPlaying by context.symphony.radio.observatory.isPlaying.collectAsState()
     val playbackPosition by context.symphony.radio.observatory.playbackPosition.collectAsState()
-    val showTrackControls by context.symphony.settings.miniPlayerTrackControls.flow.collectAsState()
-    val showSeekControls by context.symphony.settings.miniPlayerSeekControls.flow.collectAsState()
-    val seekBackDuration by context.symphony.settings.seekBackDuration.flow.collectAsState()
-    val seekForwardDuration by context.symphony.settings.seekForwardDuration.flow.collectAsState()
+    val showTrackControls by context.symphony.settingsOLD.miniPlayerTrackControls.flow.collectAsState()
+    val showSeekControls by context.symphony.settingsOLD.miniPlayerSeekControls.flow.collectAsState()
+    val seekBackDuration by context.symphony.settingsOLD.seekBackDuration.flow.collectAsState()
+    val seekForwardDuration by context.symphony.settingsOLD.seekForwardDuration.flow.collectAsState()
 
     AnimatedContent(
         modifier = Modifier.fillMaxWidth(),
@@ -320,7 +320,7 @@ private fun NowPlayingBottomBarContentText(
     text: String,
     style: TextStyle,
 ) {
-    val textMarquee by context.symphony.settings.miniPlayerTextMarquee.flow.collectAsState()
+    val textMarquee by context.symphony.settingsOLD.miniPlayerTextMarquee.flow.collectAsState()
     var showOverlay by remember { mutableStateOf(false) }
 
     Box {

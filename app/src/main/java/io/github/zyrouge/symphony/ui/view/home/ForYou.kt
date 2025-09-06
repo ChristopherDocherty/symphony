@@ -76,8 +76,8 @@ fun ForYouView(context: ViewContext) {
     val albumIds by context.symphony.groove.album.all.collectAsState()
     val artistNames by context.symphony.groove.artist.all.collectAsState()
     val songIds by context.symphony.groove.song.all.collectAsState()
-    val sortBy by context.symphony.settings.lastUsedSongsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settings.lastUsedSongsSortReverse.flow.collectAsState()
+    val sortBy by context.symphony.settingsOLD.lastUsedSongsSortBy.flow.collectAsState()
+    val sortReverse by context.symphony.settingsOLD.lastUsedSongsSortReverse.flow.collectAsState()
 
     when {
         songIds.isNotEmpty() -> {
@@ -265,7 +265,7 @@ fun ForYouView(context: ViewContext) {
                         }
                     }
                 }
-                val contents by context.symphony.settings.forYouContents.flow.collectAsState()
+                val contents by context.symphony.settingsOLD.forYouContents.flow.collectAsState()
                 contents.forEach {
                     when (it) {
                         ForYou.Albums -> SuggestedAlbums(

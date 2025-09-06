@@ -24,7 +24,7 @@ data class Album(
     fun getSongIds(symphony: Symphony) = symphony.groove.album.getSongIds(id)
     fun getSortedSongIds(symphony: Symphony) = symphony.groove.song.sort(
         getSongIds(symphony),
-        symphony.settings.lastUsedAlbumSongsSortBy.value,
-        symphony.settings.lastUsedAlbumSongsSortReverse.value,
+        symphony.settingsOLD.lastUsedAlbumSongsSortBy.value,
+        symphony.settingsOLD.lastUsedAlbumSongsSortReverse.value,
     )
 }

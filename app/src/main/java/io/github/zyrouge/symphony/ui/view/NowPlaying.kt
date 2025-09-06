@@ -93,12 +93,12 @@ fun NowPlayingObserver(
     val persistedPitch by context.symphony.radio.observatory.persistedPitch.collectAsState()
     val sleepTimer by context.symphony.radio.observatory.sleepTimer.collectAsState()
     val pauseOnCurrentSongEnd by context.symphony.radio.observatory.pauseOnCurrentSongEnd.collectAsState()
-    val showSongAdditionalInfo by context.symphony.settings.nowPlayingAdditionalInfo.flow.collectAsState()
-    val enableSeekControls by context.symphony.settings.nowPlayingSeekControls.flow.collectAsState()
-    val seekBackDuration by context.symphony.settings.seekBackDuration.flow.collectAsState()
-    val seekForwardDuration by context.symphony.settings.seekForwardDuration.flow.collectAsState()
-    val controlsLayout by context.symphony.settings.nowPlayingControlsLayout.flow.collectAsState()
-    val lyricsLayout by context.symphony.settings.nowPlayingLyricsLayout.flow.collectAsState()
+    val showSongAdditionalInfo by context.symphony.settingsOLD.nowPlayingAdditionalInfo.flow.collectAsState()
+    val enableSeekControls by context.symphony.settingsOLD.nowPlayingSeekControls.flow.collectAsState()
+    val seekBackDuration by context.symphony.settingsOLD.seekBackDuration.flow.collectAsState()
+    val seekForwardDuration by context.symphony.settingsOLD.seekForwardDuration.flow.collectAsState()
+    val controlsLayout by context.symphony.settingsOLD.nowPlayingControlsLayout.flow.collectAsState()
+    val lyricsLayout by context.symphony.settingsOLD.nowPlayingLyricsLayout.flow.collectAsState()
 
     val data = when {
         isViable -> NowPlayingData(

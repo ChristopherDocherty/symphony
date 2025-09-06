@@ -104,13 +104,13 @@ class RadioSession(val symphony: Symphony) {
 
                 override fun onRewind() {
                     super.onRewind()
-                    val duration = symphony.settings.seekBackDuration.value
+                    val duration = symphony.settingsOLD.seekBackDuration.value
                     symphony.radio.shorty.seekFromCurrent(-duration)
                 }
 
                 override fun onFastForward() {
                     super.onFastForward()
-                    val duration = symphony.settings.seekForwardDuration.value
+                    val duration = symphony.settingsOLD.seekForwardDuration.value
                     symphony.radio.shorty.seekFromCurrent(duration)
                 }
 

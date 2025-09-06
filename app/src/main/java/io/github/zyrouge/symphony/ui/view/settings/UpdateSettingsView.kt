@@ -37,8 +37,8 @@ object UpdateSettingsViewRoute
 @Composable
 fun UpdateSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val checkForUpdates by context.symphony.settings.checkForUpdates.flow.collectAsState()
-    val showUpdateToast by context.symphony.settings.showUpdateToast.flow.collectAsState()
+    val checkForUpdates by context.symphony.settingsOLD.checkForUpdates.flow.collectAsState()
+    val showUpdateToast by context.symphony.settingsOLD.showUpdateToast.flow.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -84,7 +84,7 @@ fun UpdateSettingsView(context: ViewContext) {
                         },
                         value = checkForUpdates,
                         onChange = { value ->
-                            context.symphony.settings.checkForUpdates.setValue(value)
+                            context.symphony.settingsOLD.checkForUpdates.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -97,7 +97,7 @@ fun UpdateSettingsView(context: ViewContext) {
                         },
                         value = showUpdateToast,
                         onChange = { value ->
-                            context.symphony.settings.showUpdateToast.setValue(value)
+                            context.symphony.settingsOLD.showUpdateToast.setValue(value)
                         }
                     )
                 }

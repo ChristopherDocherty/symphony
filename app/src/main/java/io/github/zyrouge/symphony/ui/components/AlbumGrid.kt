@@ -24,9 +24,9 @@ fun AlbumGrid(
     albumIds: List<String>,
     albumsCount: Int? = null,
 ) {
-    val sortBy by context.symphony.settings.lastUsedAlbumsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settings.lastUsedAlbumsSortReverse.flow.collectAsState()
-    val hideCompilations by context.symphony.settings.hideCompilations.flow.collectAsState()
+    val sortBy by context.symphony.settingsOLD.lastUsedAlbumsSortBy.flow.collectAsState()
+    val sortReverse by context.symphony.settingsOLD.lastUsedAlbumsSortReverse.flow.collectAsState()
+    val hideCompilations by context.symphony.settingsOLD.hideCompilations.flow.collectAsState()
 
     val displayableAlbumIds by remember(albumIds, hideCompilations) {
         derivedStateOf {
@@ -47,8 +47,8 @@ fun AlbumGrid(
             context.symphony.groove.album.sort(displayableAlbumIds, sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settings.lastUsedAlbumsHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settings.lastUsedAlbumsVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedAlbumsHorizontalGridColumns.flow.collectAsState()
+    val verticalGridColumns by context.symphony.settingsOLD.lastUsedAlbumsVerticalGridColumns.flow.collectAsState()
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -62,14 +62,14 @@ fun AlbumGrid(
                 context,
                 reverse = sortReverse,
                 onReverseChange = {
-                    context.symphony.settings.lastUsedAlbumsSortReverse.setValue(it)
+                    context.symphony.settingsOLD.lastUsedAlbumsSortReverse.setValue(it)
                 },
                 sort = sortBy,
                 sorts = AlbumRepository.SortBy.entries.associateWith { x ->
                     ViewContext.parameterizedFn { x.label(it) }
                 },
                 onSortChange = {
-                    context.symphony.settings.lastUsedAlbumsSortBy.setValue(it)
+                    context.symphony.settingsOLD.lastUsedAlbumsSortBy.setValue(it)
                 },
                 label = {
                     Text(context.symphony.t.XAlbums((albumsCount ?: displayableAlbumIds.size).toString()))
@@ -110,10 +110,10 @@ fun AlbumGrid(
                     context,
                     columns = gridColumns,
                     onColumnsChange = {
-                        context.symphony.settings.lastUsedAlbumsHorizontalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedAlbumsHorizontalGridColumns.setValue(
                             it.horizontal
                         )
-                        context.symphony.settings.lastUsedAlbumsVerticalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedAlbumsVerticalGridColumns.setValue(
                             it.vertical
                         )
                     },

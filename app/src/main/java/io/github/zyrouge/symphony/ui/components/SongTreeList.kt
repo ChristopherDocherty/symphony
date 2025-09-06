@@ -77,10 +77,10 @@ fun SongTreeList(
             addAll(initialDisabled)
         }
     }
-    val pathsSortBy by context.symphony.settings.lastUsedTreePathSortBy.flow.collectAsState()
-    val pathsSortReverse by context.symphony.settings.lastUsedTreePathSortReverse.flow.collectAsState()
-    val songsSortBy by context.symphony.settings.lastUsedSongsSortBy.flow.collectAsState()
-    val songsSortReverse by context.symphony.settings.lastUsedSongsSortReverse.flow.collectAsState()
+    val pathsSortBy by context.symphony.settingsOLD.lastUsedTreePathSortBy.flow.collectAsState()
+    val pathsSortReverse by context.symphony.settingsOLD.lastUsedTreePathSortReverse.flow.collectAsState()
+    val songsSortBy by context.symphony.settingsOLD.lastUsedSongsSortBy.flow.collectAsState()
+    val songsSortReverse by context.symphony.settingsOLD.lastUsedSongsSortReverse.flow.collectAsState()
     val sortedTree by remember(tree, pathsSortBy, pathsSortReverse, songsSortBy, songsSortReverse) {
         derivedStateOf {
             val pairs = StringListUtils.sort(tree.keys.toList(), pathsSortBy, pathsSortReverse)
@@ -108,16 +108,16 @@ fun SongTreeList(
                 songsSortBy = songsSortBy,
                 songsSortReverse = songsSortReverse,
                 setPathsSortBy = {
-                    context.symphony.settings.lastUsedTreePathSortBy.setValue(it)
+                    context.symphony.settingsOLD.lastUsedTreePathSortBy.setValue(it)
                 },
                 setPathsSortReverse = {
-                    context.symphony.settings.lastUsedTreePathSortReverse.setValue(it)
+                    context.symphony.settingsOLD.lastUsedTreePathSortReverse.setValue(it)
                 },
                 setSongsSortBy = {
-                    context.symphony.settings.lastUsedSongsSortBy.setValue(it)
+                    context.symphony.settingsOLD.lastUsedSongsSortBy.setValue(it)
                 },
                 setSongsSortReverse = {
-                    context.symphony.settings.lastUsedSongsSortReverse.setValue(it)
+                    context.symphony.settingsOLD.lastUsedSongsSortReverse.setValue(it)
                 },
             )
         },

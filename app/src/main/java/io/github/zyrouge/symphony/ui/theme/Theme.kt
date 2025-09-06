@@ -40,12 +40,12 @@ fun SymphonyTheme(
     context: ViewContext,
     content: @Composable () -> Unit,
 ) {
-    val themeMode by context.symphony.settings.themeMode.flow.collectAsState()
-    val useMaterialYou by context.symphony.settings.useMaterialYou.flow.collectAsState()
-    val primaryColorName by context.symphony.settings.primaryColor.flow.collectAsState()
-    val fontName by context.symphony.settings.fontFamily.flow.collectAsState()
-    val fontScale by context.symphony.settings.fontScale.flow.collectAsState()
-    val contentScale by context.symphony.settings.contentScale.flow.collectAsState()
+    val themeMode by context.symphony.settingsOLD.themeMode.flow.collectAsState()
+    val useMaterialYou by context.symphony.settingsOLD.useMaterialYou.flow.collectAsState()
+    val primaryColorName by context.symphony.settingsOLD.primaryColor.flow.collectAsState()
+    val fontName by context.symphony.settingsOLD.fontFamily.flow.collectAsState()
+    val fontScale by context.symphony.settingsOLD.fontScale.flow.collectAsState()
+    val contentScale by context.symphony.settingsOLD.contentScale.flow.collectAsState()
 
     val colorSchemeMode = themeMode.toColorSchemeMode(isSystemInDarkTheme())
     val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && useMaterialYou) {

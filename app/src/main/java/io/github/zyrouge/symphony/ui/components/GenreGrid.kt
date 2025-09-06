@@ -69,15 +69,15 @@ fun GenreGrid(
     genreNames: List<String>,
     genresCount: Int? = null,
 ) {
-    val sortBy by context.symphony.settings.lastUsedGenresSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settings.lastUsedGenresSortReverse.flow.collectAsState()
+    val sortBy by context.symphony.settingsOLD.lastUsedGenresSortBy.flow.collectAsState()
+    val sortReverse by context.symphony.settingsOLD.lastUsedGenresSortReverse.flow.collectAsState()
     val sortedGenreNames by remember(genreNames, sortBy, sortReverse) {
         derivedStateOf {
             context.symphony.groove.genre.sort(genreNames, sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settings.lastUsedGenresHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settings.lastUsedGenresVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedGenresHorizontalGridColumns.flow.collectAsState()
+    val verticalGridColumns by context.symphony.settingsOLD.lastUsedGenresVerticalGridColumns.flow.collectAsState()
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -92,13 +92,13 @@ fun GenreGrid(
                     context,
                     reverse = sortReverse,
                     onReverseChange = {
-                        context.symphony.settings.lastUsedGenresSortReverse.setValue(it)
+                        context.symphony.settingsOLD.lastUsedGenresSortReverse.setValue(it)
                     },
                     sort = sortBy,
                     sorts = GenreRepository.SortBy.entries
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
-                        context.symphony.settings.lastUsedGenresSortBy.setValue(it)
+                        context.symphony.settingsOLD.lastUsedGenresSortBy.setValue(it)
                     },
                     label = {
                         Text(
@@ -198,10 +198,10 @@ fun GenreGrid(
                     context,
                     columns = gridColumns,
                     onColumnsChange = {
-                        context.symphony.settings.lastUsedGenresHorizontalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedGenresHorizontalGridColumns.setValue(
                             it.horizontal
                         )
-                        context.symphony.settings.lastUsedGenresVerticalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedGenresVerticalGridColumns.setValue(
                             it.vertical
                         )
                     },

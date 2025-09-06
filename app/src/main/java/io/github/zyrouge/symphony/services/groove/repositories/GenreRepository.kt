@@ -99,7 +99,7 @@ class GenreRepository(private val symphony: Symphony) {
         .search(terms, genreNames, maxLength = limit)
 
     fun sort(genreNames: List<String>, by: SortBy, reverse: Boolean): List<String> {
-        val sensitive = symphony.settings.caseSensitiveSorting.value
+        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
         val sorted = when (by) {
             SortBy.CUSTOM -> genreNames
             SortBy.GENRE -> genreNames.sortedBy { get(it)?.name?.withCase(sensitive) }

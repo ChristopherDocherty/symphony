@@ -22,8 +22,8 @@ fun AlbumRow(context: ViewContext, albumIds: List<String>) {
         ).div(2f)
         val width = min(maxSize, 200.dp)
 
-        val sortBy = context.symphony.settings.lastUsedArtistAlbumsSortBy.value
-        val sortReverse = context.symphony.settings.lastUsedAlbumsSortReverse.value
+        val sortBy = context.symphony.settingsOLD.lastUsedArtistAlbumsSortBy.value
+        val sortReverse = context.symphony.settingsOLD.lastUsedAlbumsSortReverse.value
         val sortedAlbumIds = remember(albumIds, sortBy, sortReverse) {
             context.symphony.groove.album.sort(
                 albumIds = albumIds,

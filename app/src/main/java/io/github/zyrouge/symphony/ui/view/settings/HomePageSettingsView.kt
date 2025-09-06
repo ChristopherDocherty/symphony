@@ -43,9 +43,9 @@ object HomePageSettingsViewRoute
 @Composable
 fun HomePageSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val homeTabs by context.symphony.settings.homeTabs.flow.collectAsState()
-    val forYouContents by context.symphony.settings.forYouContents.flow.collectAsState()
-    val homePageBottomBarLabelVisibility by context.symphony.settings.homePageBottomBarLabelVisibility.flow.collectAsState()
+    val homeTabs by context.symphony.settingsOLD.homeTabs.flow.collectAsState()
+    val forYouContents by context.symphony.settingsOLD.forYouContents.flow.collectAsState()
+    val homePageBottomBarLabelVisibility by context.symphony.settingsOLD.homePageBottomBarLabelVisibility.flow.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -97,7 +97,7 @@ fun HomePageSettingsView(context: ViewContext) {
                         values = HomePage.entries.associateWith { it.label(context) },
                         satisfies = { it.size in 2..5 },
                         onChange = { value ->
-                            context.symphony.settings.homeTabs.setValue(value)
+                            context.symphony.settingsOLD.homeTabs.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -112,7 +112,7 @@ fun HomePageSettingsView(context: ViewContext) {
                         value = forYouContents,
                         values = ForYou.entries.associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settings.forYouContents.setValue(value)
+                            context.symphony.settingsOLD.forYouContents.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -127,7 +127,7 @@ fun HomePageSettingsView(context: ViewContext) {
                         values = HomePageBottomBarLabelVisibility.entries
                             .associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settings.homePageBottomBarLabelVisibility.setValue(
+                            context.symphony.settingsOLD.homePageBottomBarLabelVisibility.setValue(
                                 value,
                             )
                         }

@@ -9,7 +9,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.zyrouge.symphony.services.AppMeta
 import io.github.zyrouge.symphony.services.Permissions
-import io.github.zyrouge.symphony.services.Settings
+import io.github.zyrouge.symphony.services.Settings__OLD
+import androidx.datastore.core.DataStore
+import io.github.zyrouge.symphony.datastore.settingsDataStore
 import io.github.zyrouge.symphony.services.database.Database
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.i18n.Translator
@@ -28,11 +30,12 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
     }
 
     val permission = Permissions(this)
-    val settings = Settings(this)
+    val settingsOLD = Settings__OLD(this)
     val database = Database(this)
     val groove = Groove(this)
     val radio = Radio(this)
     val translator = Translator(this)
+    val settingsStore: DataStore<Settings> = applicationContext.settingsDataStore
 
     var t by mutableStateOf(translator.getCurrentTranslation())
 
@@ -85,9 +88,9 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
     }
 
     private fun checkVersion() {
-        if (!settings.checkForUpdates.value) {
-            return
-        }
+         if (!settingsOLD.checkForUpdates.value) {
+             return
+         }
         viewModelScope.launch {
             val latestVersion = withContext(Dispatchers.IO) {
                 AppMeta.fetchLatestVersion()
@@ -96,13 +99,13 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
                 return@launch
             }
             withContext(Dispatchers.Main) {
-                if (settings.showUpdateToast.value && AppMeta.version != latestVersion) {
-                    Toast.makeText(
-                        applicationContext,
-                        t.NewVersionAvailableX(latestVersion),
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
+                 if (settingsOLD.showUpdateToast.value && AppMeta.version != latestVersion) {
+                     Toast.makeText(
+                         applicationContext,
+                         t.NewVersionAvailableX(latestVersion),
+                         Toast.LENGTH_SHORT,
+                     ).show()
+                 }
             }
         }
     }

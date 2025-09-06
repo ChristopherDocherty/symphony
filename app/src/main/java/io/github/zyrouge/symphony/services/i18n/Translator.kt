@@ -7,12 +7,12 @@ class Translator(private val symphony: Symphony) {
     val translations = Translations(symphony)
 
     suspend fun onChange(fn: (Translation) -> Unit) {
-        symphony.settings.language.flow.collect {
+        symphony.settingsOLD.language.flow.collect {
             fn(getCurrentTranslation())
         }
     }
 
-    fun getCurrentTranslation() = symphony.settings.language.value
+    fun getCurrentTranslation() = symphony.settingsOLD.language.value
         ?.let { translations.parse(it) }
         ?: getDefaultTranslation()
 

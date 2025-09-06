@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.protobuf)
 }
 
 android {
@@ -103,6 +104,22 @@ android {
     room {
         schemaDirectory("$projectDir/room-schemas")
     }
+
+    protobuf {
+        protoc {
+            artifact = libs.protoc.get().toString()
+        }
+        generateProtoTasks {
+            all().forEach { task ->
+                task.builtins {
+                    // MUST have Java to get the message classes:
+                    create("java") { option("lite") }
+                    // Kotlin adds the DSL wrappers that need those classes:
+                    create("kotlin") { option("lite") }
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -124,6 +141,8 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
     implementation(libs.room.runtime)
+    implementation(libs.datastore.proto)
+    implementation(libs.protobuf.kotlin.lite)
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)

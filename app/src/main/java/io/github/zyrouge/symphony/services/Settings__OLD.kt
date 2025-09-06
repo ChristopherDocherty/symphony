@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.update
 import kotlin.enums.EnumEntries
 import kotlin.enums.enumEntries
 
-class Settings(private val symphony: Symphony) {
+class Settings__OLD(private val symphony: Symphony) {
     abstract class Entry<T>(val key: String) {
         private val mutableFlow by lazy {
             MutableStateFlow(getValueInternal())

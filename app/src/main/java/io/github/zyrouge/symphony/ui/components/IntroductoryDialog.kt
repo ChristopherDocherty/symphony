@@ -35,8 +35,8 @@ fun IntroductoryDialog(
     context: ViewContext,
     onDismissRequest: () -> Unit,
 ) {
-    val checkForUpdates by context.symphony.settings.checkForUpdates.flow.collectAsState()
-    val showUpdateToast by context.symphony.settings.showUpdateToast.flow.collectAsState()
+    val checkForUpdates by context.symphony.settingsOLD.checkForUpdates.flow.collectAsState()
+    val showUpdateToast by context.symphony.settingsOLD.showUpdateToast.flow.collectAsState()
 
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
@@ -54,7 +54,7 @@ fun IntroductoryDialog(
                     content = { Text(context.symphony.t.CheckForUpdates) },
                     value = checkForUpdates,
                     onChange = { value ->
-                        context.symphony.settings.checkForUpdates.setValue(value)
+                        context.symphony.settingsOLD.checkForUpdates.setValue(value)
                     }
                 )
                 Box(modifier = Modifier.height(8.dp))
@@ -62,7 +62,7 @@ fun IntroductoryDialog(
                     content = { Text(context.symphony.t.ShowUpdateToast) },
                     value = showUpdateToast,
                     onChange = { value ->
-                        context.symphony.settings.showUpdateToast.setValue(value)
+                        context.symphony.settingsOLD.showUpdateToast.setValue(value)
                     },
                     enabled = checkForUpdates,
                 )

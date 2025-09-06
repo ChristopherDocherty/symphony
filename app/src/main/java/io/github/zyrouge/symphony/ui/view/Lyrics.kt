@@ -44,7 +44,7 @@ object LyricsViewRoute
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LyricsView(context: ViewContext) {
-    val keepScreenAwake by context.symphony.settings.lyricsKeepScreenAwake.flow.collectAsState()
+    val keepScreenAwake by context.symphony.settingsOLD.lyricsKeepScreenAwake.flow.collectAsState()
 
     if (keepScreenAwake) {
         KeepScreenAwake()

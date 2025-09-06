@@ -49,9 +49,9 @@ class MediaExposer(private val symphony: Symphony) {
                 val lyricsCacheUnused = concurrentSetOf(symphony.database.lyricsCache.keys())
                 val directoryArtworkCacheUnused = concurrentSetOf(symphony.database.directoryArtworkCache.keys())
                 val filter = MediaFilter(
-                    symphony.settings.songsFilterPattern.value,
-                    symphony.settings.blacklistFolders.value.toSortedSet(),
-                    symphony.settings.whitelistFolders.value.toSortedSet()
+                    symphony.settingsOLD.songsFilterPattern.value,
+                    symphony.settingsOLD.blacklistFolders.value.toSortedSet(),
+                    symphony.settingsOLD.whitelistFolders.value.toSortedSet()
                 )
                 return ScanCycle(
                     songCache = songCache,
@@ -73,7 +73,7 @@ class MediaExposer(private val symphony: Symphony) {
         var finished = false
         try {
             val context = symphony.applicationContext
-            val folderUris = symphony.settings.mediaFolders.value
+            val folderUris = symphony.settingsOLD.mediaFolders.value
             val cycle = ScanCycle.create(symphony)
 
             val totalFolders = folderUris.size
@@ -251,7 +251,7 @@ class MediaExposer(private val symphony: Symphony) {
             else -> Song.parse(path, file, cycle.songParseOptions)
         }
 
-        if (song.duration.milliseconds < symphony.settings.minSongDuration.value.seconds) {
+        if (song.duration.milliseconds < symphony.settingsOLD.minSongDuration.value.seconds) {
             return null
         }
 

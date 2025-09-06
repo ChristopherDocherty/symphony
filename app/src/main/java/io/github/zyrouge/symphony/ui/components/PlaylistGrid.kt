@@ -26,15 +26,15 @@ fun PlaylistGrid(
     playlistsCount: Int? = null,
     leadingContent: @Composable () -> Unit = {},
 ) {
-    val sortBy by context.symphony.settings.lastUsedPlaylistsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settings.lastUsedPlaylistsSortReverse.flow.collectAsState()
+    val sortBy by context.symphony.settingsOLD.lastUsedPlaylistsSortBy.flow.collectAsState()
+    val sortReverse by context.symphony.settingsOLD.lastUsedPlaylistsSortReverse.flow.collectAsState()
     val sortedPlaylistIds by remember(playlistIds, sortBy, sortReverse) {
         derivedStateOf {
             context.symphony.groove.playlist.sort(playlistIds, sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settings.lastUsedPlaylistsHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settings.lastUsedPlaylistsVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedPlaylistsHorizontalGridColumns.flow.collectAsState()
+    val verticalGridColumns by context.symphony.settingsOLD.lastUsedPlaylistsVerticalGridColumns.flow.collectAsState()
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -50,13 +50,13 @@ fun PlaylistGrid(
                     context,
                     reverse = sortReverse,
                     onReverseChange = {
-                        context.symphony.settings.lastUsedPlaylistsSortReverse.setValue(it)
+                        context.symphony.settingsOLD.lastUsedPlaylistsSortReverse.setValue(it)
                     },
                     sort = sortBy,
                     sorts = PlaylistRepository.SortBy.entries
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
-                        context.symphony.settings.lastUsedPlaylistsSortBy.setValue(it)
+                        context.symphony.settingsOLD.lastUsedPlaylistsSortBy.setValue(it)
                     },
                     label = {
                         Text(
@@ -104,10 +104,10 @@ fun PlaylistGrid(
                     context,
                     columns = gridColumns,
                     onColumnsChange = {
-                        context.symphony.settings.lastUsedPlaylistsHorizontalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedPlaylistsHorizontalGridColumns.setValue(
                             it.horizontal
                         )
-                        context.symphony.settings.lastUsedPlaylistsVerticalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedPlaylistsVerticalGridColumns.setValue(
                             it.vertical
                         )
                     },

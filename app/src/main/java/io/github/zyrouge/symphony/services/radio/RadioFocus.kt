@@ -38,7 +38,7 @@ class RadioFocus(val symphony: Symphony) {
                     AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
                         hasFocus = false
                         restoreVolumeOnFocusGain = symphony.radio.isPlaying
-                        if (!symphony.settings.ignoreAudioFocusLoss.value) {
+                        if (!symphony.settingsOLD.ignoreAudioFocusLoss.value) {
                             symphony.radio.pause()
                         }
                     }

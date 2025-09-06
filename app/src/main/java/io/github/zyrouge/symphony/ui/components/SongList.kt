@@ -168,29 +168,29 @@ fun SongRepository.SortBy.label(context: ViewContext) = when (this) {
 }
 
 fun SongListType.getLastUsedSortBy(context: ViewContext) = when (this) {
-    SongListType.Default -> context.symphony.settings.lastUsedSongsSortBy
-    SongListType.Album -> context.symphony.settings.lastUsedAlbumSongsSortBy
-    SongListType.Playlist -> context.symphony.settings.lastUsedPlaylistSongsSortBy
+    SongListType.Default -> context.symphony.settingsOLD.lastUsedSongsSortBy
+    SongListType.Album -> context.symphony.settingsOLD.lastUsedAlbumSongsSortBy
+    SongListType.Playlist -> context.symphony.settingsOLD.lastUsedPlaylistSongsSortBy
 }
 
 fun SongListType.setLastUsedSortBy(context: ViewContext, sort: SongRepository.SortBy) =
     when (this) {
-        SongListType.Default -> context.symphony.settings.lastUsedSongsSortBy.setValue(sort)
-        SongListType.Playlist -> context.symphony.settings.lastUsedPlaylistSongsSortBy.setValue(sort)
-        SongListType.Album -> context.symphony.settings.lastUsedAlbumSongsSortBy.setValue(sort)
+        SongListType.Default -> context.symphony.settingsOLD.lastUsedSongsSortBy.setValue(sort)
+        SongListType.Playlist -> context.symphony.settingsOLD.lastUsedPlaylistSongsSortBy.setValue(sort)
+        SongListType.Album -> context.symphony.settingsOLD.lastUsedAlbumSongsSortBy.setValue(sort)
     }
 
 fun SongListType.getLastUsedSortReverse(context: ViewContext) = when (this) {
-    SongListType.Default -> context.symphony.settings.lastUsedSongsSortReverse
-    SongListType.Playlist -> context.symphony.settings.lastUsedPlaylistSongsSortReverse
-    SongListType.Album -> context.symphony.settings.lastUsedAlbumSongsSortReverse
+    SongListType.Default -> context.symphony.settingsOLD.lastUsedSongsSortReverse
+    SongListType.Playlist -> context.symphony.settingsOLD.lastUsedPlaylistSongsSortReverse
+    SongListType.Album -> context.symphony.settingsOLD.lastUsedAlbumSongsSortReverse
 }
 
 fun SongListType.setLastUsedSortReverse(context: ViewContext, reverse: Boolean) = when (this) {
-    SongListType.Default -> context.symphony.settings.lastUsedSongsSortReverse.setValue(reverse)
-    SongListType.Playlist -> context.symphony.settings.lastUsedPlaylistSongsSortReverse.setValue(
+    SongListType.Default -> context.symphony.settingsOLD.lastUsedSongsSortReverse.setValue(reverse)
+    SongListType.Playlist -> context.symphony.settingsOLD.lastUsedPlaylistSongsSortReverse.setValue(
         reverse
     )
 
-    SongListType.Album -> context.symphony.settings.lastUsedAlbumSongsSortReverse.setValue(reverse)
+    SongListType.Album -> context.symphony.settingsOLD.lastUsedAlbumSongsSortReverse.setValue(reverse)
 }

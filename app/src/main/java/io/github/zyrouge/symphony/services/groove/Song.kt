@@ -58,8 +58,8 @@ data class Song(
         companion object {
             fun create(symphony: Symphony) = ParseOptions(
                 symphony = symphony,
-                artistSeparatorRegex = makeSeparatorsRegex(symphony.settings.artistTagSeparators.value),
-                genreSeparatorRegex = makeSeparatorsRegex(symphony.settings.genreTagSeparators.value),
+                artistSeparatorRegex = makeSeparatorsRegex(symphony.settingsOLD.artistTagSeparators.value),
+                genreSeparatorRegex = makeSeparatorsRegex(symphony.settingsOLD.genreTagSeparators.value),
             )
         }
     }
@@ -106,7 +106,7 @@ data class Song(
             file: DocumentFileX,
             options: ParseOptions,
         ): Song {
-            if (options.symphony.settings.useMetaphony.value) {
+            if (options.symphony.settingsOLD.useMetaphony.value) {
                 try {
                     val song = parseUsingMetaphony(path, file, options)
                     if (song != null) {
@@ -145,7 +145,7 @@ data class Song(
                 if (extension == null) {
                     return@let null
                 }
-                val quality = symphony.settings.artworkQuality.value
+                val quality = symphony.settingsOLD.artworkQuality.value
                 if (quality.maxSide == null) {
                     val name = "$id.$extension"
                     symphony.database.artworkCache.get(name).writeBytes(it.data)
@@ -202,7 +202,7 @@ data class Song(
             val id = symphony.groove.song.idGenerator.next() + ".mr"
             val coverFile = retriever.embeddedPicture?.let {
                 val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-                val quality = symphony.settings.artworkQuality.value
+                val quality = symphony.settingsOLD.artworkQuality.value
                 val name = "$id.jpg"
                 FileOutputStream(symphony.database.artworkCache.get(name)).use { writer ->
                     ImagePreserver

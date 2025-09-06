@@ -45,15 +45,15 @@ object PlayerSettingsViewRoute
 @Composable
 fun PlayerSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val fadePlayback by context.symphony.settings.fadePlayback.flow.collectAsState()
-    val fadePlaybackDuration by context.symphony.settings.fadePlaybackDuration.flow.collectAsState()
-    val requireAudioFocus by context.symphony.settings.requireAudioFocus.flow.collectAsState()
-    val ignoreAudioFocusLoss by context.symphony.settings.ignoreAudioFocusLoss.flow.collectAsState()
-    val playOnHeadphonesConnect by context.symphony.settings.playOnHeadphonesConnect.flow.collectAsState()
-    val pauseOnHeadphonesDisconnect by context.symphony.settings.pauseOnHeadphonesDisconnect.flow.collectAsState()
-    val seekBackDuration by context.symphony.settings.seekBackDuration.flow.collectAsState()
-    val seekForwardDuration by context.symphony.settings.seekForwardDuration.flow.collectAsState()
-    val gaplessPlayback by context.symphony.settings.gaplessPlayback.flow.collectAsState()
+    val fadePlayback by context.symphony.settingsOLD.fadePlayback.flow.collectAsState()
+    val fadePlaybackDuration by context.symphony.settingsOLD.fadePlaybackDuration.flow.collectAsState()
+    val requireAudioFocus by context.symphony.settingsOLD.requireAudioFocus.flow.collectAsState()
+    val ignoreAudioFocusLoss by context.symphony.settingsOLD.ignoreAudioFocusLoss.flow.collectAsState()
+    val playOnHeadphonesConnect by context.symphony.settingsOLD.playOnHeadphonesConnect.flow.collectAsState()
+    val pauseOnHeadphonesDisconnect by context.symphony.settingsOLD.pauseOnHeadphonesDisconnect.flow.collectAsState()
+    val seekBackDuration by context.symphony.settingsOLD.seekBackDuration.flow.collectAsState()
+    val seekForwardDuration by context.symphony.settingsOLD.seekForwardDuration.flow.collectAsState()
+    val gaplessPlayback by context.symphony.settingsOLD.gaplessPlayback.flow.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -101,7 +101,7 @@ fun PlayerSettingsView(context: ViewContext) {
                         },
                         value = fadePlayback,
                         onChange = { value ->
-                            context.symphony.settings.fadePlayback.setValue(value)
+                            context.symphony.settingsOLD.fadePlayback.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -122,11 +122,11 @@ fun PlayerSettingsView(context: ViewContext) {
                             value.times(2).roundToInt().toFloat().div(2)
                         },
                         onChange = { value ->
-                            context.symphony.settings.fadePlaybackDuration.setValue(value)
+                            context.symphony.settingsOLD.fadePlaybackDuration.setValue(value)
                         },
                         onReset = {
-                            context.symphony.settings.fadePlaybackDuration.setValue(
-                                context.symphony.settings.fadePlaybackDuration.defaultValue,
+                            context.symphony.settingsOLD.fadePlaybackDuration.setValue(
+                                context.symphony.settingsOLD.fadePlaybackDuration.defaultValue,
                             )
                         },
                     )
@@ -140,7 +140,7 @@ fun PlayerSettingsView(context: ViewContext) {
                         },
                         value = requireAudioFocus,
                         onChange = { value ->
-                            context.symphony.settings.requireAudioFocus.setValue(value)
+                            context.symphony.settingsOLD.requireAudioFocus.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -153,7 +153,7 @@ fun PlayerSettingsView(context: ViewContext) {
                         },
                         value = ignoreAudioFocusLoss,
                         onChange = { value ->
-                            context.symphony.settings.ignoreAudioFocusLoss.setValue(value)
+                            context.symphony.settingsOLD.ignoreAudioFocusLoss.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -166,7 +166,7 @@ fun PlayerSettingsView(context: ViewContext) {
                         },
                         value = playOnHeadphonesConnect,
                         onChange = { value ->
-                            context.symphony.settings.playOnHeadphonesConnect.setValue(value)
+                            context.symphony.settingsOLD.playOnHeadphonesConnect.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -179,7 +179,7 @@ fun PlayerSettingsView(context: ViewContext) {
                         },
                         value = pauseOnHeadphonesDisconnect,
                         onChange = { value ->
-                            context.symphony.settings.pauseOnHeadphonesDisconnect.setValue(value)
+                            context.symphony.settingsOLD.pauseOnHeadphonesDisconnect.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -200,11 +200,11 @@ fun PlayerSettingsView(context: ViewContext) {
                             value.roundToInt().toFloat()
                         },
                         onChange = { value ->
-                            context.symphony.settings.seekBackDuration.setValue(value.toInt())
+                            context.symphony.settingsOLD.seekBackDuration.setValue(value.toInt())
                         },
                         onReset = {
-                            context.symphony.settings.seekBackDuration.setValue(
-                                context.symphony.settings.seekBackDuration.defaultValue,
+                            context.symphony.settingsOLD.seekBackDuration.setValue(
+                                context.symphony.settingsOLD.seekBackDuration.defaultValue,
                             )
                         },
                     )
@@ -226,11 +226,11 @@ fun PlayerSettingsView(context: ViewContext) {
                             value.roundToInt().toFloat()
                         },
                         onChange = { value ->
-                            context.symphony.settings.seekForwardDuration.setValue(value.toInt())
+                            context.symphony.settingsOLD.seekForwardDuration.setValue(value.toInt())
                         },
                         onReset = {
-                            context.symphony.settings.seekForwardDuration.setValue(
-                                context.symphony.settings.seekForwardDuration.defaultValue,
+                            context.symphony.settingsOLD.seekForwardDuration.setValue(
+                                context.symphony.settingsOLD.seekForwardDuration.defaultValue,
                             )
                         },
                     )
@@ -244,7 +244,7 @@ fun PlayerSettingsView(context: ViewContext) {
                         },
                         value = gaplessPlayback,
                         onChange = { value ->
-                            context.symphony.settings.gaplessPlayback.setValue(value)
+                            context.symphony.settingsOLD.gaplessPlayback.setValue(value)
                         },
                     )
                 }

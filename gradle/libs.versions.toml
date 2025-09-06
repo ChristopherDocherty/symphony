@@ -14,6 +14,10 @@ lifecycle-runtime = "2.8.7"
 media = "1.7.0"
 okhttp3 = "4.12.0"
 room = "2.6.1"
+protobuf = "0.9.5"
+protobuf-libs = "4.32.0"
+datastore = "1.1.7"
+
 
 android-gradle-plugin = "8.7.3"
 kotlin-gradle-plugin = "2.1.0"
@@ -55,6 +59,11 @@ ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit-
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+protobuf-kotlin-lite = { group = "com.google.protobuf", name = "protobuf-kotlin-lite", version.ref = "protobuf-libs" }
+datastore-proto= { module = "androidx.datastore:datastore", version.ref = "datastore" }
+protoc= { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf-libs" }
+
+
 
 [plugins]
 android-app = { id = "com.android.application", version.ref = "android-gradle-plugin" }
@@ -64,3 +73,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp-plugin" }
 room = { id = "androidx.room", version.ref = "room" }
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobuf" }

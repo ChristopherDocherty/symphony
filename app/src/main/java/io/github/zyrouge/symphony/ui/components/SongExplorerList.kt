@@ -74,8 +74,8 @@ fun SongExplorerList(
             initialPath?.let { explorer.navigateToFolder(it) } ?: explorer
         )
     }
-    val sortBy by context.symphony.settings.lastUsedBrowserSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settings.lastUsedBrowserSortReverse.flow.collectAsState()
+    val sortBy by context.symphony.settingsOLD.lastUsedBrowserSortBy.flow.collectAsState()
+    val sortReverse by context.symphony.settingsOLD.lastUsedBrowserSortReverse.flow.collectAsState()
     val sortedEntities by remember(key, currentFolder) {
         derivedStateOf {
             val categorized = currentFolder.categorizedChildren()
@@ -153,13 +153,13 @@ fun SongExplorerList(
                     context,
                     reverse = sortReverse,
                     onReverseChange = {
-                        context.symphony.settings.lastUsedBrowserSortReverse.setValue(it)
+                        context.symphony.settingsOLD.lastUsedBrowserSortReverse.setValue(it)
                     },
                     sort = sortBy,
                     sorts = SongRepository.SortBy.entries
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
-                        context.symphony.settings.lastUsedBrowserSortBy.setValue(it)
+                        context.symphony.settingsOLD.lastUsedBrowserSortBy.setValue(it)
                     },
                     label = {
                         Text(

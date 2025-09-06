@@ -11,7 +11,7 @@ data class Genre(
     fun getSongIds(symphony: Symphony) = symphony.groove.genre.getSongIds(name)
     fun getSortedSongIds(symphony: Symphony) = symphony.groove.song.sort(
         getSongIds(symphony),
-        symphony.settings.lastUsedSongsSortBy.value,
-        symphony.settings.lastUsedSongsSortReverse.value,
+        symphony.settingsOLD.lastUsedSongsSortBy.value,
+        symphony.settingsOLD.lastUsedSongsSortReverse.value,
     )
 }

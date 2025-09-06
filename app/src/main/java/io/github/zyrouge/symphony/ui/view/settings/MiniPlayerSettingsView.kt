@@ -39,9 +39,9 @@ object MiniPlayerSettingsViewRoute
 @Composable
 fun MiniPlayerSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val miniPlayerTrackControls by context.symphony.settings.miniPlayerTrackControls.flow.collectAsState()
-    val miniPlayerSeekControls by context.symphony.settings.miniPlayerSeekControls.flow.collectAsState()
-    val miniPlayerTextMarquee by context.symphony.settings.miniPlayerTextMarquee.flow.collectAsState()
+    val miniPlayerTrackControls by context.symphony.settingsOLD.miniPlayerTrackControls.flow.collectAsState()
+    val miniPlayerSeekControls by context.symphony.settingsOLD.miniPlayerSeekControls.flow.collectAsState()
+    val miniPlayerTextMarquee by context.symphony.settingsOLD.miniPlayerTextMarquee.flow.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -87,7 +87,7 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                         },
                         value = miniPlayerTrackControls,
                         onChange = { value ->
-                            context.symphony.settings.miniPlayerTrackControls.setValue(value)
+                            context.symphony.settingsOLD.miniPlayerTrackControls.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -100,7 +100,7 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                         },
                         value = miniPlayerSeekControls,
                         onChange = { value ->
-                            context.symphony.settings.miniPlayerSeekControls.setValue(value)
+                            context.symphony.settingsOLD.miniPlayerSeekControls.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -113,7 +113,7 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                         },
                         value = miniPlayerTextMarquee,
                         onChange = { value ->
-                            context.symphony.settings.miniPlayerTextMarquee.setValue(value)
+                            context.symphony.settingsOLD.miniPlayerTextMarquee.setValue(value)
                         }
                     )
                 }

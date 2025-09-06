@@ -173,7 +173,7 @@ class AlbumRepository(private val symphony: Symphony) {
         .search(terms, albumIds, maxLength = limit)
 
     fun sort(albumIds: List<String>, by: SortBy, reverse: Boolean): List<String> {
-        val sensitive = symphony.settings.caseSensitiveSorting.value
+        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
         val sorted = when (by) {
             SortBy.CUSTOM -> albumIds
             SortBy.ALBUM_NAME -> albumIds.sortedBy { get(it)?.name?.withCase(sensitive) }

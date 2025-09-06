@@ -156,7 +156,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     }
 
     private fun prepareNextPlayer() {
-        if (!symphony.settings.gaplessPlayback.value) {
+        if (!symphony.settingsOLD.gaplessPlayback.value) {
             return
         }
         val (nextSongIndex) = getNextSong(SongFinishSource.Finish)
@@ -183,7 +183,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     private fun start() {
         player?.let {
             val hasFocus = focus.requestFocus()
-            if (symphony.settings.requireAudioFocus.value && !hasFocus) {
+            if (symphony.settingsOLD.requireAudioFocus.value && !hasFocus) {
                 return
             }
             if (it.fadePlayback) {
@@ -392,7 +392,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         if (!queue.isEmpty()) {
             return
         }
-        symphony.settings.previousSongQueue.value?.let { previous ->
+        symphony.settingsOLD.previousSongQueue.value?.let { previous ->
             var currentSongIndex = previous.currentSongIndex
             var playedDuration = previous.playedDuration
             val originalQueue = mutableListOf<String>()
@@ -456,7 +456,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         if (queue.isEmpty()) {
             return
         }
-        symphony.settings.previousSongQueue.setValue(
+        symphony.settingsOLD.previousSongQueue.setValue(
             RadioQueue.Serialized.create(
                 queue = queue,
                 playbackPosition = currentPlaybackPosition ?: RadioPlayer.PlaybackPosition.zero

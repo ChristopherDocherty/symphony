@@ -71,7 +71,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.services.groove.Groove
@@ -341,10 +340,10 @@ private fun HomeBottomBar(
 @Composable
 fun HomeView(context: ViewContext) {
     val coroutineScope = rememberCoroutineScope()
-    val readIntroductoryMessage by context.symphony.settings.readIntroductoryMessage.flow.collectAsState()
-    val tabs by context.symphony.settings.homeTabs.flow.collectAsState()
-    val labelVisibility by context.symphony.settings.homePageBottomBarLabelVisibility.flow.collectAsState()
-    val currentTab by context.symphony.settings.lastHomeTab.flow.collectAsState()
+    val readIntroductoryMessage by context.symphony.settingsOLD.readIntroductoryMessage.flow.collectAsState()
+    val tabs by context.symphony.settingsOLD.homeTabs.flow.collectAsState()
+    val labelVisibility by context.symphony.settingsOLD.homePageBottomBarLabelVisibility.flow.collectAsState()
+    val currentTab by context.symphony.settingsOLD.lastHomeTab.flow.collectAsState()
     var showOptionsDropdown by remember { mutableStateOf(false) }
     var showTabsSheet by remember { mutableStateOf(false) }
 
@@ -376,7 +375,7 @@ fun HomeView(context: ViewContext) {
                 tabs = tabs,
                 labelVisibility = labelVisibility,
                 onTabClick = { newTab ->
-                    context.symphony.settings.lastHomeTab.setValue(newTab) // Persist the tab change
+                    context.symphony.settingsOLD.lastHomeTab.setValue(newTab) // Persist the tab change
                 },
                 onShowTabsSheet = { showTabsSheet = true }
             )
@@ -421,7 +420,7 @@ fun HomeView(context: ViewContext) {
                             .padding(2.dp, 0.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .clickable {
-                                context.symphony.settings.lastHomeTab.setValue(x)
+                                context.symphony.settingsOLD.lastHomeTab.setValue(x)
                                 showTabsSheet = false
                             }
                             .background(containerColor)
@@ -451,7 +450,7 @@ fun HomeView(context: ViewContext) {
         IntroductoryDialog(
             context,
             onDismissRequest = {
-                context.symphony.settings.readIntroductoryMessage.setValue(true)
+                context.symphony.settingsOLD.readIntroductoryMessage.setValue(true)
             },
         )
     }

@@ -24,16 +24,16 @@ fun ArtistGrid(
     artistName: List<String>,
     artistsCount: Int? = null,
 ) {
-    val sortBy by context.symphony.settings.lastUsedArtistsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settings.lastUsedArtistsSortReverse.flow.collectAsState()
+    val sortBy by context.symphony.settingsOLD.lastUsedArtistsSortBy.flow.collectAsState()
+    val sortReverse by context.symphony.settingsOLD.lastUsedArtistsSortReverse.flow.collectAsState()
     val sortedArtistNames by remember(artistName, sortBy, sortReverse) {
         derivedStateOf {
             val filteredArtistNames = context.symphony.groove.artist.filterByTrackCount(artistName)
             context.symphony.groove.artist.sort(filteredArtistNames, sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settings.lastUsedArtistsHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settings.lastUsedArtistsVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedArtistsHorizontalGridColumns.flow.collectAsState()
+    val verticalGridColumns by context.symphony.settingsOLD.lastUsedArtistsVerticalGridColumns.flow.collectAsState()
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -47,13 +47,13 @@ fun ArtistGrid(
                 context,
                 reverse = sortReverse,
                 onReverseChange = {
-                    context.symphony.settings.lastUsedArtistsSortReverse.setValue(it)
+                    context.symphony.settingsOLD.lastUsedArtistsSortReverse.setValue(it)
                 },
                 sort = sortBy,
                 sorts = ArtistRepository.SortBy.entries
                     .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                 onSortChange = {
-                    context.symphony.settings.lastUsedArtistsSortBy.setValue(it)
+                    context.symphony.settingsOLD.lastUsedArtistsSortBy.setValue(it)
                 },
                 label = {
                     Text(context.symphony.t.XArtists((artistsCount ?: artistName.size).toString()))
@@ -94,10 +94,10 @@ fun ArtistGrid(
                     context,
                     columns = gridColumns,
                     onColumnsChange = {
-                        context.symphony.settings.lastUsedArtistsHorizontalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedArtistsHorizontalGridColumns.setValue(
                             it.horizontal
                         )
-                        context.symphony.settings.lastUsedArtistsVerticalGridColumns.setValue(
+                        context.symphony.settingsOLD.lastUsedArtistsVerticalGridColumns.setValue(
                             it.vertical
                         )
                     },

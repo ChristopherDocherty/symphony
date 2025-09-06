@@ -13,7 +13,7 @@ fun BrowserView(context: ViewContext) {
     val isUpdating by context.symphony.groove.song.isUpdating.collectAsState()
     val id by context.symphony.groove.song.id.collectAsState()
     val explorer = context.symphony.groove.song.explorer
-    val lastUsedFolderPath by context.symphony.settings.lastUsedBrowserPath.flow.collectAsState()
+    val lastUsedFolderPath by context.symphony.settingsOLD.lastUsedBrowserPath.flow.collectAsState()
 
     LoaderScaffold(context, isLoading = isUpdating) {
         SongExplorerList(
@@ -22,7 +22,7 @@ fun BrowserView(context: ViewContext) {
             key = id,
             explorer = explorer,
             onPathChange = { path ->
-                context.symphony.settings.lastUsedBrowserPath.setValue(path.pathString)
+                context.symphony.settingsOLD.lastUsedBrowserPath.setValue(path.pathString)
             }
         )
     }

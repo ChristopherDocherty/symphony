@@ -52,7 +52,7 @@ class RadioPlayer(val symphony: Symphony, val id: String, val uri: Uri) {
         private set
 
     val usable get() = state == State.Prepared
-    val fadePlayback get() = symphony.settings.fadePlayback.value
+    val fadePlayback get() = symphony.settingsOLD.fadePlayback.value
     val audioSessionId get() = mediaPlayer?.audioSessionId
     val isPlaying get() = mediaPlayer?.isPlaying == true
 
@@ -141,7 +141,7 @@ class RadioPlayer(val symphony: Symphony, val id: String, val uri: Uri) {
         when {
             to == volume -> onFinish(true)
             forceFade || fadePlayback -> {
-                val duration = (symphony.settings.fadePlaybackDuration.value * 1000).toInt()
+                val duration = (symphony.settingsOLD.fadePlaybackDuration.value * 1000).toInt()
                 fader = RadioEffects.Fader(
                     RadioEffects.Fader.Options(volume, to, duration),
                     onUpdate = {

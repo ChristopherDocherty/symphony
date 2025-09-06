@@ -69,7 +69,7 @@ fun NowPlayingBodyCover(
 
 @Composable
 private fun NowPlayingBodyCoverLyrics(context: ViewContext, orientation: ScreenOrientation) {
-    val keepScreenAwake by context.symphony.settings.lyricsKeepScreenAwake.flow.collectAsState()
+    val keepScreenAwake by context.symphony.settingsOLD.lyricsKeepScreenAwake.flow.collectAsState()
 
     if (keepScreenAwake) {
         KeepScreenAwake()

@@ -76,17 +76,17 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
-    val songsFilterPattern by context.symphony.settings.songsFilterPattern.flow.collectAsState()
-    val minSongDuration by context.symphony.settings.minSongDuration.flow.collectAsState()
-    val blacklistFolders by context.symphony.settings.blacklistFolders.flow.collectAsState()
-    val whitelistFolders by context.symphony.settings.whitelistFolders.flow.collectAsState()
-    val artistTagSeparators by context.symphony.settings.artistTagSeparators.flow.collectAsState()
-    val genreTagSeparators by context.symphony.settings.genreTagSeparators.flow.collectAsState()
-    val mediaFolders by context.symphony.settings.mediaFolders.flow.collectAsState()
-    val artworkQuality by context.symphony.settings.artworkQuality.flow.collectAsState()
-    val caseSensitiveSorting by context.symphony.settings.caseSensitiveSorting.flow.collectAsState()
-    val useMetaphony by context.symphony.settings.useMetaphony.flow.collectAsState()
-    val hideCompilations by context.symphony.settings.hideCompilations.flow.collectAsState() // Added state
+    val songsFilterPattern by context.symphony.settingsOLD.songsFilterPattern.flow.collectAsState()
+    val minSongDuration by context.symphony.settingsOLD.minSongDuration.flow.collectAsState()
+    val blacklistFolders by context.symphony.settingsOLD.blacklistFolders.flow.collectAsState()
+    val whitelistFolders by context.symphony.settingsOLD.whitelistFolders.flow.collectAsState()
+    val artistTagSeparators by context.symphony.settingsOLD.artistTagSeparators.flow.collectAsState()
+    val genreTagSeparators by context.symphony.settingsOLD.genreTagSeparators.flow.collectAsState()
+    val mediaFolders by context.symphony.settingsOLD.mediaFolders.flow.collectAsState()
+    val artworkQuality by context.symphony.settingsOLD.artworkQuality.flow.collectAsState()
+    val caseSensitiveSorting by context.symphony.settingsOLD.caseSensitiveSorting.flow.collectAsState()
+    val useMetaphony by context.symphony.settingsOLD.useMetaphony.flow.collectAsState()
+    val hideCompilations by context.symphony.settingsOLD.hideCompilations.flow.collectAsState() // Added state
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -142,7 +142,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             },
                             initialValues = mediaFolders,
                             onChange = { values ->
-                                context.symphony.settings.mediaFolders.setValue(values)
+                                context.symphony.settingsOLD.mediaFolders.setValue(values)
                                 refreshMediaLibrary(context.symphony)
                             }
                         )
@@ -158,10 +158,10 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         },
                         value = songsFilterPattern ?: defaultSongsFilterPattern,
                         onReset = {
-                            context.symphony.settings.songsFilterPattern.setValue(null)
+                            context.symphony.settingsOLD.songsFilterPattern.setValue(null)
                         },
                         onChange = { value ->
-                            context.symphony.settings.songsFilterPattern.setValue(
+                            context.symphony.settingsOLD.songsFilterPattern.setValue(
                                 when (value) {
                                     defaultSongsFilterPattern -> null
                                     else -> value
@@ -188,11 +188,11 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             value.roundToInt().toFloat()
                         },
                         onChange = { value ->
-                            context.symphony.settings.minSongDuration.setValue(value.toInt())
+                            context.symphony.settingsOLD.minSongDuration.setValue(value.toInt())
                         },
                         onReset = {
-                            context.symphony.settings.minSongDuration.setValue(
-                                context.symphony.settings.minSongDuration.defaultValue,
+                            context.symphony.settingsOLD.minSongDuration.setValue(
+                                context.symphony.settingsOLD.minSongDuration.defaultValue,
                             )
                         },
                     )
@@ -208,7 +208,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         explorer = context.symphony.groove.exposer.explorer,
                         initialValues = blacklistFolders,
                         onChange = { values ->
-                            context.symphony.settings.blacklistFolders.setValue(values)
+                            context.symphony.settingsOLD.blacklistFolders.setValue(values)
                             refreshMediaLibrary(context.symphony)
                         }
                     )
@@ -224,7 +224,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         explorer = context.symphony.groove.exposer.explorer,
                         initialValues = whitelistFolders,
                         onChange = { values ->
-                            context.symphony.settings.whitelistFolders.setValue(values)
+                            context.symphony.settingsOLD.whitelistFolders.setValue(values)
                             refreshMediaLibrary(context.symphony)
                         }
                     )
@@ -239,7 +239,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         },
                         values = artistTagSeparators.toList(),
                         onChange = {
-                            context.symphony.settings.artistTagSeparators.setValue(it.toSet())
+                            context.symphony.settingsOLD.artistTagSeparators.setValue(it.toSet())
                             refreshMediaLibrary(context.symphony)
                         },
                     )
@@ -254,7 +254,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         },
                         values = genreTagSeparators.toList(),
                         onChange = {
-                            context.symphony.settings.genreTagSeparators.setValue(it.toSet())
+                            context.symphony.settingsOLD.genreTagSeparators.setValue(it.toSet())
                             refreshMediaLibrary(context.symphony)
                         },
                     )
@@ -270,7 +270,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         values = ImagePreserver.Quality.entries
                             .associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settings.artworkQuality.setValue(value)
+                            context.symphony.settingsOLD.artworkQuality.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -283,7 +283,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         },
                         value = hideCompilations,
                         onChange = {
-                            context.symphony.settings.hideCompilations.setValue(it)
+                            context.symphony.settingsOLD.hideCompilations.setValue(it)
                         }
                     )
                     HorizontalDivider()
@@ -296,7 +296,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         },
                         value = caseSensitiveSorting, // Changed from value to checked
                         onChange = { value ->
-                            context.symphony.settings.caseSensitiveSorting.setValue(value)
+                            context.symphony.settingsOLD.caseSensitiveSorting.setValue(value)
                         }
                     )
                     HorizontalDivider()
@@ -309,7 +309,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         },
                         value = useMetaphony, // Changed from value to checked
                         onChange = { value ->
-                            context.symphony.settings.useMetaphony.setValue(value)
+                            context.symphony.settingsOLD.useMetaphony.setValue(value)
                         }
                     )
                     HorizontalDivider()
