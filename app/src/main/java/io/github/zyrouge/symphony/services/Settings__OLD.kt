@@ -3,6 +3,7 @@ package io.github.zyrouge.symphony.services
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.edit
+import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.repositories.AlbumArtistRepository
@@ -138,11 +139,6 @@ class Settings__OLD(private val symphony: Symphony) {
         "last_used_artists_vertical_grid_columns",
         ResponsiveGridColumns.DEFAULT_VERTICAL_COLUMNS,
     )
-    val lastUsedArtistAlbumsSortBy = EnumEntry(
-        "last_used_artist_albums_sort_by",
-        enumEntries<AlbumRepository.SortBy>(),
-        AlbumRepository.SortBy.YEAR,
-    )
     val lastUsedAlbumArtistsSortBy = EnumEntry(
         "last_used_album_artists_sort_by",
         enumEntries<AlbumArtistRepository.SortBy>(),
@@ -158,12 +154,6 @@ class Settings__OLD(private val symphony: Symphony) {
         "last_used_album_artists_vertical_grid_columns",
         ResponsiveGridColumns.DEFAULT_VERTICAL_COLUMNS,
     )
-    val lastUsedAlbumsSortBy = EnumEntry(
-        "last_used_albums_sort_by",
-        enumEntries<AlbumRepository.SortBy>(),
-        AlbumRepository.SortBy.ALBUM_NAME,
-    )
-    val lastUsedAlbumsSortReverse = BooleanEntry("last_used_albums_sort_reverse", false)
     val lastUsedAlbumsHorizontalGridColumns = IntEntry(
         "last_used_albums_horizontal_grid_columns",
         ResponsiveGridColumns.DEFAULT_HORIZONTAL_COLUMNS,
@@ -325,7 +315,6 @@ class Settings__OLD(private val symphony: Symphony) {
         enumEntries<ImagePreserver.Quality>(),
         ImagePreserver.Quality.Medium,
     )
-    val hideCompilations = BooleanEntry("hide_compilations", false)
     val useMetaphony = BooleanEntry("use_metaphony", true)
     val gaplessPlayback = BooleanEntry("gapless_playback", true)
     val caseSensitiveSorting = BooleanEntry("case_sensitive_sorting", false)

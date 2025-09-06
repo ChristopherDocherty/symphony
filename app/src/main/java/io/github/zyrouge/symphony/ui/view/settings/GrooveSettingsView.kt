@@ -43,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.Settings
@@ -50,6 +51,7 @@ import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.components.AdaptiveSnackbar
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
+import io.github.zyrouge.symphony.ui.components.label
 import io.github.zyrouge.symphony.ui.components.settings.ConsiderContributingTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsMultiGrooveFolderTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsMultiSystemFolderTile
@@ -90,6 +92,8 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     val caseSensitiveSorting by context.symphony.settingsOLD.caseSensitiveSorting.flow.collectAsState()
     val useMetaphony by context.symphony.settingsOLD.useMetaphony.flow.collectAsState()
     val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
+    val artistAlbumsview by context.symphony.settings.data.map{it.uiArtistViewAlbumSortBy.by}.collectAsState(
+        AlbumSortBy.ALBUM_YEAR)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -332,6 +336,22 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                                     context.symphony.t.SongCacheCleared,
                                     withDismissAction = true,
                                 )
+                            }
+                        }
+                    )
+                    HorizontalDivider()
+                    SettingsOptionTile(
+                        icon = {
+                            Icon(Icons.Filled.VisibilityOff, null)
+                        },
+                        title = {
+                            Text("Artist View Album Sort")
+                        },
+                        value = artistAlbumsview,
+                        values = AlbumSortBy.entries.associateWith { it.label(context) },
+                        onChange = { value ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { uiArtistViewAlbumSortBy = uiArtistViewAlbumSortBy.copy {by = value}} }
                             }
                         }
                     )

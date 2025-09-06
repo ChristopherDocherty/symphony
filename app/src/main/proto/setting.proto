@@ -26,7 +26,7 @@ message SongSortPreference {
 
 enum AlbumSortBy {
   ALBUM_CUSTOM= 0;
-  ALBUM_ALBUM_NAME= 1;
+  ALBUM_NAME= 1;
   ALBUM_ARTIST_NAME= 2;
   ALBUM_TRACKS_COUNT= 3;
   ALBUM_YEAR= 4;
@@ -46,25 +46,23 @@ enum ArtistSortBy {
 }
 
 message ArtistSortPreference {
-  AlbumSortBy by = 1;
+  ArtistSortBy by = 1;
   bool reverse = 2;
 }
 
 
 message Settings {
 
-
-  bool ui_album_grid_hide_compilations = 1;
-
   SongSortPreference ui_default_song_sort = 2;
   SongSortPreference ui_album_view_songs_sort = 3;
   SongSortPreference ui_artist_view_songs_sort = 4;
   SongSortPreference ui_playlist_view_songs_sort = 5;
 
-  AlbumSortBy ui_default_album_sort_by = 6;
-  AlbumSortBy  ui_artist_view_album_sort_by = 7;
+  AlbumSortPreference ui_default_album_sort_by = 6;
+  AlbumSortPreference ui_artist_view_album_sort_by = 7;
+  bool ui_album_grid_hide_compilations = 1;
 
-  ArtistSortBy ui_default_artist_sort_by = 8;
+  ArtistSortPreference ui_default_artist_sort = 8;
 
 
 

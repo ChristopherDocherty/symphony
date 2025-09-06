@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.services.groove.repositories
 
+import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.services.groove.Song
@@ -172,17 +173,18 @@ class AlbumRepository(private val symphony: Symphony) {
     fun search(albumIds: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, albumIds, maxLength = limit)
 
-    fun sort(albumIds: List<String>, by: SortBy, reverse: Boolean): List<String> {
+    fun sort(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean): List<String> {
         val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
         val sorted = when (by) {
-            SortBy.CUSTOM -> albumIds
-            SortBy.ALBUM_NAME -> albumIds.sortedBy { get(it)?.name?.withCase(sensitive) }
-            SortBy.ARTIST_NAME -> albumIds.sortedBy {
+            AlbumSortBy.ALBUM_CUSTOM -> albumIds
+            AlbumSortBy.ALBUM_NAME -> albumIds.sortedBy { get(it)?.name?.withCase(sensitive) }
+            AlbumSortBy.ALBUM_ARTIST_NAME -> albumIds.sortedBy {
                 get(it)?.artists?.joinToStringIfNotEmpty(sensitive)
             }
 
-            SortBy.TRACKS_COUNT -> albumIds.sortedBy { get(it)?.numberOfTracks }
-            SortBy.YEAR -> albumIds.sortedBy { get(it)?.date }
+            AlbumSortBy.ALBUM_TRACKS_COUNT -> albumIds.sortedBy { get(it)?.numberOfTracks }
+            AlbumSortBy.ALBUM_YEAR -> albumIds.sortedBy { get(it)?.date }
+            AlbumSortBy.UNRECOGNIZED -> albumIds
         }
         return if (reverse) sorted.reversed() else sorted
     }
