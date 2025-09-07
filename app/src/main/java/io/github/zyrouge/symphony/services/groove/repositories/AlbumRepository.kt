@@ -166,18 +166,20 @@ class AlbumRepository(private val symphony: Symphony) {
     fun search(albumIds: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, albumIds, maxLength = limit)
 
-    fun sort(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean): List<String> {
+    fun getAlbums(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean, hide_compilations: Boolean = false): List<String> {
         val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
+
+        val filteredAlbumIds = albumIds.filter { !hide_compilations || get(it)?.is_compilation == false }
         val sorted = when (by) {
-            AlbumSortBy.ALBUM_CUSTOM -> albumIds
-            AlbumSortBy.ALBUM_NAME -> albumIds.sortedBy { get(it)?.name?.withCase(sensitive) }
-            AlbumSortBy.ALBUM_ARTIST_NAME -> albumIds.sortedBy {
+            AlbumSortBy.ALBUM_CUSTOM -> filteredAlbumIds
+            AlbumSortBy.ALBUM_NAME -> filteredAlbumIds.sortedBy { get(it)?.name?.withCase(sensitive) }
+            AlbumSortBy.ALBUM_ARTIST_NAME -> filteredAlbumIds.sortedBy {
                 get(it)?.artists?.joinToStringIfNotEmpty(sensitive)
             }
 
-            AlbumSortBy.ALBUM_TRACKS_COUNT -> albumIds.sortedBy { get(it)?.numberOfTracks }
-            AlbumSortBy.ALBUM_YEAR -> albumIds.sortedBy { get(it)?.date }
-            AlbumSortBy.UNRECOGNIZED -> albumIds
+            AlbumSortBy.ALBUM_TRACKS_COUNT -> filteredAlbumIds.sortedBy { get(it)?.numberOfTracks }
+            AlbumSortBy.ALBUM_YEAR -> filteredAlbumIds.sortedBy { get(it)?.date }
+            AlbumSortBy.UNRECOGNIZED -> filteredAlbumIds
         }
         return if (reverse) sorted.reversed() else sorted
     }

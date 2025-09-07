@@ -16,10 +16,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Settings
-import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
-import io.github.zyrouge.symphony.services.groove.repositories.AlbumRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -40,24 +38,9 @@ fun AlbumGrid(
     val sortBy by type.getLastUsedSortBy(context).collectAsState(AlbumSortBy.ALBUM_NAME)
     val sortReverse by type.getLastUsedReverse(context).collectAsState(false)
     val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
-
-    val displayableAlbumIds by remember(albumIds, isHideCompilations) {
+    val sortedAlbumIds by remember(albumIds, sortBy, sortReverse, isHideCompilations) {
         derivedStateOf {
-            if (isHideCompilations) {
-                albumIds.filter { albumId ->
-                    context.symphony.groove.album.get(albumId)?.let { album ->
-                        !album.is_compilation
-                    } ?: true
-                }
-            } else {
-                albumIds
-            }
-        }
-    }
-
-    val sortedAlbumIds by remember(displayableAlbumIds, sortBy, sortReverse) {
-        derivedStateOf {
-            context.symphony.groove.album.sort(displayableAlbumIds, sortBy, sortReverse)
+            context.symphony.groove.album.getAlbums(albumIds, sortBy, sortReverse, isHideCompilations)
         }
     }
     val horizontalGridColumns by context.symphony.settingsOLD.lastUsedAlbumsHorizontalGridColumns.flow.collectAsState()
@@ -90,7 +73,7 @@ fun AlbumGrid(
                     }
                 },
                 label = {
-                    Text(context.symphony.t.XAlbums((albumsCount ?: displayableAlbumIds.size).toString()))
+                    Text(context.symphony.t.XAlbums((albumsCount ?: sortedAlbumIds.size).toString()))
                 },
                 onShowModifyLayout = {
                     showModifyLayoutSheet = true
@@ -99,7 +82,7 @@ fun AlbumGrid(
         },
         content = {
             when {
-                displayableAlbumIds.isEmpty() -> IconTextBody(
+                sortedAlbumIds.isEmpty() -> IconTextBody(
                     icon = { modifier ->
                         Icon(
                             Icons.Filled.Album,

@@ -92,6 +92,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     val caseSensitiveSorting by context.symphony.settingsOLD.caseSensitiveSorting.flow.collectAsState()
     val useMetaphony by context.symphony.settingsOLD.useMetaphony.flow.collectAsState()
     val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
+    val artistIsHideCompilations by context.symphony.settings.data.map(Settings::getUiArtistAlbumRowHideCompilations).collectAsState(false)
     val artistAlbumsview by context.symphony.settings.data.map{it.uiArtistViewAlbumSortBy.by}.collectAsState(
         AlbumSortBy.ALBUM_YEAR)
 
@@ -292,6 +293,21 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         onChange = { value ->
                             coroutineScope.launch {
                                 context.symphony.settings.updateData { it.copy { uiAlbumGridHideCompilations = value} }
+                            }
+                        }
+                    )
+                    HorizontalDivider()
+                    SettingsSwitchTile(
+                        icon = {
+                            Icon(Icons.Filled.VisibilityOff, null)
+                        },
+                        title = {
+                            Text("Hide Compilations (Artist View)")
+                        },
+                        value = artistIsHideCompilations,
+                        onChange = { value ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { uiArtistAlbumRowHideCompilations = value} }
                             }
                         }
                     )

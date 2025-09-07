@@ -60,6 +60,7 @@ message Settings {
   AlbumSortPreference ui_default_album_sort_by = 6;
   AlbumSortPreference ui_artist_view_album_sort_by = 7;
   bool ui_album_grid_hide_compilations = 1;
+  bool ui_artist_album_row_hide_compilations = 9;
 
   ArtistSortPreference ui_default_artist_sort = 8;
 

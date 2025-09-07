@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import io.github.zyrouge.symphony.AlbumSortBy
+import io.github.zyrouge.symphony.Settings
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.map
@@ -29,11 +30,14 @@ fun AlbumRow(context: ViewContext, albumIds: List<String>) {
         val sortBy by context.symphony.settings.data.map { it.uiArtistViewAlbumSortBy.by }.collectAsState(
             AlbumSortBy.ALBUM_YEAR)
         val sortReverse by context.symphony.settings.data.map { it.uiArtistViewAlbumSortBy.reverse}.collectAsState(false)
-        val sortedAlbumIds = remember(albumIds, sortBy, sortReverse) {
-            context.symphony.groove.album.sort(
+        val isHideCompilations by context.symphony.settings.data.map(Settings::getUiArtistAlbumRowHideCompilations).collectAsState(false)
+
+        val sortedAlbumIds = remember(albumIds, sortBy, sortReverse, isHideCompilations) {
+            context.symphony.groove.album.getAlbums(
                 albumIds = albumIds,
                 by = sortBy,
-                reverse = sortReverse
+                reverse = sortReverse,
+                hide_compilations = isHideCompilations
             )
         }
 
