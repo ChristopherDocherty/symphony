@@ -7,9 +7,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,6 +49,13 @@ fun ArtistGrid(
         }
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
+
+    val initialScrollOffsetY by context.symphony.settings.data
+        .map { it.artistGridScrollOffsetY ?: 0f }
+        .collectAsState(initial = 0f)
+    var currentScrollPointerOffsetY by remember(initialScrollOffsetY) {
+        mutableFloatStateOf(initialScrollOffsetY)
+    }
 
     val scope = rememberCoroutineScope()
 
@@ -90,7 +99,7 @@ fun ArtistGrid(
                     content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
                 )
 
-                else -> ResponsiveGrid(gridColumns) {
+                else -> ResponsiveGrid(gridColumns, currentScrollPointerOffsetY, {newOffsetY ->  currentScrollPointerOffsetY = newOffsetY}) {
                     itemsIndexed(
                         sortedArtistNames,
                         key = { i, x -> "$i-$x" },
@@ -122,6 +131,17 @@ fun ArtistGrid(
             }
         }
     )
+    DisposableEffect(Unit) {
+        onDispose {
+            scope.launch {
+                context.symphony.settings.updateData { currentSettings ->
+                    currentSettings.copy {
+                        artistGridScrollOffsetY = currentScrollPointerOffsetY
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun ArtistSortBy.label(context: ViewContext) = when (this) {

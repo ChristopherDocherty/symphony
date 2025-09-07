@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
@@ -7,13 +8,16 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberCoroutineScope // For UI-related async tasks not in ViewModel
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel // Added for ViewModel
 import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Settings
 import io.github.zyrouge.symphony.copy
@@ -22,6 +26,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+
 
 enum class AlbumGridType {
     Default,
@@ -35,6 +40,12 @@ fun AlbumGrid(
     albumsCount: Int? = null,
     type: AlbumGridType = AlbumGridType.Default,
 ) {
+    // Instantiate the ViewModel
+    // AlbumGridViewModelFactory should be in the same package or imported
+    val viewModel: AlbumGridViewModel = viewModel(
+        factory = AlbumGridViewModelFactory(context)
+    )
+
     val sortBy by type.getLastUsedSortBy(context).collectAsState(AlbumSortBy.ALBUM_NAME)
     val sortReverse by type.getLastUsedReverse(context).collectAsState(false)
     val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
@@ -52,7 +63,19 @@ fun AlbumGrid(
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
 
-    val coroutineScope = rememberCoroutineScope()
+    val initialScrollOffsetY by context.symphony.settings.data
+        .map { settings ->
+            Log.d("AlbumGrid_Load", "Read albumGridScrollOffsetY from settings: ${settings.albumGridScrollOffsetY}")
+            settings.albumGridScrollOffsetY
+        }
+        .collectAsState(initial = 0f)
+    var currentScrollPointerOffsetY by remember(initialScrollOffsetY) {
+        Log.d("AlbumGrid_Load", "Initializing currentScrollPointerOffsetY with: $initialScrollOffsetY")
+        mutableFloatStateOf(initialScrollOffsetY)
+    }
+
+    val coroutineScope = rememberCoroutineScope() // Still used for sort/reverse changes
+
     MediaSortBarScaffold(
         mediaSortBar = {
             MediaSortBar(
@@ -93,7 +116,7 @@ fun AlbumGrid(
                     content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
                 )
 
-                else -> ResponsiveGrid(gridColumns) {
+                else -> ResponsiveGrid(gridColumns, currentScrollPointerOffsetY, {newOffsetY ->  currentScrollPointerOffsetY = newOffsetY}) {
                     itemsIndexed(
                         sortedAlbumIds,
                         key = { i, x -> "$i-$x" },
@@ -125,6 +148,14 @@ fun AlbumGrid(
             }
         }
     )
+
+    // Updated DisposableEffect
+    DisposableEffect(Unit) {
+        onDispose {
+            Log.d("AlbumGrid_Save", "onDispose: Triggering save for scrollOffsetY: $currentScrollPointerOffsetY")
+            viewModel.saveScrollOffset(currentScrollPointerOffsetY)
+        }
+    }
 }
 
 fun AlbumGridType.getLastUsedSortBy(context: ViewContext) : Flow<AlbumSortBy> = when (this) {

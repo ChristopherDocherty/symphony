@@ -42,6 +42,8 @@ data class ResponsiveGridColumns(val horizontal: Int, val vertical: Int) {
 @Composable
 fun ResponsiveGrid(
     columns: ResponsiveGridColumns,
+    currentScrollPointerOffsetY: Float,
+    onScrollPointerOffsetYChange: (Float) -> Unit,
     content: LazyGridScope.(ResponsiveGridData) -> Unit,
 ) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -55,7 +57,7 @@ fun ResponsiveGrid(
         LazyVerticalGrid(
             state = gridState,
             columns = GridCells.Fixed(effectiveColumn),
-            modifier = Modifier.drawScrollBar(gridState, effectiveColumn)
+            modifier = Modifier.drawScrollBar(gridState, effectiveColumn, currentScrollPointerOffsetY, onScrollPointerOffsetYChange)
         ) {
             content(responsiveGridData)
         }

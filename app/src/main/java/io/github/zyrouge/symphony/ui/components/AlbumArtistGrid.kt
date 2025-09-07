@@ -7,15 +7,21 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.repositories.AlbumArtistRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +45,15 @@ fun AlbumArtistGrid(
         }
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
+
+    val initialScrollOffsetY by context.symphony.settings.data
+        .map { it.albumArtistGridScrollOffsetY ?: 0f }
+        .collectAsState(initial = 0f)
+    var currentScrollPointerOffsetY by remember(initialScrollOffsetY) {
+        mutableFloatStateOf(initialScrollOffsetY)
+    }
+
+    val scope = rememberCoroutineScope()
 
     MediaSortBarScaffold(
         mediaSortBar = {
@@ -79,7 +94,7 @@ fun AlbumArtistGrid(
                     content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
                 )
 
-                else -> ResponsiveGrid(gridColumns) {
+                else -> ResponsiveGrid(gridColumns, currentScrollPointerOffsetY , {newOffsetY ->  currentScrollPointerOffsetY = newOffsetY}) {
                     itemsIndexed(
                         sortedAlbumArtistNames,
                         key = { i, x -> "$i-$x" },
@@ -112,6 +127,18 @@ fun AlbumArtistGrid(
             }
         }
     )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            scope.launch {
+                context.symphony.settings.updateData { currentSettings ->
+                    currentSettings.copy {
+                        albumArtistGridScrollOffsetY = currentScrollPointerOffsetY
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun AlbumArtistRepository.SortBy.label(context: ViewContext) = when (this) {

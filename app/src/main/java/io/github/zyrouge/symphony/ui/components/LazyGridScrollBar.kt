@@ -7,16 +7,19 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawWithContent
 import io.github.zyrouge.symphony.utils.toSafeFinite
 import kotlin.math.floor
 
-fun Modifier.drawScrollBar(state: LazyGridState, columns: Int): Modifier = composed {
+fun Modifier.drawScrollBar(
+    state: LazyGridState,
+    columns: Int,
+    currentScrollPointerOffsetY: Float,
+    onScrollPointerOffsetYChange: (Float) -> Unit
+): Modifier = composed {
     val scrollPointerColor = MaterialTheme.colorScheme.surfaceTint
     val isLastItemVisible by remember {
         derivedStateOf {
@@ -38,9 +41,8 @@ fun Modifier.drawScrollBar(state: LazyGridState, columns: Int): Modifier = compo
         animationSpec = tween(durationMillis = 500),
         label = "c-lazy-grid-scroll-pointer-color",
     )
-    var scrollPointerOffsetY by remember { mutableFloatStateOf(0f) }
     val scrollPointerOffsetYAnimated by animateFloatAsState(
-        scrollPointerOffsetY,
+        currentScrollPointerOffsetY,
         animationSpec = tween(durationMillis = 150),
         label = "c-lazy-grid-scroll-pointer-offset-y",
     )
@@ -49,10 +51,12 @@ fun Modifier.drawScrollBar(state: LazyGridState, columns: Int): Modifier = compo
         drawContent()
         val scrollBarHeight =
             size.height - ContentDrawScopeScrollBarDefaults.scrollPointerHeight.toPx()
-        scrollPointerOffsetY = when {
+        val newCalculatedOffsetY = when {
             isLastItemVisible -> scrollBarHeight
             else -> (scrollBarHeight / rows) * (state.firstVisibleItemIndex / columns)
         }.toSafeFinite()
+        onScrollPointerOffsetYChange(newCalculatedOffsetY)
+
         drawScrollBar(
             scrollPointerColor = showScrollPointerColorAnimated,
             scrollPointerOffsetY = scrollPointerOffsetYAnimated,

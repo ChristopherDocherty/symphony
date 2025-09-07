@@ -64,6 +64,14 @@ message Settings {
 
   ArtistSortPreference ui_default_artist_sort = 8;
 
+  float artist_grid_scroll_offset_y = 10;
+  float album_grid_scroll_offset_y = 11;
+  float album_artist_grid_scroll_offset_y = 12;
+  float playlist_grid_scroll_offset_y = 13;
+  float genre_grid_scroll_offset_y = 14;
+  float folder_grid_scroll_offset_y = 15;
+
+
 
 
 }

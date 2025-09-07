@@ -19,9 +19,11 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -30,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.components.AddToPlaylistDialog
 import io.github.zyrouge.symphony.ui.components.IconTextBody
@@ -50,6 +53,7 @@ import io.github.zyrouge.symphony.ui.view.nowPlaying.defaultHorizontalPadding
 import io.github.zyrouge.symphony.utils.SimpleFileSystem
 import io.github.zyrouge.symphony.utils.StringListUtils
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.Stack
 
@@ -171,6 +175,16 @@ private fun FoldersGrid(
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
 
+
+    val initialScrollOffsetY by context.symphony.settings.data
+        .map { it.genreGridScrollOffsetY ?: 0f }
+        .collectAsState(initial = 0f)
+    var currentScrollPointerOffsetY by remember(initialScrollOffsetY) {
+        mutableFloatStateOf(initialScrollOffsetY)
+    }
+
+    val scope = rememberCoroutineScope()
+
     MediaSortBarScaffold(
         mediaSortBar = {
             MediaSortBar(
@@ -206,7 +220,7 @@ private fun FoldersGrid(
                     content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
                 )
 
-                else -> ResponsiveGrid(gridColumns) {
+                else -> ResponsiveGrid(gridColumns, currentScrollPointerOffsetY, { newOffsetY -> currentScrollPointerOffsetY = newOffsetY }) {
                     itemsIndexed(
                         sortedFolderNames,
                         key = { i, x -> "$i-$x" },
@@ -241,6 +255,18 @@ private fun FoldersGrid(
             }
         }
     )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            scope.launch {
+                context.symphony.settings.updateData { currentSettings ->
+                    currentSettings.copy {
+                        artistGridScrollOffsetY = currentScrollPointerOffsetY
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

@@ -20,11 +20,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,10 +37,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.repositories.GenreRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.GenreViewRoute
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 private object GenreTile {
     val colors = listOf(
@@ -85,6 +91,15 @@ fun GenreGrid(
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
 
+    val initialScrollOffsetY by context.symphony.settings.data
+        .map { it.genreGridScrollOffsetY ?: 0f }
+        .collectAsState(initial = 0f)
+    var currentScrollPointerOffsetY by remember(initialScrollOffsetY) {
+        mutableFloatStateOf(initialScrollOffsetY)
+    }
+
+    val scope = rememberCoroutineScope()
+
     MediaSortBarScaffold(
         mediaSortBar = {
             Box(modifier = Modifier.padding(bottom = 4.dp)) {
@@ -126,7 +141,7 @@ fun GenreGrid(
                     content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
                 )
 
-                else -> ResponsiveGrid(gridColumns) { gridData ->
+                else -> ResponsiveGrid(gridColumns, currentScrollPointerOffsetY, { newOffsetY -> currentScrollPointerOffsetY = newOffsetY }) { gridData ->
                     itemsIndexed(
                         sortedGenreNames,
                         key = { i, x -> "$i-$x" },
@@ -212,6 +227,18 @@ fun GenreGrid(
             }
         }
     )
+
+    DisposableEffect(Unit) {
+        onDispose {
+            scope.launch {
+                context.symphony.settings.updateData { currentSettings ->
+                    currentSettings.copy {
+                        artistGridScrollOffsetY = currentScrollPointerOffsetY
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun GenreRepository.SortBy.label(context: ViewContext) = when (this) {
