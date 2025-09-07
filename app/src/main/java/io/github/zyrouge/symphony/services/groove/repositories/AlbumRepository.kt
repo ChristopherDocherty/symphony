@@ -100,6 +100,7 @@ class AlbumRepository(private val symphony: Symphony) {
                         startYear = startYear?.let { old -> min(old, it) } ?: it
                         endYear = endYear?.let { old -> max(old, it) } ?: it
                     }
+                    
                     if(song.date != null){
                         date = song.date
                     }
@@ -124,6 +125,7 @@ class AlbumRepository(private val symphony: Symphony) {
                         numberOfTracks = 1,
                         duration = song.duration.milliseconds,
                         is_compilation = song.is_compilation,
+                        date=song.date
                     )
                 }
             }
