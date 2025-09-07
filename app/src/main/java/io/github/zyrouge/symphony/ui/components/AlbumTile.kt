@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -22,9 +23,11 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.ui.components.SelectAlbumDiscDialog // Added import
+import kotlinx.coroutines.launch
 
 @Composable
 fun AlbumTile(context: ViewContext, album: Album) {
+    val scope = rememberCoroutineScope()
     SquareGrooveTile(
         image = album.createArtworkImageRequest(context.symphony).build(),
         options = { expanded, onDismissRequest ->
@@ -54,7 +57,9 @@ fun AlbumTile(context: ViewContext, album: Album) {
             }
         },
         onPlay = {
-            context.symphony.radio.shorty.playQueue(album.getSortedSongIds(context.symphony))
+            scope.launch {
+                context.symphony.radio.shorty.playQueue(album.getSortedSongIds(context.symphony))
+            }
         },
         onClick = {
             context.navController.navigate(AlbumViewRoute(album.id))
@@ -72,6 +77,7 @@ fun AlbumDropdownMenu(
     var showAddToPlaylistDialog by remember { mutableStateOf(false) }
     var showSelectDiscDialog by remember { mutableStateOf(false) } // Added state
 
+    val scope = rememberCoroutineScope()
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest
@@ -85,10 +91,12 @@ fun AlbumDropdownMenu(
             },
             onClick = {
                 onDismissRequest()
-                context.symphony.radio.shorty.playQueue(
-                    album.getSortedSongIds(context.symphony),
-                    shuffle = true,
-                )
+                scope.launch {
+                    context.symphony.radio.shorty.playQueue(
+                        album.getSortedSongIds(context.symphony),
+                        shuffle = true,
+                    )
+                }
             }
         )
         DropdownMenuItem(
@@ -100,10 +108,12 @@ fun AlbumDropdownMenu(
             },
             onClick = {
                 onDismissRequest()
-                context.symphony.radio.queue.add(
-                    album.getSortedSongIds(context.symphony),
-                    context.symphony.radio.queue.currentSongIndex + 1
-                )
+                scope.launch {
+                    context.symphony.radio.queue.add(
+                        album.getSortedSongIds(context.symphony),
+                        context.symphony.radio.queue.currentSongIndex + 1
+                    )
+                }
             }
         )
         DropdownMenuItem(
@@ -115,7 +125,9 @@ fun AlbumDropdownMenu(
             },
             onClick = {
                 onDismissRequest()
-                context.symphony.radio.queue.add(album.getSortedSongIds(context.symphony))
+                scope.launch {
+                    context.symphony.radio.queue.add(album.getSortedSongIds(context.symphony))
+                }
             }
         )
         DropdownMenuItem(

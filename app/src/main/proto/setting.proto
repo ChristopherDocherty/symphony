@@ -39,10 +39,9 @@ message AlbumSortPreference {
 
 enum ArtistSortBy {
     ARTIST_CUSTOM= 0;
-    ARTIST_ALBUM_NAME= 1;
-    ARTIST_ARTIST_NAME= 2;
-    ARTIST_TRACKS_COUNT= 3;
-    ARTIST_ALBUMS_COUNT = 4;
+    ARTIST_NAME= 1;
+    ARTIST_TRACKS_COUNT= 2;
+    ARTIST_ALBUMS_COUNT = 3;
 }
 
 message ArtistSortPreference {

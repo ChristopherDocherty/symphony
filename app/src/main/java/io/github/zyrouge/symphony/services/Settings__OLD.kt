@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.edit
 import io.github.zyrouge.symphony.AlbumSortBy
+import io.github.zyrouge.symphony.ArtistSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.repositories.AlbumArtistRepository
@@ -125,12 +126,6 @@ class Settings__OLD(private val symphony: Symphony) {
     val themeMode = EnumEntry("theme_mode", enumEntries<ThemeMode>(), ThemeMode.SYSTEM)
     val language = NullableStringEntry("language")
     val useMaterialYou = BooleanEntry("material_you", true)
-    val lastUsedArtistsSortBy = EnumEntry(
-        "last_used_artists_sort_by",
-        enumEntries<ArtistRepository.SortBy>(),
-        ArtistRepository.SortBy.ARTIST_NAME,
-    )
-    val lastUsedArtistsSortReverse = BooleanEntry("last_used_artists_sort_reverse", false)
     val lastUsedArtistsHorizontalGridColumns = IntEntry(
         "last_used_artists_horizontal_grid_columns",
         ResponsiveGridColumns.DEFAULT_HORIZONTAL_COLUMNS,
@@ -209,7 +204,6 @@ class Settings__OLD(private val symphony: Symphony) {
         enumEntries<SongSortBy>(),
         SongSortBy.SONG_TRACK_NUMBER,
     )
-    val lastUsedAlbumSongsSortReverse = BooleanEntry("last_used_album_songs_sort_reverse", false)
     val lastUsedTreePathSortBy = EnumEntry(
         "last_used_tree_path_sort_by",
         enumEntries<StringListUtils.SortBy>(),

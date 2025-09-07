@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.services.groove.repositories
 
+import io.github.zyrouge.symphony.ArtistSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.Artist
 import io.github.zyrouge.symphony.services.groove.Song
@@ -16,12 +17,6 @@ import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
 class ArtistRepository(private val symphony: Symphony) {
-    enum class SortBy {
-        CUSTOM,
-        ARTIST_NAME,
-        TRACKS_COUNT,
-        ALBUMS_COUNT,
-    }
 
     private val cache = ConcurrentHashMap<String, Artist>()
     private val songIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
@@ -121,11 +116,12 @@ class ArtistRepository(private val symphony: Symphony) {
     fun search(artistNames: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, artistNames, maxLength = limit)
 
-    fun sort(artistNames: List<String>, by: SortBy, reverse: Boolean): List<String> {
+    fun sort(artistNames: List<String>, by: ArtistSortBy, reverse: Boolean): List<String> {
         val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
         val sorted = when (by) {
-            SortBy.CUSTOM -> artistNames
-            SortBy.ARTIST_NAME -> artistNames.sortedBy {
+            ArtistSortBy.ARTIST_CUSTOM -> artistNames
+            ArtistSortBy.ARTIST_NAME -> artistNames.sortedBy {
+                //TODO: make tertiary statement?
                 get(it)?.name?.let { name ->
                     if (name.startsWith("The ", ignoreCase = true)) {
                         name.substring(4)
@@ -134,8 +130,9 @@ class ArtistRepository(private val symphony: Symphony) {
                     }
                 }?.withCase(sensitive)
             }
-            SortBy.TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
-            SortBy.ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfAlbums }
+            ArtistSortBy.ARTIST_TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
+            ArtistSortBy.ARTIST_ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfAlbums }
+            ArtistSortBy.UNRECOGNIZED -> artistNames
         }
         return if (reverse) sorted.reversed() else sorted
     }

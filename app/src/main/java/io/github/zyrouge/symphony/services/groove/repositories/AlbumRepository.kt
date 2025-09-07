@@ -21,13 +21,6 @@ import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
 
 class AlbumRepository(private val symphony: Symphony) {
-    enum class SortBy {
-        CUSTOM,
-        ALBUM_NAME,
-        ARTIST_NAME,
-        TRACKS_COUNT,
-        YEAR,
-    }
 
     private val cache = ConcurrentHashMap<String, Album>()
     private val songIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()

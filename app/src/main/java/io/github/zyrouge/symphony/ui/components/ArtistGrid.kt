@@ -12,10 +12,16 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import io.github.zyrouge.symphony.ArtistSortBy
+import io.github.zyrouge.symphony.SongSortBy
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.repositories.ArtistRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,8 +30,9 @@ fun ArtistGrid(
     artistName: List<String>,
     artistsCount: Int? = null,
 ) {
-    val sortBy by context.symphony.settingsOLD.lastUsedArtistsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settingsOLD.lastUsedArtistsSortReverse.flow.collectAsState()
+    val sortBy by context.symphony.settings.data.map { it.uiDefaultArtistSort.by }.collectAsState(
+        ArtistSortBy.ARTIST_NAME)
+    val sortReverse by context.symphony.settings.data.map { it.uiDefaultArtistSort.reverse }.collectAsState(false)
     val sortedArtistNames by remember(artistName, sortBy, sortReverse) {
         derivedStateOf {
             val filteredArtistNames = context.symphony.groove.artist.filterByTrackCount(artistName)
@@ -41,19 +48,26 @@ fun ArtistGrid(
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
 
+    val scope = rememberCoroutineScope()
+
     MediaSortBarScaffold(
         mediaSortBar = {
             MediaSortBar(
                 context,
                 reverse = sortReverse,
-                onReverseChange = {
-                    context.symphony.settingsOLD.lastUsedArtistsSortReverse.setValue(it)
+                onReverseChange = { value->
+                    scope.launch{
+                        context.symphony.settings.updateData { it.copy { uiDefaultArtistSort = uiDefaultArtistSort.copy { reverse = value} }}
+                    }
                 },
                 sort = sortBy,
-                sorts = ArtistRepository.SortBy.entries
+                sorts = ArtistSortBy.entries
                     .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
-                onSortChange = {
-                    context.symphony.settingsOLD.lastUsedArtistsSortBy.setValue(it)
+                onSortChange = {value ->
+                    scope.launch {
+                        context.symphony.settings.updateData { it.copy { uiDefaultArtistSort = uiDefaultArtistSort.copy { by = value} }}
+
+                    }
                 },
                 label = {
                     Text(context.symphony.t.XArtists((artistsCount ?: artistName.size).toString()))
@@ -110,9 +124,10 @@ fun ArtistGrid(
     )
 }
 
-private fun ArtistRepository.SortBy.label(context: ViewContext) = when (this) {
-    ArtistRepository.SortBy.CUSTOM -> context.symphony.t.Custom
-    ArtistRepository.SortBy.ARTIST_NAME -> context.symphony.t.Artist
-    ArtistRepository.SortBy.ALBUMS_COUNT -> context.symphony.t.AlbumCount
-    ArtistRepository.SortBy.TRACKS_COUNT -> context.symphony.t.TrackCount
+private fun ArtistSortBy.label(context: ViewContext) = when (this) {
+    ArtistSortBy.ARTIST_CUSTOM -> context.symphony.t.Custom
+    ArtistSortBy.ARTIST_NAME -> context.symphony.t.Artist
+    ArtistSortBy.ARTIST_ALBUMS_COUNT -> context.symphony.t.AlbumCount
+    ArtistSortBy.ARTIST_TRACKS_COUNT -> context.symphony.t.TrackCount
+    ArtistSortBy.UNRECOGNIZED -> "???"
 }
