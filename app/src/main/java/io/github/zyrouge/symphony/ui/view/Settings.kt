@@ -49,7 +49,6 @@ import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.services.AppMeta
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
-import io.github.zyrouge.symphony.ui.components.settings.ConsiderContributingTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSimpleTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.settings.AppearanceSettingsViewRoute
@@ -108,7 +107,6 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                     .fillMaxSize()
             ) {
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
-                    ConsiderContributingTile(context)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(modifier = Modifier.size((configuration.smallestScreenWidthDp * 0.25).dp)) {
                             AsyncImage(R.drawable.ic_launcher_foreground, null)
@@ -127,50 +125,6 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                                 )
                             }
                         }
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                            .horizontalScroll(rememberScrollState())
-                            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                    ) {
-                        LinkChip(
-                            context,
-                            icon = Icons.Filled.BugReport,
-                            label = context.symphony.t.ReportAnIssue,
-                            url = AppMeta.githubIssuesUrl,
-                        )
-                        LinkChip(
-                            context,
-                            icon = Icons.Filled.Code,
-                            label = context.symphony.t.Github,
-                            url = AppMeta.githubRepositoryUrl,
-                        )
-                        LinkChip(
-                            context,
-                            label = context.symphony.t.Discord,
-                            url = AppMeta.discordUrl,
-                        )
-                        LinkChip(
-                            context,
-                            label = context.symphony.t.Reddit,
-                            url = AppMeta.redditUrl,
-                        )
-                        LinkChip(
-                            context,
-                            label = context.symphony.t.PlayStore,
-                            url = AppMeta.playStoreUrl,
-                        )
-                        LinkChip(
-                            context,
-                            label = context.symphony.t.FDroid,
-                            url = AppMeta.fdroidUrl,
-                        )
-                        LinkChip(
-                            context,
-                            label = context.symphony.t.IzzyOnDroid,
-                            url = AppMeta.izzyOnDroidUrl,
-                        )
                     }
                     HorizontalDivider()
                     SettingsSimpleTile(
