@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import io.github.zyrouge.symphony.services.groove.Artist
@@ -63,11 +64,21 @@ fun ArtistDropdownMenu(
 ) {
     var showAddToPlaylistDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val uriHandler = LocalUriHandler.current
 
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
     ) {
+        DropdownMenuItem(
+            text = {
+                Text("Open on last.fm")
+            },
+            onClick = {
+                onDismissRequest()
+                uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${artist.name.replace(" ","+").replace("/","%2F")}")
+            }
+        )
         DropdownMenuItem(
             leadingIcon = {
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
