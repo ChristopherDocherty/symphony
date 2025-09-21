@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import io.github.zyrouge.symphony.LoopMode
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.services.radio.RadioQueue
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
@@ -20,7 +21,7 @@ data class NowPlayingData(
     val isPlaying: Boolean,
     val currentSongIndex: Int,
     val queueSize: Int,
-    val currentLoopMode: RadioQueue.LoopMode,
+    val currentLoopMode: LoopMode,
     val currentShuffleMode: Boolean,
     val currentSpeed: Float,
     val currentPitch: Float,

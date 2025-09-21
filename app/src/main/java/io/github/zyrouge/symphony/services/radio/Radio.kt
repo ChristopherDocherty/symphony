@@ -1,8 +1,12 @@
 package io.github.zyrouge.symphony.services.radio
 
+import io.github.zyrouge.symphony.LoopMode
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.utils.Eventer
 import io.github.zyrouge.symphony.utils.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.Date
@@ -27,7 +31,6 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         }
 
         sealed class QueueOption : Events() {
-            object LoopModeChanged : QueueOption()
             object ShuffleModeChanged : QueueOption()
             object SleepTimerChanged : QueueOption()
             object SpeedChanged : QueueOption()
@@ -43,8 +46,10 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         var quitOnEnd: Boolean,
     )
 
+    private val radioScope = CoroutineScope(Dispatchers.Default)
+
     val onUpdate = Eventer<Events>()
-    val queue = RadioQueue(symphony)
+    val queue = RadioQueue(symphony, radioScope)
     val shorty = RadioShorty(symphony)
     val session = RadioSession(symphony)
     var observatory = RadioObservatory(symphony)
@@ -83,6 +88,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         observatory.destroy()
         session.destroy()
         nativeReceiver.destroy()
+        radioScope.cancel()
     }
 
     data class PlayOptions(
@@ -356,8 +362,8 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         }
         var autostart: Boolean
         var nextSongIndex: Int
-        when (queue.currentLoopMode) {
-            RadioQueue.LoopMode.Song -> {
+        when (queue.currentLoopMode.value) {
+            LoopMode.SINGLE_SONG -> {
                 nextSongIndex = queue.currentSongIndex
                 autostart = source == SongFinishSource.Finish
                 if (!queue.hasSongAt(nextSongIndex)) {
@@ -374,7 +380,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
                 autostart = true
                 if (!queue.hasSongAt(nextSongIndex)) {
                     nextSongIndex = 0
-                    autostart = queue.currentLoopMode == RadioQueue.LoopMode.Queue
+                    autostart = queue.currentLoopMode.value == LoopMode.QUEUE
                 }
             }
         }

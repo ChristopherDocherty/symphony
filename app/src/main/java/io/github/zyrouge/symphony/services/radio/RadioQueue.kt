@@ -1,18 +1,21 @@
 package io.github.zyrouge.symphony.services.radio
 
+import io.github.zyrouge.symphony.LoopMode
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.copy
+import io.github.zyrouge.symphony.utils.Logger
 import io.github.zyrouge.symphony.utils.concurrentListOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
-class RadioQueue(private val symphony: Symphony) {
-    enum class LoopMode {
-        None,
-        Queue,
-        Song;
-
-        companion object {
-            val values = enumValues<LoopMode>()
-        }
-    }
+class RadioQueue(private val symphony: Symphony, private val scope: CoroutineScope) {
 
     val originalQueue = concurrentListOf<String>()
     val currentQueue = concurrentListOf<String>()
@@ -29,11 +32,34 @@ class RadioQueue(private val symphony: Symphony) {
             symphony.radio.onUpdate.dispatch(Radio.Events.QueueOption.ShuffleModeChanged)
         }
 
-    var currentLoopMode = LoopMode.None
-        private set(value) {
-            field = value
-            symphony.radio.onUpdate.dispatch(Radio.Events.QueueOption.LoopModeChanged)
+    val currentLoopMode: StateFlow<LoopMode> =
+        symphony.settings.data
+            .map { it.playbackOptions.loopMode }
+            .distinctUntilChanged()
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.Eagerly,
+                initialValue = runBlocking { symphony.settings.data.first().playbackOptions.loopMode }
+            )
+
+    fun setLoopMode(newMode: LoopMode) {
+        scope.launch {
+            symphony.settings.updateData {
+                it.copy {
+                    playbackOptions = playbackOptions.copy {
+                        loopMode = newMode
+                    }
+                }
+            }
         }
+        Logger.warn("RadioQueue", "setLoopMode -> wrote $newMode")
+    }
+
+    fun toggleLoopMode() {
+        val order = listOf(LoopMode.OFF, LoopMode.QUEUE, LoopMode.SINGLE_SONG)
+        val next = order[(order.indexOf(currentLoopMode.value) + 1) % order.size]
+        setLoopMode(next)
+    }
 
     val currentSongId: String?
         get() = getSongIdAt(currentSongIndex)
@@ -110,14 +136,7 @@ class RadioQueue(private val symphony: Symphony) {
         }
     }
 
-    fun setLoopMode(loopMode: LoopMode) {
-        currentLoopMode = loopMode
-    }
 
-    fun toggleLoopMode() {
-        val next = (currentLoopMode.ordinal + 1) % LoopMode.values.size
-        setLoopMode(LoopMode.values[next])
-    }
 
     fun toggleShuffleMode() = setShuffleMode(!currentShuffleMode)
 

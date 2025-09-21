@@ -49,6 +49,16 @@ message ArtistSortPreference {
   bool reverse = 2;
 }
 
+enum LoopMode {
+  OFF = 0;
+  QUEUE = 1;
+  SINGLE_SONG = 2;
+}
+
+message PlaybackOptions {
+  LoopMode loopMode = 1;
+  bool shuffle = 2;
+}
 
 message Settings {
 
@@ -64,7 +74,6 @@ message Settings {
 
   ArtistSortPreference ui_default_artist_sort = 8;
 
-
-
+  PlaybackOptions playback_options = 901;
 }
 

@@ -31,11 +31,11 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
 
     val permission = Permissions(this)
     val settingsOLD = Settings__OLD(this)
+    val settings: DataStore<Settings> = applicationContext.settingsDataStore
     val database = Database(this)
     val groove = Groove(this)
     val radio = Radio(this)
     val translator = Translator(this)
-    val settings: DataStore<Settings> = applicationContext.settingsDataStore
 
     var t by mutableStateOf(translator.getCurrentTranslation())
 

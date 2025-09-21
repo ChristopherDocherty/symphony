@@ -1,8 +1,10 @@
 package io.github.zyrouge.symphony.services.radio
 
+import io.github.zyrouge.symphony.LoopMode
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.utils.EventUnsubscribeFn
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -18,8 +20,8 @@ class RadioObservatory(private val symphony: Symphony) {
     val queueIndex = _queueIndex.asStateFlow()
     private val _queue = MutableStateFlow(emptyList<String>())
     val queue = _queue.asStateFlow()
-    private val _loopMode = MutableStateFlow(RadioQueue.LoopMode.None)
-    val loopMode = _loopMode.asStateFlow()
+    val loopMode: StateFlow<LoopMode>
+        get() = symphony.radio.queue.currentLoopMode
     private val _shuffleMode = MutableStateFlow(false)
     val shuffleMode = _shuffleMode.asStateFlow()
     private val _sleepTimer = MutableStateFlow<Radio.SleepTimer?>(null)
@@ -42,7 +44,6 @@ class RadioObservatory(private val symphony: Symphony) {
                 is Radio.Events.Player -> emitIsPlaying()
                 is Radio.Events.Queue.IndexChanged -> emitQueueIndex()
                 is Radio.Events.Queue -> emitQueue()
-                Radio.Events.QueueOption.LoopModeChanged -> emitLoopMode()
                 Radio.Events.QueueOption.ShuffleModeChanged -> emitShuffleMode()
                 Radio.Events.QueueOption.SleepTimerChanged -> emitSleepTimer()
                 Radio.Events.QueueOption.SpeedChanged -> emitSpeed()
@@ -70,10 +71,6 @@ class RadioObservatory(private val symphony: Symphony) {
 
     private fun emitQueueIndex() = _queueIndex.update {
         symphony.radio.queue.currentSongIndex
-    }
-
-    private fun emitLoopMode() = _loopMode.update {
-        symphony.radio.queue.currentLoopMode
     }
 
     private fun emitShuffleMode() = _shuffleMode.update {
