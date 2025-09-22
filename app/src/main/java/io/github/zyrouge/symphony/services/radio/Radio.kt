@@ -31,7 +31,6 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         }
 
         sealed class QueueOption : Events() {
-            object ShuffleModeChanged : QueueOption()
             object SleepTimerChanged : QueueOption()
             object SpeedChanged : QueueOption()
             object PitchChanged : QueueOption()

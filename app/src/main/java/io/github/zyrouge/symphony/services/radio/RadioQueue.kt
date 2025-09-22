@@ -26,11 +26,14 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
             symphony.radio.onUpdate.dispatch(Radio.Events.Queue.IndexChanged)
         }
 
-    var currentShuffleMode = false
-        private set(value) {
-            field = value
-            symphony.radio.onUpdate.dispatch(Radio.Events.QueueOption.ShuffleModeChanged)
-        }
+    val currentShuffleMode: StateFlow<Boolean> = symphony.settings.data
+            .map { it.playbackOptions.shuffle }
+            .distinctUntilChanged()
+            .stateIn(
+                scope = scope,
+                started = SharingStarted.Eagerly,
+                initialValue = runBlocking { symphony.settings.data.first().playbackOptions.shuffle }
+            )
 
     val currentLoopMode: StateFlow<LoopMode> =
         symphony.settings.data
@@ -45,11 +48,7 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
     fun setLoopMode(newMode: LoopMode) {
         scope.launch {
             symphony.settings.updateData {
-                it.copy {
-                    playbackOptions = playbackOptions.copy {
-                        loopMode = newMode
-                    }
-                }
+                it.copy { playbackOptions = playbackOptions.copy { loopMode = newMode } }
             }
         }
         Logger.warn("RadioQueue", "setLoopMode -> wrote $newMode")
@@ -138,13 +137,17 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
 
 
 
-    fun toggleShuffleMode() = setShuffleMode(!currentShuffleMode)
+    fun toggleShuffleMode() = setShuffleMode(!currentShuffleMode.value)
 
-    fun setShuffleMode(to: Boolean) {
-        currentShuffleMode = to
+    fun setShuffleMode(newShuffleMode: Boolean) {
+        scope.launch {
+            symphony.settings.updateData {
+                it.copy { playbackOptions = playbackOptions.copy { shuffle = newShuffleMode } }
+            }
+        }
         if (currentQueue.isNotEmpty()) {
             val currentSongId = getSongIdAt(currentSongIndex) ?: getSongIdAt(0)!!
-            currentSongIndex = if (currentShuffleMode) {
+            currentSongIndex = if (newShuffleMode) {
                 val newQueue = originalQueue.toMutableList()
                 newQueue.removeAt(currentSongIndex)
                 newQueue.shuffle()
@@ -186,7 +189,7 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
                     playedDuration = playbackPosition.played,
                     originalQueue = queue.originalQueue.toList(),
                     currentQueue = queue.currentQueue.toList(),
-                    shuffled = queue.currentShuffleMode,
+                    shuffled = queue.currentShuffleMode.value,
                 )
 
             fun parse(data: String): Serialized? {
@@ -214,7 +217,13 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
             currentQueue.clear()
             currentQueue.addAll(serialized.currentQueue)
             symphony.radio.onUpdate.dispatch(Radio.Events.Queue.Modified)
-            currentShuffleMode = serialized.shuffled
+
+            scope.launch {
+                symphony.settings.updateData {
+                    it.copy { playbackOptions = playbackOptions.copy { shuffle = serialized.shuffled } }
+                }
+            }
+
             afterAdd(
                 Radio.PlayOptions(
                     index = serialized.currentSongIndex,
