@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
@@ -38,7 +39,7 @@ fun SelectAlbumDiscDialog(
 
     LaunchedEffect(album) {
         isLoading = true
-        val allSongIds = album.getSortedSongIds(context.symphony)
+        val allSongIds = album.getSortedSongIds(context.symphony, SongSortBy.SONG_TRACK_NUMBER, false)
         val fetchedSongs = context.symphony.groove.song.get(allSongIds)
         albumSongs = fetchedSongs
 

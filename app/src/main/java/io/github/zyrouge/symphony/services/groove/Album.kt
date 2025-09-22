@@ -1,6 +1,7 @@
 package io.github.zyrouge.symphony.services.groove
 
 import androidx.compose.runtime.Immutable
+import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.Symphony
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
@@ -23,12 +24,12 @@ data class Album(
         symphony.groove.album.createArtworkImageRequest(id)
 
     fun getSongIds(symphony: Symphony) = symphony.groove.album.getSongIds(id)
-    suspend fun getSortedSongIds(symphony: Symphony): List<String> {
+    suspend fun getSortedSongIds(symphony: Symphony, by : SongSortBy? = null, reverse: Boolean? = null): List<String> {
         val currentSettings = symphony.settings.data.first()
         return symphony.groove.song.sort(
             getSongIds(symphony),
-            currentSettings.uiArtistViewSongsSort.by,
-            currentSettings.uiArtistViewSongsSort.reverse,
+            by ?: currentSettings.uiAlbumViewSongsSort.by,
+            reverse ?: currentSettings.uiAlbumViewSongsSort.reverse,
         )
     }
 }
