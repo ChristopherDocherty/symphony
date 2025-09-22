@@ -85,14 +85,14 @@ fun ForYouView(context: ViewContext) {
         songIds.isNotEmpty() -> {
             val sortedSongIds by remember(songsIsUpdating, songIds, sortBy, sortReverse) {
                 derivedStateOf {
-                    runIfOrDefault(songsIsUpdating == null, listOf()) {
+                    runIfOrDefault(!songsIsUpdating, listOf()) {
                         context.symphony.groove.song.sort(songIds.toList(), sortBy, sortReverse)
                     }
                 }
             }
             val recentlyAddedSongs by remember(songsIsUpdating, songIds) {
                 derivedStateOf {
-                    runIfOrDefault(songsIsUpdating == null, listOf()) {
+                    runIfOrDefault(!songsIsUpdating, listOf()) {
                         context.symphony.groove.song.sort(
                             songIds.toList(),
                             SongSortBy.SONG_DATE_MODIFIED,
@@ -103,21 +103,21 @@ fun ForYouView(context: ViewContext) {
             }
             val randomAlbums by remember(albumsIsUpdating, albumIds) {
                 derivedStateOf {
-                    runIfOrDefault(albumsIsUpdating == null, listOf()) {
+                    runIfOrDefault(!albumsIsUpdating, listOf()) {
                         albumIds.randomSubList(6)
                     }
                 }
             }
             val randomArtists by remember(artistsIsUpdating, artistNames) {
                 derivedStateOf {
-                    runIfOrDefault(artistsIsUpdating == null, listOf()) {
+                    runIfOrDefault(!artistsIsUpdating, listOf()) {
                         artistNames.randomSubList(6)
                     }
                 }
             }
             val randomAlbumArtists by remember(albumArtistsIsUpdating, albumArtistNames) {
                 derivedStateOf {
-                    runIfOrDefault(albumArtistsIsUpdating == null, listOf()) {
+                    runIfOrDefault(!albumArtistsIsUpdating, listOf()) {
                         albumArtistNames.randomSubList(6)
                     }
                 }
@@ -131,7 +131,7 @@ fun ForYouView(context: ViewContext) {
                             text = {
                                 Text(context.symphony.t.PlayAll)
                             },
-                            enabled = songsIsUpdating == null,
+                            enabled = !songsIsUpdating,
                             onClick = {
                                 context.symphony.radio.shorty.playQueue(sortedSongIds)
                             },
@@ -144,7 +144,7 @@ fun ForYouView(context: ViewContext) {
                             text = {
                                 Text(context.symphony.t.ShufflePlay)
                             },
-                            enabled = songsIsUpdating == null,
+                            enabled = !songsIsUpdating,
                             onClick = {
                                 context.symphony.radio.shorty.playQueue(
                                     songIds.toList(),
@@ -160,7 +160,7 @@ fun ForYouView(context: ViewContext) {
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 when {
-                    songsIsUpdating != null -> SixGridLoading()
+                    songsIsUpdating -> SixGridLoading()
                     recentlyAddedSongs.isEmpty() -> SixGridEmpty(context)
                     else -> BoxWithConstraints {
                         val tileWidth = this@BoxWithConstraints.maxWidth.times(0.7f)
@@ -272,21 +272,21 @@ fun ForYouView(context: ViewContext) {
                     when (it) {
                         ForYou.Albums -> SuggestedAlbums(
                             context,
-                            isLoading = albumsIsUpdating != null,
+                            isLoading = albumsIsUpdating,
                             albumIds = randomAlbums,
                         )
 
                         ForYou.Artists -> SuggestedArtists(
                             context,
                             label = context.symphony.t.SuggestedArtists,
-                            isLoading = artistsIsUpdating != null,
+                            isLoading = artistsIsUpdating,
                             artistNames = randomArtists,
                         )
 
                         ForYou.AlbumArtists -> SuggestedAlbumArtists(
                             context,
                             label = context.symphony.t.SuggestedAlbumArtists,
-                            isLoading = albumArtistsIsUpdating != null,
+                            isLoading = albumArtistsIsUpdating,
                             albumArtistNames = randomAlbumArtists,
                         )
                     }
