@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.ui.helpers.Assets
 import io.github.zyrouge.symphony.utils.DocumentFileX
+import io.github.zyrouge.symphony.utils.Logger
 import io.github.zyrouge.symphony.utils.SimplePath
 import kotlin.io.path.Path
 import kotlin.io.path.nameWithoutExtension
@@ -31,15 +32,10 @@ data class Playlist(
             ?: Assets.createPlaceholderImageRequest(symphony)
 
     fun getSongIds(symphony: Symphony): List<String> {
-        val parentPath = path?.let { SimplePath(it) }?.parent
-        val primaryPath = SimplePath(PRIMARY_STORAGE)
-        return songPaths.mapNotNull { x ->
-            symphony.groove.song.pathCache[x]
-                ?: x.takeIf { x[0] == '/' }?.let {
-                    symphony.groove.song.pathCache[it.substring(1).replaceFirst("/", ":")]
+        return songPaths.mapNotNull { path ->
+                path.let {
+                    symphony.groove.song.pathCache[it.replaceFirst("/", ":")]
                 }
-                ?: parentPath?.let { symphony.groove.song.pathCache[it.join(x).pathString] }
-                ?: symphony.groove.song.pathCache[primaryPath.join(x).pathString]
         }
     }
 

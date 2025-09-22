@@ -242,6 +242,9 @@ class MediaExposer(private val symphony: Symphony) {
     ) {
         uris[path.pathString] = file.uri
         explorer.addChildFile(path)
+
+        val playlist = Playlist.parse(symphony, null, file.uri)
+        symphony.groove.playlist.add(playlist)
     }
 
     private fun scanImageFile(
