@@ -16,13 +16,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.ui.components.SelectAlbumDiscDialog // Added import
+import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,6 +80,7 @@ fun AlbumDropdownMenu(
 ) {
     var showAddToPlaylistDialog by remember { mutableStateOf(false) }
     var showSelectDiscDialog by remember { mutableStateOf(false) } // Added state
+    val uriHandler = LocalUriHandler.current
 
     val scope = rememberCoroutineScope()
     DropdownMenu(
@@ -168,6 +173,18 @@ fun AlbumDropdownMenu(
                 }
             )
         }
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(painter=painterResource(R.drawable.last_fm), "last.fm icon")
+            },
+            text = {
+                Text("Open on last.fm")
+            },
+            onClick = {
+                onDismissRequest()
+                uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(album.artists.first())}/${escapeTextForLastFmUrl (album.name)}")
+            }
+        )
     }
 
     if (showAddToPlaylistDialog) {
