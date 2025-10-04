@@ -78,23 +78,23 @@ fun SquareGrooveTile(
                             }
                         }
                     }
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomStart)
-                            .padding(8.dp)
-                    ) {
-                        IconButton(
-                            modifier = Modifier
-                                .background(
-                                    MaterialTheme.colorScheme.surface,
-                                    RoundedCornerShape(12.dp)
-                                )
-                                .then(Modifier.size(36.dp)),
-                            onClick = onPlay
-                        ) {
-                            Icon(Icons.Filled.PlayArrow, null)
-                        }
-                    }
+//                    Box(
+//                        modifier = Modifier
+//                            .align(Alignment.BottomStart)
+//                            .padding(8.dp)
+//                    ) {
+//                        IconButton(
+//                            modifier = Modifier
+//                                .background(
+//                                    MaterialTheme.colorScheme.surface,
+//                                    RoundedCornerShape(12.dp)
+//                                )
+//                                .then(Modifier.size(36.dp)),
+//                            onClick = onPlay
+//                        ) {
+//                            Icon(Icons.Filled.PlayArrow, null)
+//                        }
+//                    }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 content()
