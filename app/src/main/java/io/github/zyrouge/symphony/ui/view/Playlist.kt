@@ -34,6 +34,7 @@ import io.github.zyrouge.symphony.ui.components.SongListType
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.theme.ThemeColors
+import io.github.zyrouge.symphony.utils.Logger
 import io.github.zyrouge.symphony.utils.mutate
 import kotlinx.serialization.Serializable
 
@@ -124,6 +125,7 @@ fun PlaylistView(context: ViewContext, route: PlaylistViewRoute) {
                     .padding(contentPadding)
                     .fillMaxSize()
             ) {
+                Logger.warn("playlist","in playlist: ${songIds}")
                 when {
                     isViable -> SongList(
                         context,

@@ -33,9 +33,7 @@ data class Playlist(
 
     fun getSongIds(symphony: Symphony): List<String> {
         return songPaths.mapNotNull { path ->
-                path.let {
-                    symphony.groove.song.pathCache[it.replaceFirst("/", ":")]
-                }
+            symphony.groove.song.pathCache[path]
         }
     }
 
