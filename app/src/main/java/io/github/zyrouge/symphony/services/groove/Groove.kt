@@ -38,7 +38,7 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
     private suspend fun fetch() {
         coroutineScope.launch {
             awaitAll(
-                async { exposer.fetch() },
+    async { exposer.fetch() },
                 async { playlist.fetch() },
             )
         }.join()
@@ -47,7 +47,8 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
     private suspend fun fetchFromCache() {
         coroutineScope.launch {
             awaitAll(
-                async { exposer.loadFromCache() },
+        async { exposer.loadFromCache() },
+                    async { playlist.fetch() },
             )
         }.join()
     }

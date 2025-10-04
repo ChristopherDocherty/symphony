@@ -52,8 +52,6 @@ data class Playlist(
     )
 
     companion object {
-        private const val PRIMARY_STORAGE = "primary:"
-
         fun parse(symphony: Symphony, playlistId: String?, uri: Uri): Playlist {
             val file = DocumentFileX.fromSingleUri(symphony.applicationContext, uri)!!
             val content = symphony.applicationContext.contentResolver.openInputStream(uri)
