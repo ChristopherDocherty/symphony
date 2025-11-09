@@ -56,13 +56,12 @@ class PlaylistRepository(private val symphony: Symphony) {
     suspend fun fetch() {
         emitUpdate(true)
         try {
-            val context = symphony.applicationContext
             val playlists = symphony.database.playlists.entries()
-            playlists.values.map { x ->
+            playlists.values.filter { x -> cache.contains(x.id) }
+                .map { x ->
                 val playlist = when {
                     x.isLocal -> {
-                        ActivityUtils.makePersistableReadableUri(context, x.uri!!)
-                        Playlist.parse(symphony, x.id, x.uri)
+                        Playlist.parse(symphony, x.id, x.uri!!)
                     }
 
                     else -> x

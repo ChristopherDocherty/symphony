@@ -41,7 +41,7 @@ fun PlaylistsView(context: ViewContext) {
     val playlistsCount by context.symphony.groove.playlist.count.collectAsState()
     var showPlaylistCreator by remember { mutableStateOf(false) }
 
-    val openPlaylistLauncher = rememberLauncherForActivityResult(
+    val importPlaylistLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
         uris.forEach { x ->
@@ -72,7 +72,7 @@ fun PlaylistsView(context: ViewContext) {
                         showPlaylistCreator = true
                     },
                     showPlaylistPicker = {
-                        openPlaylistLauncher.launch(arrayOf(MediaExposer.MIMETYPE_M3U))
+                        importPlaylistLauncher.launch(arrayOf(MediaExposer.MIMETYPE_M3U))
                     },
                 )
                 Spacer(modifier = Modifier.height(4.dp))
