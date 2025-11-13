@@ -60,8 +60,8 @@ data class Playlist(
                 .map { it.trim() }
                 .filter { it.isNotEmpty() && it[0] != '#' }
                 .toList()
-            val id = playlistId ?: symphony.groove.playlist.idGenerator.next()
             val path = DocumentFileX.getParentPathOfSingleUri(file.uri) ?: file.name
+            val id = path
             return Playlist(
                 id = id,
                 title = Path(path).nameWithoutExtension,

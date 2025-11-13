@@ -5,12 +5,17 @@ import androidx.room.Insert
 import androidx.room.MapColumn
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import io.github.zyrouge.symphony.services.groove.Playlist
 
 @Dao
 interface PlaylistStore {
     @Insert
     suspend fun insert(vararg playlist: Playlist): List<Long>
+
+
+    @Upsert
+    suspend fun upsert(vararg playlist: Playlist): List<Long>
 
     @Update
     suspend fun update(vararg playlist: Playlist): Int

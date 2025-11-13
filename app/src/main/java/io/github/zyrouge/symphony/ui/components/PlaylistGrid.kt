@@ -22,7 +22,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 @Composable
 fun PlaylistGrid(
     context: ViewContext,
-    playlistIds: List<String>,
+    playlistIds: Set<String>,
     playlistsCount: Int? = null,
     leadingContent: @Composable () -> Unit = {},
 ) {
@@ -30,7 +30,7 @@ fun PlaylistGrid(
     val sortReverse by context.symphony.settingsOLD.lastUsedPlaylistsSortReverse.flow.collectAsState()
     val sortedPlaylistIds by remember(playlistIds, sortBy, sortReverse) {
         derivedStateOf {
-            context.symphony.groove.playlist.sort(playlistIds, sortBy, sortReverse)
+            context.symphony.groove.playlist.sort(playlistIds.toList(), sortBy, sortReverse)
         }
     }
     val horizontalGridColumns by context.symphony.settingsOLD.lastUsedPlaylistsHorizontalGridColumns.flow.collectAsState()

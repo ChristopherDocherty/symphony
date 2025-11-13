@@ -34,7 +34,7 @@ class PlaylistRepository(private val symphony: Symphony) {
     val isUpdating = _isUpdating.asStateFlow()
     private val _updateId = MutableStateFlow(0L)
     val updateId = _updateId.asStateFlow()
-    private val _all = MutableStateFlow<List<String>>(emptyList())
+    private val _all = MutableStateFlow<Set<String>>(setOf())
     val all = _all.asStateFlow()
     private val _count = MutableStateFlow(0)
     val count = _count.asStateFlow()
@@ -57,8 +57,7 @@ class PlaylistRepository(private val symphony: Symphony) {
         emitUpdate(true)
         try {
             val playlists = symphony.database.playlists.entries()
-            playlists.values.filter { x -> cache.contains(x.id) }
-                .map { x ->
+            playlists.values.map { x ->
                 val playlist = when {
                     x.isLocal -> {
                         Playlist.parse(symphony, x.id, x.uri!!)
@@ -91,7 +90,7 @@ class PlaylistRepository(private val symphony: Symphony) {
         emitUpdate(true)
         cache.clear()
         _all.update {
-            emptyList()
+            emptySet()
         }
         emitCount()
         _favorites.update {
@@ -147,7 +146,7 @@ class PlaylistRepository(private val symphony: Symphony) {
         emitUpdateId()
         emitCount()
         symphony.groove.coroutineScope.launch {
-            symphony.database.playlists.insert(playlist)
+            symphony.database.playlists.upsert(playlist)
         }
     }
 

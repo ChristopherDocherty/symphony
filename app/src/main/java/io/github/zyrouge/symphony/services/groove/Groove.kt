@@ -39,7 +39,6 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
         coroutineScope.launch {
             awaitAll(
     async { exposer.fetch() },
-                async { playlist.fetch() },
             )
         }.join()
     }
