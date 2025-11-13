@@ -60,6 +60,17 @@ message PlaybackOptions {
   bool shuffle = 2;
 }
 
+
+message AlbumFilter {
+  repeated string release_type = 1;
+  repeated string original_owner = 2;
+  repeated string listened_to_status = 3;
+  repeated string country = 4;
+  repeated string collections = 5;
+  repeated uint32 album_of_the_year_rank = 6;
+  repeated uint32 release_year = 7;
+}
+
 message Settings {
 
   SongSortPreference ui_default_song_sort = 2;
@@ -73,6 +84,10 @@ message Settings {
   bool ui_artist_album_row_hide_compilations = 9;
 
   ArtistSortPreference ui_default_artist_sort = 8;
+
+
+  AlbumFilter ui_album_grid_album_filter = 801;
+  AlbumFilter ui_album_row_album_filter = 802;
 
   PlaybackOptions playback_options = 901;
 }
