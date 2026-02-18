@@ -91,6 +91,7 @@ import io.github.zyrouge.symphony.ui.view.home.GenresView
 import io.github.zyrouge.symphony.ui.view.home.PlaylistsView
 import io.github.zyrouge.symphony.ui.view.home.SongsView
 import io.github.zyrouge.symphony.ui.view.home.TreeView
+import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import kotlinx.serialization.Serializable
 
 enum class HomePage(
@@ -171,8 +172,9 @@ object HomeViewRoute
 private fun HomeTopAppBar(
     context: ViewContext,
     currentTab: HomePage,
+    extraDropdownItems: @Composable () -> Unit,
     onSearchClick: () -> Unit,
-    onMoreOptionsClick: () -> Unit, // Or manage dropdown state internally
+    onMoreOptionsClick: () -> Unit,
 ) {
     var showOptionsDropdown by remember { mutableStateOf(false) } // Manage here or pass state
 
@@ -207,6 +209,7 @@ private fun HomeTopAppBar(
                     HomeTopAppBarDropdownMenu(
                         context = context,
                         expanded = showOptionsDropdown,
+                        extraItems = extraDropdownItems,
                         onDismissRequest = { showOptionsDropdown = false },
                         onRescanClick = {
                             showOptionsDropdown = false
@@ -258,6 +261,7 @@ private fun HomePageContent(
 private fun HomeTopAppBarDropdownMenu(
     context: ViewContext,
     expanded: Boolean,
+    extraItems: @Composable () -> Unit,
     onDismissRequest: () -> Unit,
     onRescanClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -280,6 +284,7 @@ private fun HomeTopAppBarDropdownMenu(
             text = { Text(context.symphony.t.Settings) },
             onClick = onSettingsClick
         )
+        extraItems()
     }
 }
 
@@ -346,17 +351,22 @@ fun HomeView(context: ViewContext) {
     val currentTab by context.symphony.settingsOLD.lastHomeTab.flow.collectAsState()
     var showOptionsDropdown by remember { mutableStateOf(false) }
     var showTabsSheet by remember { mutableStateOf(false) }
+    val pageStates = remember { mapOf(
+        HomePage.Albums to AlbumsPageState(),
+    ) }
+    val currentPageState = pageStates[currentTab]
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
                 HomeTopAppBar(
                     context = context,
-                    currentTab = currentTab, // or currentTabState
+                    currentTab = currentTab,
+                    extraDropdownItems = { currentPageState?.DropdownItems() },
                     onSearchClick = {
-                        context.navController.navigate(SearchViewRoute(currentTab.kind?.name)) // or currentTabState.kind
+                        context.navController.navigate(SearchViewRoute(currentTab.kind?.name))
                     },
-                    onMoreOptionsClick = { /* Logic to show dropdown or handle directly in HomeTopAppBar */ }
+                    onMoreOptionsClick = {}
                 )
         },
         content = { contentPadding ->
@@ -445,6 +455,8 @@ fun HomeView(context: ViewContext) {
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
+
+    currentPageState?.Dialogs(context)
 
     if (!readIntroductoryMessage) {
         IntroductoryDialog(
