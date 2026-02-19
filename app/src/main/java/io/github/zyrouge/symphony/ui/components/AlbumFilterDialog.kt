@@ -41,16 +41,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.copy
+import io.github.zyrouge.symphony.services.groove.ALBUM_STRING_FILTER_FIELDS
+import io.github.zyrouge.symphony.services.groove.StringFilterField
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-
-// Hardcoded available values per field — will be replaced by library data in a later step
-private val RELEASE_TYPE_OPTIONS = listOf("Album", "EP", "Single", "Compilation", "Live", "Demo", "Remix")
-private val ORIGINAL_OWNER_OPTIONS = listOf("Self", "Gift", "Inherited", "Borrowed")
-private val LISTENED_TO_STATUS_OPTIONS = listOf("Unlistened", "In Progress", "Listened", "Revisiting")
-private val COUNTRY_OPTIONS = listOf("US", "UK", "JP", "DE", "FR", "SE", "AU", "CA")
-private val COLLECTIONS_OPTIONS = listOf("Favourites", "Wishlist", "Loaned Out", "To Rip")
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -61,19 +56,15 @@ fun AlbumFilterDialog(
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(true) }
 
-    val releaseTypeState = remember { mutableStateListOf<String>() }
-    val originalOwnerState = remember { mutableStateListOf<String>() }
-    val listenedToStatusState = remember { mutableStateListOf<String>() }
-    val countryState = remember { mutableStateListOf<String>() }
-    val collectionsState = remember { mutableStateListOf<String>() }
+    val fieldStates = remember {
+        ALBUM_STRING_FILTER_FIELDS.map { it to mutableStateListOf<String>() }
+    }
 
     LaunchedEffect(Unit) {
         val filter = context.symphony.settings.data.first().uiAlbumGridAlbumFilter
-        releaseTypeState.addAll(filter.releaseTypeList)
-        originalOwnerState.addAll(filter.originalOwnerList)
-        listenedToStatusState.addAll(filter.listenedToStatusList)
-        countryState.addAll(filter.countryList)
-        collectionsState.addAll(filter.collectionsList)
+        fieldStates.forEach { (field, state) ->
+            state.addAll(field.getSelected(filter))
+        }
         isLoading = false
     }
 
@@ -92,43 +83,16 @@ fun AlbumFilterDialog(
                 }
             } else {
                 LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        FilterSection(
-                            label = "Release Type",
-                            state = releaseTypeState,
-                            available = RELEASE_TYPE_OPTIONS,
-                        )
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
+                    fieldStates.forEach { (field, state) ->
+                        item {
+                            FilterSection(
+                                field = field,
+                                state = state,
+                            )
+                        }
                     }
-                    item {
-                        FilterSection(
-                            label = "Original Owner",
-                            state = originalOwnerState,
-                            available = ORIGINAL_OWNER_OPTIONS,
-                        )
-                    }
-                    item {
-                        FilterSection(
-                            label = "Listened To Status",
-                            state = listenedToStatusState,
-                            available = LISTENED_TO_STATUS_OPTIONS,
-                        )
-                    }
-                    item {
-                        FilterSection(
-                            label = "Country",
-                            state = countryState,
-                            available = COUNTRY_OPTIONS,
-                        )
-                    }
-                    item {
-                        FilterSection(
-                            label = "Collections",
-                            state = collectionsState,
-                            available = COLLECTIONS_OPTIONS,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
             }
         },
@@ -142,12 +106,10 @@ fun AlbumFilterDialog(
                     coroutineScope.launch {
                         context.symphony.settings.updateData { settings ->
                             settings.copy {
-                                uiAlbumGridAlbumFilter = AlbumFilter.newBuilder()
-                                    .addAllReleaseType(releaseTypeState)
-                                    .addAllOriginalOwner(originalOwnerState)
-                                    .addAllListenedToStatus(listenedToStatusState)
-                                    .addAllCountry(countryState)
-                                    .addAllCollections(collectionsState)
+                                uiAlbumGridAlbumFilter = fieldStates
+                                    .fold(AlbumFilter.newBuilder()) { builder, (field, state) ->
+                                        field.applyTo(builder, state.toList())
+                                    }
                                     .build()
                             }
                         }
@@ -164,15 +126,14 @@ fun AlbumFilterDialog(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FilterSection(
-    label: String,
+    field: StringFilterField,
     state: SnapshotStateList<String>,
-    available: List<String>,
 ) {
     var showPicker by remember { mutableStateOf(false) }
-    val pickable = available.filter { it !in state }
+    val pickable = field.available.filter { it !in state }
 
     Text(
-        label,
+        field.label,
         style = MaterialTheme.typography.labelMedium,
         modifier = Modifier.padding(bottom = 8.dp),
     )
@@ -212,7 +173,7 @@ private fun FilterSection(
 
     if (showPicker) {
         PickerDialog(
-            title = label,
+            title = field.label,
             options = pickable,
             onSelect = { value ->
                 state.add(value)
