@@ -49,6 +49,8 @@ data class Song(
     val path: String,
     @ColumnInfo(defaultValue = "0")
     val is_compilation: Boolean = false,
+    @ColumnInfo(defaultValue = "{}")
+    val customTags: Map<String, String> = emptyMap(),
 ) {
     data class ParseOptions(
         val symphony: Symphony,
@@ -188,6 +190,12 @@ data class Song(
                 uri = file.uri,
                 path = path.pathString,
                 is_compilation = metadata.isCompilation,
+                customTags = ALBUM_STRING_FILTER_FIELDS
+                    .mapNotNull { field ->
+                        metadata.customTags[field.tagName]?.firstOrNull()
+                            ?.let { field.tagName to it }
+                    }
+                    .toMap(),
             )
         }
 

@@ -14,10 +14,11 @@ import io.github.zyrouge.symphony.utils.RoomConvertors
 
 @Database(
     entities = [Song::class],
-    version = 3, // Incremented database version
+    version = 4,
     autoMigrations = [
         AutoMigration(1, 2, CacheDatabase.Migration1To2::class),
-        AutoMigration(2, 3) // Added auto-migration for version 2 to 3
+        AutoMigration(2, 3),
+        AutoMigration(3, 4),
     ]
 )
 @TypeConverters(RoomConvertors::class)

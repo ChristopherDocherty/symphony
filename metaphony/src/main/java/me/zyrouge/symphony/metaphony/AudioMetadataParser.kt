@@ -58,6 +58,7 @@ class AudioMetadataParser private constructor() {
             channels = audioProperties["CHANNELS"],
             pictures = pictures,
             isCompilation = tags["COMPILATION"]?.firstOrNull() == "1",
+            customTags = tags,
         )
     }
 

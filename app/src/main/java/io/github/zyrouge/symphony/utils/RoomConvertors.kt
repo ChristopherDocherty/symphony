@@ -26,6 +26,12 @@ class RoomConvertors {
     fun deserializeStringList(value: String) = Json.decodeFromString<List<String>>(value)
 
     @TypeConverter
+    fun serializeStringMap(value: Map<String, String>) = Json.encodeToString(value)
+
+    @TypeConverter
+    fun deserializeStringMap(value: String) = Json.decodeFromString<Map<String, String>>(value)
+
+    @TypeConverter
     fun serializeLocalDate(value: LocalDate) = value.toString()
 
     @TypeConverter

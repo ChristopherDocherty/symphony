@@ -22,6 +22,7 @@ data class AudioMetadata(
     val channels: Int?,
     val pictures: List<Picture>,
     val isCompilation: Boolean = false,
+    val customTags: Map<String, List<String>> = emptyMap(),
 ) {
     data class Picture(val pictureType: String, val mimeType: String, val data: ByteArray)
 }
