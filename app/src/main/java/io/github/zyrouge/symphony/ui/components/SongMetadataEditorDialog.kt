@@ -13,13 +13,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.services.groove.SONG_TAG_FIELDS
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.Dispatchers
@@ -32,12 +32,9 @@ fun SongMetadataEditorDialog(
     song: Song,
     onDismissRequest: () -> Unit,
 ) {
-    var artist by remember { mutableStateOf(song.artists.joinToString(", ")) }
-    var album by remember { mutableStateOf(song.album ?: "") }
-    var genre by remember { mutableStateOf(song.genres.joinToString(", ")) }
-    var year by remember { mutableStateOf(song.year?.toString() ?: "") }
-    var trackNumber by remember { mutableStateOf(song.trackNumber?.toString() ?: "") }
-
+    val fieldValues: SnapshotStateList<String> = remember {
+        SONG_TAG_FIELDS.map { it.getValue(song) }.toMutableStateList()
+    }
     val coroutineScope = rememberCoroutineScope()
 
     ScaffoldDialog(
@@ -47,13 +44,10 @@ fun SongMetadataEditorDialog(
             IconButton(
                 onClick = {
                     coroutineScope.launch(Dispatchers.IO) {
-                        val tags = buildMap {
-                            put("ARTIST", artist)
-                            put("ALBUM", album)
-                            put("GENRE", genre)
-                            if (year.isNotBlank()) put("DATE", year)
-                            if (trackNumber.isNotBlank()) put("TRACKNUMBER", trackNumber)
-                        }
+                        val tags = SONG_TAG_FIELDS.mapIndexedNotNull { i, field ->
+                            val value = fieldValues[i]
+                            if (value.isNotBlank()) field.tagKey to value else null
+                        }.toMap()
                         val fd = context.activity.contentResolver
                             .openFileDescriptor(song.uri, "rw")
                             ?.detachFd()
@@ -73,36 +67,14 @@ fun SongMetadataEditorDialog(
                     .padding(16.dp, 12.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
-                OutlinedTextField(
-                    value = artist,
-                    onValueChange = { artist = it },
-                    label = { Text("Artist") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = album,
-                    onValueChange = { album = it },
-                    label = { Text("Album") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = genre,
-                    onValueChange = { genre = it },
-                    label = { Text("Genre") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = year,
-                    onValueChange = { year = it },
-                    label = { Text("Year") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = trackNumber,
-                    onValueChange = { trackNumber = it },
-                    label = { Text("Track Number") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                SONG_TAG_FIELDS.forEachIndexed { i, field ->
+                    OutlinedTextField(
+                        value = fieldValues[i],
+                        onValueChange = { fieldValues[i] = it },
+                        label = { Text(field.label) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
     )
