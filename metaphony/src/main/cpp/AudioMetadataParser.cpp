@@ -127,4 +127,47 @@ Java_me_zyrouge_symphony_metaphony_AudioMetadataParser_readMetadata(
     }
     return static_cast<jboolean>(true);
 }
+
+JNIEXPORT jboolean JNICALL
+Java_me_zyrouge_symphony_metaphony_AudioMetadataParser_writeMetadata(
+        JNIEnv *env,
+        jobject thiz,
+        jstring filename,
+        jint fd,
+        jobjectArray keys,
+        jobjectArray values) {
+    const char *filenameStr = env->GetStringUTFChars(filename, nullptr);
+    const auto stream = std::make_unique<TagLib::FileStream>(fd, false);
+    const auto rawFile = TagLibHelper::detectParser(
+            filenameStr,
+            stream.get(),
+            false,
+            TagLib::AudioProperties::ReadStyle::Fast);
+    env->ReleaseStringUTFChars(filename, filenameStr);
+    if (!rawFile) {
+        return static_cast<jboolean>(false);
+    }
+    const std::unique_ptr<TagLib::File> file(rawFile);
+
+    auto props = file->properties();
+    const jint length = env->GetArrayLength(keys);
+    for (jint i = 0; i < length; i++) {
+        const auto jKey = (jstring) env->GetObjectArrayElement(keys, i);
+        const auto jValue = (jstring) env->GetObjectArrayElement(values, i);
+        const char *keyStr = env->GetStringUTFChars(jKey, nullptr);
+        const char *valueStr = env->GetStringUTFChars(jValue, nullptr);
+        const auto key = TagLib::String(keyStr, TagLib::String::UTF8);
+        const auto value = TagLib::String(valueStr, TagLib::String::UTF8);
+        env->ReleaseStringUTFChars(jKey, keyStr);
+        env->ReleaseStringUTFChars(jValue, valueStr);
+        env->DeleteLocalRef(jKey);
+        env->DeleteLocalRef(jValue);
+        TagLib::StringList valueList;
+        valueList.append(value);
+        props[key] = valueList;
+    }
+
+    file->setProperties(props);
+    return static_cast<jboolean>(file->save());
+}
 }

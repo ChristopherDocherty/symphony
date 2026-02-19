@@ -61,7 +61,7 @@ fun SettingsMultiSystemFolderTile(
             ActivityResultContracts.OpenDocumentTree()
         ) { uri ->
             uri?.let { _ ->
-                ActivityUtils.makePersistableReadableUri(context.symphony.applicationContext, uri)
+                ActivityUtils.makePersistableReadWriteUri(context.symphony.applicationContext, uri)
                 values.add(uri)
             }
         }
@@ -111,7 +111,7 @@ fun SettingsMultiSystemFolderTile(
                 actions = {
                     TextButton(
                         onClick = {
-                            pickFolderLauncher.launch(null)
+                            pickFolderLauncher.launch(values.lastOrNull())
                         }
                     ) {
                         Text(context.symphony.t.AddFolder)

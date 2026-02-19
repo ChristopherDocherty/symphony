@@ -27,6 +27,22 @@ object ActivityUtils {
         )
     }
 
+    fun makePersistableReadWriteUri(context: Context, uri: Uri) {
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+            // Write permission not available (e.g. folder was added before write support).
+            // Fall back to read-only so scanning still works.
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        }
+    }
+
     fun releasePersistableReadableUri(context: Context, uri: Uri) {
         context.contentResolver.releasePersistableUriPermission(
             uri,

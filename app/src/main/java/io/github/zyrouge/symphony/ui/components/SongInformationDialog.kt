@@ -3,9 +3,17 @@ package io.github.zyrouge.symphony.ui.components
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextDecoration
@@ -23,8 +31,15 @@ import kotlin.math.round
 
 @Composable
 fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: () -> Unit) {
+    var showMetadataEditorDialog by remember { mutableStateOf(false) }
+
     InformationDialog(
         context,
+        titleTrailing = {
+            IconButton(onClick = { showMetadataEditorDialog = true }) {
+                Icon(Icons.Filled.Edit, contentDescription = "Edit metadata")
+            }
+        },
         content = {
             InformationKeyValue(context.symphony.t.Id) {
                 LongPressCopyableText(context, song.id)
@@ -147,6 +162,14 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
         },
         onDismissRequest = onDismissRequest,
     )
+
+    if (showMetadataEditorDialog) {
+        SongMetadataEditorDialog(
+            context = context,
+            song = song,
+            onDismissRequest = { showMetadataEditorDialog = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

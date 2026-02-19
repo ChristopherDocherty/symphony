@@ -19,12 +19,14 @@ fun InformationDialog(
     context: ViewContext,
     content: @Composable (ColumnScope.() -> Unit),
     onDismissRequest: () -> Unit,
+    titleTrailing: (@Composable () -> Unit)? = null,
 ) {
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
             Text(context.symphony.t.Details)
         },
+        titleTrailing = titleTrailing,
         content = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),

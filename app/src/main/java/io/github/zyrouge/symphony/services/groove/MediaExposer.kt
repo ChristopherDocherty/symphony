@@ -76,8 +76,9 @@ class MediaExposer(private val symphony: Symphony) {
 
             coroutineScope {
                 val deferredSongLists = folderUris.mapNotNull { uri ->
-                    ActivityUtils.makePersistableReadableUri(context, uri)
-                    DocumentFileX.fromTreeUri(context, uri)?.let { docFile ->
+                    ActivityUtils.makePersistableReadWriteUri(context, uri)
+                    val docFile = DocumentFileX.fromTreeUri(context, uri)
+                    docFile?.let {
                         val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
                         async(Dispatchers.IO) {
                             scanMediaTree(cycle, path, docFile)
@@ -105,9 +106,10 @@ class MediaExposer(private val symphony: Symphony) {
             if (!cycle.filter.isWhitelisted(path.pathString)) {
                 return emptyList()
             }
+            val children = file.list()
             val songsFound = mutableListOf<Song>()
             coroutineScope {
-                val songLists = file.list().map { childFile ->
+                val songLists = children.map { childFile ->
                     val childPath = path.join(childFile.name)
                     async {
                         when {
@@ -188,7 +190,7 @@ class MediaExposer(private val symphony: Symphony) {
         val cacheHit = cached != null &&
                 cached.dateModified == lastModified &&
                 (cached.coverFile?.let { cycle.artworkCacheUnused.contains(it) } != false)
-        
+
         val song = when {
             cacheHit -> cached!!
             else -> Song.parse(path, file, cycle.songParseOptions)

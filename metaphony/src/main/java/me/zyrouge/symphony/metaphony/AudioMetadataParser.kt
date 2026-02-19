@@ -34,6 +34,7 @@ class AudioMetadataParser private constructor() {
     }
 
     external fun readMetadata(filename: String, fd: Int): Boolean
+    external fun writeMetadata(filename: String, fd: Int, keys: Array<String>, values: Array<String>): Boolean
 
     fun toMetadata(): AudioMetadata {
         val (discNumber, discTotal) = parseSlashedNumber(tags["DISCNUMBER"]?.firstOrNull() ?: "")
@@ -74,6 +75,16 @@ class AudioMetadataParser private constructor() {
                 return null
             }
             return parser.toMetadata()
+        }
+
+        fun write(filename: String, fd: Int, tags: Map<String, String>): Boolean {
+            val parser = AudioMetadataParser()
+            return parser.writeMetadata(
+                filename,
+                fd,
+                tags.keys.toTypedArray(),
+                tags.values.toTypedArray(),
+            )
         }
 
         private fun parseSlashedNumber(text: String): Pair<Int?, Int?> {
