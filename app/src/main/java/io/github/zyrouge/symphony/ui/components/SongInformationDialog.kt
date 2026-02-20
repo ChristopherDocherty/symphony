@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextDecoration
+import io.github.zyrouge.symphony.services.groove.ALBUM_STRING_FILTER_FIELDS
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumArtistViewRoute
@@ -41,9 +42,6 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
             }
         },
         content = {
-            InformationKeyValue(context.symphony.t.Id) {
-                LongPressCopyableText(context, song.id)
-            }
             InformationKeyValue(context.symphony.t.TrackName) {
                 LongPressCopyableText(context, song.title)
             }
@@ -118,6 +116,14 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                     LongPressCopyableText(context, it.toString())
                 }
             }
+            ALBUM_STRING_FILTER_FIELDS.forEach { field ->
+                val value = song.customTags[field.tagName]
+                if (!value.isNullOrEmpty()) {
+                    InformationKeyValue(field.label) {
+                        LongPressCopyableText(context, value)
+                    }
+                }
+            }
             InformationKeyValue(context.symphony.t.Duration) {
                 LongPressCopyableText(context, DurationUtils.formatMs(song.duration))
             }
@@ -158,6 +164,9 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                     context,
                     SimpleDateFormat.getInstance().format(Date(song.dateModified * 1000)),
                 )
+            }
+            InformationKeyValue(context.symphony.t.Id) {
+                LongPressCopyableText(context, song.id)
             }
         },
         onDismissRequest = onDismissRequest,
