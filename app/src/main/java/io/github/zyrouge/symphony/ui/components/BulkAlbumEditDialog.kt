@@ -27,7 +27,6 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.SONG_TAG_FIELDS
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.Dispatchers
@@ -92,7 +91,7 @@ fun BulkAlbumEditDialog(
                                 saveProgress = index + 1
                             }
                         }
-                        context.symphony.groove.fetch(Groove.FetchOptions())
+                        context.symphony.groove.fetchPaths(songs.map { it.path })
                         withContext(Dispatchers.Main) {
                             isSaving = false
                             onDismissRequest()

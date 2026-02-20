@@ -89,6 +89,12 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
         }
     }
 
+    fun fetchPaths(paths: List<String>) {
+        coroutineScope.launch {
+            exposer.fetchPaths(paths)
+        }
+    }
+
     override fun onSymphonyReady() {
         coroutineScope.launch {
             fetchFromCache()

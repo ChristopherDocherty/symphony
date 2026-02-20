@@ -154,6 +154,45 @@ class MediaExposer(private val symphony: Symphony) {
         }
     }
 
+    suspend fun fetchPaths(paths: List<String>) {
+        emitUpdate(true)
+        scanCompletedDirs.set(0)
+        scanTotalDirs.set(paths.size)
+        emitScanProgress()
+        try {
+            val context = symphony.applicationContext
+            val cycle = ScanCycle.create(symphony)
+
+            val existingSongs = symphony.groove.song.values()
+
+            val updatedSongs = coroutineScope {
+                paths.mapNotNull { path ->
+                    val uri = uris[path] ?: return@mapNotNull null
+                    val docFile = DocumentFileX.fromSingleUri(context, uri) ?: return@mapNotNull null
+                    async(Dispatchers.IO) {
+                        scanMediaFile(cycle, SimplePath(path), docFile).firstOrNull()
+                    }
+                }.awaitAll().filterNotNull()
+            }
+
+            val updatedByPath = updatedSongs.associateBy { it.path }
+            val mergedSongs = existingSongs.filter { it.path !in updatedByPath } + updatedSongs
+
+            symphony.groove.album.reset()
+            symphony.groove.albumArtist.reset()
+            symphony.groove.artist.reset()
+            symphony.groove.genre.reset()
+            symphony.groove.song.reset()
+
+            emitSongs(mergedSongs)
+        } catch (err: Exception) {
+            Logger.error("MediaExposer", "fetchPaths failed", err)
+        }
+        _scanProgress.update { null }
+        emitUpdate(false)
+        emitFinish()
+    }
+
     suspend fun loadFromCache() {
         emitUpdate(true)
         try {
