@@ -99,7 +99,13 @@ class SongRepository(private val symphony: Symphony) {
             SongSortBy.SONG_CUSTOM -> songIds
             SongSortBy.SONG_TITLE -> songIds.sortedBy { get(it)?.title?.withCase(sensitive) }
             SongSortBy.SONG_ARTIST -> songIds.sortedBy { get(it)?.artists?.joinToStringIfNotEmpty(sensitive) }
-            SongSortBy.SONG_ALBUM -> songIds.sortedBy { get(it)?.album?.withCase(sensitive) }
+            SongSortBy.SONG_ALBUM -> songIds.sortedWith(
+                compareBy(
+                    { get(it)?.album?.withCase(sensitive) },
+                    { get(it)?.discNumber },
+                    { get(it)?.trackNumber },
+                )
+            )
             SongSortBy.SONG_DURATION -> songIds.sortedBy { get(it)?.duration }
             SongSortBy.SONG_DATE_ADDED -> songIds.sortedBy { get(it)?.dateModified }
             SongSortBy.SONG_COMPOSER -> songIds.sortedBy {
