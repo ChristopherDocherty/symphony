@@ -47,8 +47,6 @@ data class Song(
     val coverFile: String?,
     val uri: Uri,
     val path: String,
-    @ColumnInfo(defaultValue = "0")
-    val is_compilation: Boolean = false,
     @ColumnInfo(defaultValue = "{}")
     val customTags: Map<String, String> = emptyMap(),
 ) {
@@ -190,7 +188,6 @@ data class Song(
                 coverFile = coverFile,
                 uri = file.uri,
                 path = path.pathString,
-                is_compilation = metadata.isCompilation,
                 customTags = ALBUM_STRING_FILTER_FIELDS
                     .mapNotNull { field ->
                         metadata.customTags[field.tagName]?.firstOrNull()
@@ -273,7 +270,6 @@ data class Song(
                 coverFile = coverFile,
                 uri = file.uri,
                 path = path.pathString,
-                is_compilation = false, // Added is_compilation
             )
         }
 

@@ -74,9 +74,6 @@ class AlbumRepository(private val symphony: Symphony) {
                 if(song.date != null){
                     date = song.date
                 }
-                if (song.is_compilation) {
-                    is_compilation = true
-                }
                 numberOfTracks++
                 duration += song.duration.milliseconds
             } ?: run {
@@ -97,7 +94,6 @@ class AlbumRepository(private val symphony: Symphony) {
                     endYear = song.year,
                     numberOfTracks = 1,
                     duration = song.duration.milliseconds,
-                    is_compilation = song.is_compilation,
                     date = song.date,
                 )
             }
@@ -123,9 +119,6 @@ class AlbumRepository(private val symphony: Symphony) {
                     if(song.date != null){
                         date = song.date
                     }
-                    if (song.is_compilation) {
-                        is_compilation = true
-                    }
                     numberOfTracks++
                     duration += song.duration.milliseconds
                 } ?: run {
@@ -143,7 +136,6 @@ class AlbumRepository(private val symphony: Symphony) {
                         endYear = song.year,
                         numberOfTracks = 1,
                         duration = song.duration.milliseconds,
-                        is_compilation = song.is_compilation,
                         date=song.date
                     )
                 }
@@ -188,11 +180,10 @@ class AlbumRepository(private val symphony: Symphony) {
     fun search(albumIds: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, albumIds, maxLength = limit)
 
-    fun getAlbums(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean, hide_compilations: Boolean = false, filter: AlbumFilter = AlbumFilter.getDefaultInstance()): List<String> {
+    fun getAlbums(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean, filter: AlbumFilter = AlbumFilter.getDefaultInstance()): List<String> {
         val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
 
         val filteredAlbumIds = albumIds.filter { albumId ->
-            if (hide_compilations && get(albumId)?.is_compilation == true) return@filter false
             ALBUM_STRING_FILTER_FIELDS.all { field ->
                 val selected = field.getSelected(filter)
                 if (selected.isEmpty()) return@all true

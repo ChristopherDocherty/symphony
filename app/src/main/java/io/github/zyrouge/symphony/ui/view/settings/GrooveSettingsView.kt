@@ -46,7 +46,6 @@ import androidx.compose.ui.graphics.Color
 import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.copy
-import io.github.zyrouge.symphony.Settings
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.components.AdaptiveSnackbar
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
@@ -90,8 +89,6 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     val artworkQuality by context.symphony.settingsOLD.artworkQuality.flow.collectAsState()
     val caseSensitiveSorting by context.symphony.settingsOLD.caseSensitiveSorting.flow.collectAsState()
     val useMetaphony by context.symphony.settingsOLD.useMetaphony.flow.collectAsState()
-    val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
-    val artistIsHideCompilations by context.symphony.settings.data.map(Settings::getUiArtistAlbumRowHideCompilations).collectAsState(false)
     val artistAlbumsview by context.symphony.settings.data.map{it.uiArtistViewAlbumSortBy.by}.collectAsState(
         AlbumSortBy.ALBUM_YEAR)
 
@@ -277,36 +274,6 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             .associateWith { it.label(context) },
                         onChange = { value ->
                             context.symphony.settingsOLD.artworkQuality.setValue(value)
-                        }
-                    )
-                    HorizontalDivider()
-                    SettingsSwitchTile(
-                        icon = {
-                            Icon(Icons.Filled.VisibilityOff, null)
-                        },
-                        title = {
-                            Text("Hide Compilations")
-                        },
-                        value = isHideCompilations,
-                        onChange = { value ->
-                            coroutineScope.launch {
-                                context.symphony.settings.updateData { it.copy { uiAlbumGridHideCompilations = value} }
-                            }
-                        }
-                    )
-                    HorizontalDivider()
-                    SettingsSwitchTile(
-                        icon = {
-                            Icon(Icons.Filled.VisibilityOff, null)
-                        },
-                        title = {
-                            Text("Hide Compilations (Artist View)")
-                        },
-                        value = artistIsHideCompilations,
-                        onChange = { value ->
-                            coroutineScope.launch {
-                                context.symphony.settings.updateData { it.copy { uiArtistAlbumRowHideCompilations = value} }
-                            }
                         }
                     )
                     HorizontalDivider()

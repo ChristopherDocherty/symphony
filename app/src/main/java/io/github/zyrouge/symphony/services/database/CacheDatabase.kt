@@ -14,11 +14,12 @@ import io.github.zyrouge.symphony.utils.RoomConvertors
 
 @Database(
     entities = [Song::class],
-    version = 4,
+    version = 5,
     autoMigrations = [
         AutoMigration(1, 2, CacheDatabase.Migration1To2::class),
         AutoMigration(2, 3),
         AutoMigration(3, 4),
+        AutoMigration(4, 5, CacheDatabase.Migration4To5::class),
     ]
 )
 @TypeConverters(RoomConvertors::class)
@@ -42,4 +43,7 @@ abstract class CacheDatabase : RoomDatabase() {
     @DeleteColumn("songs", "samples")
     @DeleteColumn("songs", "codec")
     class Migration1To2 : AutoMigrationSpec
+
+    @DeleteColumn("songs", "is_compilation")
+    class Migration4To5 : AutoMigrationSpec
 }

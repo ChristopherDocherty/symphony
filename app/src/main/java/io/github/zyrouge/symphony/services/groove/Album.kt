@@ -17,7 +17,6 @@ data class Album(
     var endYear: Int?,
     var numberOfTracks: Int,
     var duration: Duration,
-    var is_compilation: Boolean = false,
     var date: LocalDate? = null,
 ) {
     fun createArtworkImageRequest(symphony: Symphony) =
