@@ -35,7 +35,6 @@ enum class AlbumGridType {
 fun AlbumGrid(
     context: ViewContext,
     albumIds: List<String>,
-    albumsCount: Int? = null,
     type: AlbumGridType = AlbumGridType.Default,
     pageState: AlbumsPageState? = null,
 ) {
@@ -82,7 +81,7 @@ fun AlbumGrid(
                     }
                 },
                 label = {
-                    Text(context.symphony.t.XAlbums((albumsCount ?: sortedAlbumIds.size).toString()))
+                    Text(context.symphony.t.XAlbums(sortedAlbumIds.size.toString()))
                 },
                 onShowModifyLayout = {
                     showModifyLayoutSheet = true

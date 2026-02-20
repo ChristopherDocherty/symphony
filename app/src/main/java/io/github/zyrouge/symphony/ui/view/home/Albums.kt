@@ -114,14 +114,12 @@ class AlbumsPageState : HomePageState {
 fun AlbumsView(context: ViewContext, pageState: AlbumsPageState? = null) {
     val isUpdating by context.symphony.groove.album.isUpdating.collectAsState()
     val albumIds by context.symphony.groove.album.all.collectAsState()
-    val albumsCount by context.symphony.groove.album.count.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         LoaderScaffold(context, isLoading = isUpdating) {
             AlbumGrid(
                 context,
                 albumIds = albumIds,
-                albumsCount = albumsCount,
                 pageState = pageState,
             )
         }
