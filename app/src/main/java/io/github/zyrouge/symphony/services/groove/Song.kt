@@ -163,7 +163,8 @@ data class Song(
             }
            // END cover art logic
             metadata.lyrics?.let {
-                symphony.database.lyricsCache.put(id, it)
+                val lyricsKey = path.pathString.substringBeforeLast('.', path.pathString)
+                symphony.database.lyricsCache.put(lyricsKey, it)
             }
             return Song(
                 id = id,

@@ -222,7 +222,7 @@ class MediaExposer(private val symphony: Symphony) {
         emitScanProgress()
         try {
             when {
-                path.extension == "lrc" -> {
+                path.extension == "lrc" || path.extension == "txt" -> {
                     scanLrcFile(cycle, path, file)
                     return emptyList()
                 }
@@ -295,7 +295,7 @@ class MediaExposer(private val symphony: Symphony) {
         try {
             val lyricsContent = symphony.applicationContext.contentResolver.openInputStream(file.uri)?.bufferedReader()?.use { it.readText() }
             if (lyricsContent != null) {
-                val key = path.pathString.substringBeforeLast(".lrc", path.pathString)
+                val key = path.pathString.substringBeforeLast('.', path.pathString)
                 symphony.database.lyricsCache.put(key, lyricsContent)
                 cycle.lyricsCacheUnused.remove(key)
             }
