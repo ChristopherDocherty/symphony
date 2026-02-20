@@ -26,12 +26,16 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.ui.components.SelectAlbumDiscDialog // Added import
+import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
 import kotlinx.coroutines.launch
 
 @Composable
-fun AlbumTile(context: ViewContext, album: Album) {
+fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = null) {
     val scope = rememberCoroutineScope()
+    val isMultiSelectMode = pageState?.isMultiSelectMode == true
+    val isSelected = pageState?.selectedAlbumIds?.contains(album.id) == true
+
     SquareGrooveTile(
         image = album.createArtworkImageRequest(context.symphony).build(),
         options = { expanded, onDismissRequest ->
@@ -66,8 +70,19 @@ fun AlbumTile(context: ViewContext, album: Album) {
             }
         },
         onClick = {
-            context.navController.navigate(AlbumViewRoute(album.id))
-        }
+            if (isMultiSelectMode) {
+                pageState?.toggleSelection(album.id)
+            } else {
+                context.navController.navigate(AlbumViewRoute(album.id))
+            }
+        },
+        onLongClick = {
+            if (!isMultiSelectMode) {
+                pageState?.enterMultiSelect(album.id)
+            }
+        },
+        isSelected = isSelected,
+        isMultiSelectMode = isMultiSelectMode,
     )
 }
 

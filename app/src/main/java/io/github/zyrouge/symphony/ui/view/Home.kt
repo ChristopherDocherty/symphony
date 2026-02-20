@@ -92,6 +92,7 @@ import io.github.zyrouge.symphony.ui.view.home.PlaylistsView
 import io.github.zyrouge.symphony.ui.view.home.SongsView
 import io.github.zyrouge.symphony.ui.view.home.TreeView
 import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
+import io.github.zyrouge.symphony.ui.view.home.HomePageState
 import kotlinx.serialization.Serializable
 
 enum class HomePage(
@@ -232,6 +233,7 @@ private fun HomePageContent(
     modifier: Modifier = Modifier,
     context: ViewContext,
     currentPage: HomePage,
+    pageStates: Map<HomePage, HomePageState>,
 ) {
     AnimatedContent(
         label = "home-content",
@@ -245,7 +247,7 @@ private fun HomePageContent(
         when (page) {
             HomePage.ForYou -> ForYouView(context)
             HomePage.Songs -> SongsView(context)
-            HomePage.Albums -> AlbumsView(context)
+            HomePage.Albums -> AlbumsView(context, pageStates[page] as? AlbumsPageState)
             HomePage.Artists -> ArtistsView(context)
             HomePage.AlbumArtists -> AlbumArtistsView(context)
             HomePage.Genres -> GenresView(context)
@@ -375,7 +377,8 @@ fun HomeView(context: ViewContext) {
                     .padding(contentPadding)
                     .fillMaxSize(),
                 context = context,
-                currentPage = currentTab // or currentTabState
+                currentPage = currentTab,
+                pageStates = pageStates,
             )
         },
         bottomBar = {

@@ -19,6 +19,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.groove.SONG_TAG_FIELDS
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
@@ -53,6 +54,7 @@ fun SongMetadataEditorDialog(
                             ?.detachFd()
                             ?: return@launch
                         AudioMetadataParser.write(song.filename, fd, tags)
+                        context.symphony.groove.fetch(Groove.FetchOptions())
                     }
                     onDismissRequest()
                 }

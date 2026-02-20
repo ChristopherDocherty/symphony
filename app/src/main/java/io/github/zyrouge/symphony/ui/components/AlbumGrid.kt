@@ -7,6 +7,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -20,6 +21,7 @@ import io.github.zyrouge.symphony.Settings
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -35,6 +37,7 @@ fun AlbumGrid(
     albumIds: List<String>,
     albumsCount: Int? = null,
     type: AlbumGridType = AlbumGridType.Default,
+    pageState: AlbumsPageState? = null,
 ) {
     val sortBy by type.getLastUsedSortBy(context).collectAsState(AlbumSortBy.ALBUM_NAME)
     val sortReverse by type.getLastUsedReverse(context).collectAsState(false)
@@ -53,6 +56,10 @@ fun AlbumGrid(
         }
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
+
+    SideEffect {
+        pageState?.sortedAlbumIds = sortedAlbumIds
+    }
 
     val coroutineScope = rememberCoroutineScope()
     MediaSortBarScaffold(
@@ -102,7 +109,7 @@ fun AlbumGrid(
                         contentType = { _, _ -> Groove.Kind.ALBUM }
                     ) { _, albumId ->
                         context.symphony.groove.album.get(albumId)?.let { album ->
-                            AlbumTile(context, album)
+                            AlbumTile(context, album, pageState)
                         }
                     }
                 }
