@@ -34,7 +34,7 @@ class SQLiteKeyValueDatabaseAdapter<T>(
             put(COLUMN_KEY, key)
             put(COLUMN_VALUE, transformer.serialize(value))
         }
-        val rowId = writableDatabase.insert(name, null, values)
+        val rowId = writableDatabase.insertWithOnConflict(name, null, values, SQLiteDatabase.CONFLICT_REPLACE)
         return rowId != -1L
     }
 
