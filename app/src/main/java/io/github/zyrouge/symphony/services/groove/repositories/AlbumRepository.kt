@@ -1,7 +1,9 @@
 package io.github.zyrouge.symphony.services.groove.repositories
 
+import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.services.groove.ALBUM_STRING_FILTER_FIELDS
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.Assets
@@ -24,6 +26,7 @@ class AlbumRepository(private val symphony: Symphony) {
 
     private val cache = ConcurrentHashMap<String, Album>()
     private val songIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
+    private val customTagValuesCache = ConcurrentHashMap<String, ConcurrentHashMap<String, MutableSet<String>>>()
     private val searcher = FuzzySearcher<String>(
         options = listOf(
             FuzzySearchOption({ v -> get(v)?.name?.let { compareString(it) } }, 3),
@@ -41,11 +44,26 @@ class AlbumRepository(private val symphony: Symphony) {
         cache.size
     }
 
+    private fun indexCustomTags(albumId: String, song: Song) {
+        if (song.customTags.isEmpty()) return
+        customTagValuesCache.compute(albumId) { _, tagMap ->
+            (tagMap ?: ConcurrentHashMap()).apply {
+                song.customTags.forEach { (tagName, value) ->
+                    compute(tagName) { _, values -> (values ?: mutableSetOf()).apply { add(value) } }
+                }
+            }
+        }
+    }
+
+    fun getAvailableTagValues(tagName: String): List<String> =
+        customTagValuesCache.values.flatMapTo(mutableSetOf()) { it[tagName] ?: emptySet() }.sorted()
+
     internal fun onSong(song: Song) {
         val albumId = getIdFromSong(song) ?: return
         songIdsCache.compute(albumId) { _, value ->
             value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
         }
+        indexCustomTags(albumId, song)
         cache.compute(albumId) { _, value ->
             value?.apply {
                 artists.addAll(song.artists)
@@ -93,6 +111,7 @@ class AlbumRepository(private val symphony: Symphony) {
             songIdsCache.compute(albumId) { _, value ->
                 value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
             }
+            indexCustomTags(albumId, song)
             cache.compute(albumId) { _, value ->
                 value?.apply {
                     artists.addAll(song.artists)
@@ -141,6 +160,7 @@ class AlbumRepository(private val symphony: Symphony) {
     fun reset() {
         cache.clear()
         songIdsCache.clear()
+        customTagValuesCache.clear()
         _all.update {
             emptyList()
         }
@@ -168,10 +188,18 @@ class AlbumRepository(private val symphony: Symphony) {
     fun search(albumIds: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, albumIds, maxLength = limit)
 
-    fun getAlbums(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean, hide_compilations: Boolean = false): List<String> {
+    fun getAlbums(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean, hide_compilations: Boolean = false, filter: AlbumFilter = AlbumFilter.getDefaultInstance()): List<String> {
         val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
 
-        val filteredAlbumIds = albumIds.filter { !hide_compilations || get(it)?.is_compilation == false }
+        val filteredAlbumIds = albumIds.filter { albumId ->
+            if (hide_compilations && get(albumId)?.is_compilation == true) return@filter false
+            ALBUM_STRING_FILTER_FIELDS.all { field ->
+                val selected = field.getSelected(filter)
+                if (selected.isEmpty()) return@all true
+                val albumValues = customTagValuesCache[albumId]?.get(field.tagName) ?: emptySet()
+                albumValues.any { it in selected }
+            }
+        }
         val sorted = when (by) {
             AlbumSortBy.ALBUM_CUSTOM -> filteredAlbumIds
             AlbumSortBy.ALBUM_NAME -> filteredAlbumIds.sortedBy { get(it)?.name?.withCase(sensitive) }

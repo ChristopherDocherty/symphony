@@ -59,11 +59,17 @@ fun AlbumFilterDialog(
     val fieldStates = remember {
         ALBUM_STRING_FILTER_FIELDS.map { it to mutableStateListOf<String>() }
     }
+    val availableValues = remember {
+        ALBUM_STRING_FILTER_FIELDS.map { it to mutableStateListOf<String>() }
+    }
 
     LaunchedEffect(Unit) {
         val filter = context.symphony.settings.data.first().uiAlbumGridAlbumFilter
         fieldStates.forEach { (field, state) ->
             state.addAll(field.getSelected(filter))
+        }
+        availableValues.forEach { (field, avail) ->
+            avail.addAll(context.symphony.groove.album.getAvailableTagValues(field.tagName))
         }
         isLoading = false
     }
@@ -84,11 +90,14 @@ fun AlbumFilterDialog(
             } else {
                 LazyColumn(modifier = Modifier.padding(horizontal = 20.dp)) {
                     item { Spacer(modifier = Modifier.height(16.dp)) }
-                    fieldStates.forEach { (field, state) ->
+                    fieldStates.zip(availableValues).forEach { (fieldState, fieldAvail) ->
+                        val (field, state) = fieldState
+                        val (_, avail) = fieldAvail
                         item {
                             FilterSection(
                                 field = field,
                                 state = state,
+                                available = avail,
                             )
                         }
                     }
@@ -128,9 +137,10 @@ fun AlbumFilterDialog(
 private fun FilterSection(
     field: StringFilterField,
     state: SnapshotStateList<String>,
+    available: List<String>,
 ) {
     var showPicker by remember { mutableStateOf(false) }
-    val pickable = field.available.filter { it !in state }
+    val pickable = available.filter { it !in state }
 
     Text(
         field.label,

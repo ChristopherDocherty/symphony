@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Settings
 import io.github.zyrouge.symphony.copy
@@ -38,9 +39,10 @@ fun AlbumGrid(
     val sortBy by type.getLastUsedSortBy(context).collectAsState(AlbumSortBy.ALBUM_NAME)
     val sortReverse by type.getLastUsedReverse(context).collectAsState(false)
     val isHideCompilations by context.symphony.settings.data.map(Settings::getUiAlbumGridHideCompilations).collectAsState(false)
-    val sortedAlbumIds by remember(albumIds, sortBy, sortReverse, isHideCompilations) {
+    val albumFilter by context.symphony.settings.data.map { it.uiAlbumGridAlbumFilter }.collectAsState(AlbumFilter.getDefaultInstance())
+    val sortedAlbumIds by remember(albumIds, sortBy, sortReverse, isHideCompilations, albumFilter) {
         derivedStateOf {
-            context.symphony.groove.album.getAlbums(albumIds, sortBy, sortReverse, isHideCompilations)
+            context.symphony.groove.album.getAlbums(albumIds, sortBy, sortReverse, isHideCompilations, albumFilter)
         }
     }
     val horizontalGridColumns by context.symphony.settingsOLD.lastUsedAlbumsHorizontalGridColumns.flow.collectAsState()
