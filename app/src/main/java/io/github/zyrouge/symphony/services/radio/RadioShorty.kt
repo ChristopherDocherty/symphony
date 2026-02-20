@@ -48,7 +48,7 @@ class RadioShorty(private val symphony: Symphony) {
             }
 
             else -> {
-                symphony.radio.play(Radio.PlayOptions(index = 0, autostart = false))
+                symphony.radio.play(Radio.PlayOptions(index = 0, autostart = symphony.radio.isPlaying))
                 false
             }
         }
