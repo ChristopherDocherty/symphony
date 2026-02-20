@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -26,6 +27,19 @@ class MediaExposer(private val symphony: Symphony) {
     var explorer = SimpleFileSystem.Folder()
     private val _isUpdating = MutableStateFlow(false)
     val isUpdating = _isUpdating.asStateFlow()
+
+    data class ScanProgress(val completed: Int, val total: Int)
+    private val _scanProgress = MutableStateFlow<ScanProgress?>(null)
+    val scanProgress = _scanProgress.asStateFlow()
+
+    private val scanCompletedDirs = AtomicInteger(0)
+    private val scanTotalDirs = AtomicInteger(0)
+
+    private fun emitScanProgress() {
+        val completed = scanCompletedDirs.get()
+        val total = scanTotalDirs.get()
+        _scanProgress.update { ScanProgress(completed, total) }
+    }
 
     private fun emitUpdate(value: Boolean) = _isUpdating.update {
         value
@@ -74,6 +88,10 @@ class MediaExposer(private val symphony: Symphony) {
             val folderUris = symphony.settingsOLD.mediaFolders.value
             val cycle = ScanCycle.create(symphony)
 
+            scanCompletedDirs.set(0)
+            scanTotalDirs.set(0)
+            emitScanProgress()
+
             coroutineScope {
                 val deferredSongLists = folderUris.mapNotNull { uri ->
                     ActivityUtils.makePersistableReadWriteUri(context, uri)
@@ -97,6 +115,7 @@ class MediaExposer(private val symphony: Symphony) {
             Logger.error("MediaExposer", "fetch failed", err)
             emitSongs(emptyList())
         }
+        _scanProgress.update { null }
         emitUpdate(false)
         emitFinish()
     }
@@ -107,6 +126,11 @@ class MediaExposer(private val symphony: Symphony) {
                 return emptyList()
             }
             val children = file.list()
+            val fileCount = children.count { !it.isDirectory }
+            if (fileCount > 0) {
+                scanTotalDirs.addAndGet(fileCount)
+                emitScanProgress()
+            }
             val songsFound = mutableListOf<Song>()
             coroutineScope {
                 val songLists = children.map { childFile ->
@@ -155,6 +179,8 @@ class MediaExposer(private val symphony: Symphony) {
     }
 
     private suspend fun scanMediaFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): List<Song> {
+        scanCompletedDirs.incrementAndGet()
+        emitScanProgress()
         try {
             when {
                 path.extension == "lrc" -> {
@@ -189,7 +215,7 @@ class MediaExposer(private val symphony: Symphony) {
         val cached = cycle.songCache[pathString]
         val cacheHit = cached != null &&
                 cached.dateModified == lastModified &&
-                (cached.coverFile?.let { cycle.artworkCacheUnused.contains(it) } != false)
+                (cached.coverFile?.let { symphony.database.artworkCache.get(it).exists() } != false)
 
         val song = when {
             cacheHit -> cached!!
@@ -202,9 +228,11 @@ class MediaExposer(private val symphony: Symphony) {
 
         if (!cacheHit) {
             symphony.database.songCache.insert(song)
-            cached?.coverFile?.let {
-                if (symphony.database.artworkCache.get(it).delete()) {
-                    cycle.artworkCacheUnused.remove(it)
+            cached?.coverFile?.let { oldCoverFile ->
+                if (oldCoverFile != song.coverFile) {
+                    if (symphony.database.artworkCache.get(oldCoverFile).delete()) {
+                        cycle.artworkCacheUnused.remove(oldCoverFile)
+                    }
                 }
             }
         }

@@ -135,8 +135,8 @@ data class Song(
             //START cover art logic
             val coverFile = metadata.pictures.firstOrNull()?.let {
                 val cacheKey = "${metadata.album}_${metadata.artists.hashCode()}_${metadata.date.hashCode()}"
-                if (symphony.database.artworkCache.get(cacheKey).exists()){
-                    cacheKey
+                if (symphony.database.artworkCache.get(cacheKey).exists()) {
+                    return@let cacheKey
                 }
 
                 val extension = when (it.mimeType) {
