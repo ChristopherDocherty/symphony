@@ -53,14 +53,14 @@ data class Song(
 ) {
     data class ParseOptions(
         val symphony: Symphony,
-        val artistSeparatorRegex: Regex,
-        val genreSeparatorRegex: Regex,
+        val artistSeparatorRegex: Regex?,
+        val genreSeparatorRegex: Regex?,
     ) {
         companion object {
             fun create(symphony: Symphony) = ParseOptions(
                 symphony = symphony,
-                artistSeparatorRegex = makeSeparatorsRegex(symphony.settingsState.value.artistTagSeparatorsList.toSet().ifEmpty { setOf(";", "/", ",", "+") }),
-                genreSeparatorRegex = makeSeparatorsRegex(symphony.settingsState.value.genreTagSeparatorsList.toSet().ifEmpty { setOf(";", "/", ",", "+") }),
+                artistSeparatorRegex = makeSeparatorsRegex(symphony.settingsState.value.artistTagSeparatorsList.toSet()),
+                genreSeparatorRegex = makeSeparatorsRegex(symphony.settingsState.value.genreTagSeparatorsList.toSet()),
             )
         }
     }
@@ -274,16 +274,18 @@ data class Song(
             )
         }
 
-        private fun makeSeparatorsRegex(separators: Set<String>): Regex {
+        private fun makeSeparatorsRegex(separators: Set<String>): Regex? {
+            if (separators.isEmpty()) return null
             val partial = separators.joinToString("|") { Pattern.quote(it) }
             return Regex("""(?<!\\)($partial)""")
         }
 
-        fun parseMultiValue(value: String?, regex: Regex) = value?.let {
+        fun parseMultiValue(value: String?, regex: Regex?) = value?.let {
             parseMultiValue(setOf(it), regex)
         } ?: emptySet()
 
-        fun parseMultiValue(values: Set<String>, regex: Regex): Set<String> {
+        fun parseMultiValue(values: Set<String>, regex: Regex?): Set<String> {
+            if (regex == null) return values.map { it.trim() }.filter { it.isNotEmpty() }.toSet()
             val result = mutableSetOf<String>()
             for (x in values) {
                 for (y in x.trim().split(regex)) {

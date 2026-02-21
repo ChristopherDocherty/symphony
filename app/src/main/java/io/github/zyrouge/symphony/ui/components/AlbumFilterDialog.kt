@@ -123,8 +123,8 @@ fun AlbumFilterDialog(
                                     .build()
                             }
                         }
+                        onDismissRequest()
                     }
-                    onDismissRequest()
                 }
             ) {
                 Text("Apply")
