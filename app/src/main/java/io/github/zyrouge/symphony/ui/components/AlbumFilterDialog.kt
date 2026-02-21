@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.ALBUM_STRING_FILTER_FIELDS
+import io.github.zyrouge.symphony.services.groove.BLANK_TAG_VALUE
 import io.github.zyrouge.symphony.services.groove.StringFilterField
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.first
@@ -160,7 +161,7 @@ private fun FilterSection(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    value,
+                    if (value == BLANK_TAG_VALUE) "(blank)" else value,
                     color = MaterialTheme.colorScheme.primary,
                     style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
                 )
@@ -208,7 +209,7 @@ private fun PickerDialog(
             LazyColumn {
                 items(options) { option ->
                     ListItem(
-                        headlineContent = { Text(option) },
+                        headlineContent = { Text(if (option == BLANK_TAG_VALUE) "(blank)" else option) },
                         modifier = Modifier.clickable { onSelect(option) },
                     )
                 }

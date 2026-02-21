@@ -4,6 +4,7 @@ import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.ALBUM_STRING_FILTER_FIELDS
+import io.github.zyrouge.symphony.services.groove.BLANK_TAG_VALUE
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.Assets
@@ -55,8 +56,16 @@ class AlbumRepository(private val symphony: Symphony) {
         }
     }
 
-    fun getAvailableTagValues(tagName: String): List<String> =
-        customTagValuesCache.values.flatMapTo(mutableSetOf()) { it[tagName] ?: emptySet() }.sorted()
+    fun getAvailableTagValues(tagName: String): List<String> {
+        val values = customTagValuesCache.values.flatMapTo(mutableSetOf()) { it[tagName] ?: emptySet() }
+        val hasBlank = cache.keys.any { albumId ->
+            customTagValuesCache[albumId]?.containsKey(tagName) != true
+        }
+        return buildList {
+            if (hasBlank) add(BLANK_TAG_VALUE)
+            addAll(values.sorted())
+        }
+    }
 
     internal fun onSong(song: Song) {
         val albumId = getIdFromSong(song) ?: return
@@ -188,7 +197,7 @@ class AlbumRepository(private val symphony: Symphony) {
                 val selected = field.getSelected(filter)
                 if (selected.isEmpty()) return@all true
                 val albumValues = customTagValuesCache[albumId]?.get(field.tagName) ?: emptySet()
-                albumValues.any { it in selected }
+                (BLANK_TAG_VALUE in selected && albumValues.isEmpty()) || albumValues.any { it in selected }
             }
         }
         val sorted = when (by) {

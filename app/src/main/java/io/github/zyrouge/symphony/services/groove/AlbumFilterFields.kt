@@ -2,6 +2,8 @@ package io.github.zyrouge.symphony.services.groove
 
 import io.github.zyrouge.symphony.AlbumFilter
 
+const val BLANK_TAG_VALUE = ""
+
 data class StringFilterField(
     val label: String,
     val tagName: String,
