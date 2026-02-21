@@ -143,6 +143,11 @@ enum PathSortBy {
   PATH_SORT_NAME = 1;
 }
 
+message AlbumFilterPreset {
+  string name = 1;
+  AlbumFilter filter = 2;
+}
+
 // ---------------------------------------------------------------------------
 // Root settings message
 // ---------------------------------------------------------------------------
@@ -227,6 +232,7 @@ message Settings {
   // --- Existing album filters (field numbers preserved) ---
   AlbumFilter ui_album_grid_album_filter = 801;
   AlbumFilter ui_album_row_album_filter = 802;
+  repeated AlbumFilterPreset ui_album_filter_presets = 803;
 
   // --- Playback (300–399, alongside existing 901) ---
   bool fade_playback = 300;
