@@ -77,7 +77,7 @@ fun BulkAlbumEditDialog(
                     coroutineScope.launch(Dispatchers.IO) {
                         songs.forEachIndexed { index, song ->
                             val tags = SONG_TAG_FIELDS.mapIndexedNotNull { i, field ->
-                                val value = fieldValues[i]
+                                val value = fieldValues[i].trim()
                                 if (value.isBlank()) null else field.tagKey to value
                             }.toMap()
                             if (tags.isNotEmpty()) {

@@ -45,7 +45,7 @@ fun SongMetadataEditorDialog(
                 onClick = {
                     coroutineScope.launch(Dispatchers.IO) {
                         val tags = SONG_TAG_FIELDS.mapIndexedNotNull { i, field ->
-                            val value = fieldValues[i]
+                            val value = fieldValues[i].trim()
                             if (value.isNotBlank()) field.tagKey to value else null
                         }.toMap()
                         val fd = context.activity.contentResolver
