@@ -22,8 +22,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import io.github.zyrouge.symphony.HomePageBottomBarLabelVisibility
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsMultiOptionTile
@@ -31,8 +34,8 @@ import io.github.zyrouge.symphony.ui.components.settings.SettingsOptionTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSideHeading
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.HomePage
-import io.github.zyrouge.symphony.ui.view.HomePageBottomBarLabelVisibility
 import io.github.zyrouge.symphony.ui.view.home.ForYou
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -42,9 +45,16 @@ object HomePageSettingsViewRoute
 @Composable
 fun HomePageSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val homeTabs by context.symphony.settingsOLD.homeTabs.flow.collectAsState()
-    val forYouContents by context.symphony.settingsOLD.forYouContents.flow.collectAsState()
-    val homePageBottomBarLabelVisibility by context.symphony.settingsOLD.homePageBottomBarLabelVisibility.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
+
+    val homeTabs = settings.homeTabsList
+        .mapNotNull { runCatching { HomePage.valueOf(it) }.getOrNull() }
+        .toSet()
+    val forYouContents = settings.forYouContentsList
+        .mapNotNull { runCatching { ForYou.valueOf(it) }.getOrNull() }
+        .toSet()
+    val homePageBottomBarLabelVisibility = settings.homePageBottomBarLabelVisibility
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -95,7 +105,14 @@ fun HomePageSettingsView(context: ViewContext) {
                         values = HomePage.entries.associateWith { it.label(context) },
                         satisfies = { it.size in 2..5 },
                         onChange = { value ->
-                            context.symphony.settingsOLD.homeTabs.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy {
+                                        this.homeTabs.clear()
+                                        this.homeTabs.addAll(value.map { tab -> tab.name })
+                                    }
+                                }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -110,7 +127,14 @@ fun HomePageSettingsView(context: ViewContext) {
                         value = forYouContents,
                         values = ForYou.entries.associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settingsOLD.forYouContents.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy {
+                                        this.forYouContents.clear()
+                                        this.forYouContents.addAll(value.map { item -> item.name })
+                                    }
+                                }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -123,11 +147,14 @@ fun HomePageSettingsView(context: ViewContext) {
                         },
                         value = homePageBottomBarLabelVisibility,
                         values = HomePageBottomBarLabelVisibility.entries
+                            .filter { it != HomePageBottomBarLabelVisibility.UNRECOGNIZED }
                             .associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settingsOLD.homePageBottomBarLabelVisibility.setValue(
-                                value,
-                            )
+                            scope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy { this.homePageBottomBarLabelVisibility = value }
+                                }
+                            }
                         }
                     )
                 }
@@ -137,7 +164,8 @@ fun HomePageSettingsView(context: ViewContext) {
 }
 
 fun HomePageBottomBarLabelVisibility.label(context: ViewContext) = when (this) {
-    HomePageBottomBarLabelVisibility.ALWAYS_VISIBLE -> context.symphony.t.AlwaysVisible
-    HomePageBottomBarLabelVisibility.VISIBLE_WHEN_ACTIVE -> context.symphony.t.VisibleWhenActive
-    HomePageBottomBarLabelVisibility.INVISIBLE -> context.symphony.t.Invisible
+    HomePageBottomBarLabelVisibility.BOTTOM_BAR_ALWAYS_VISIBLE -> context.symphony.t.AlwaysVisible
+    HomePageBottomBarLabelVisibility.BOTTOM_BAR_VISIBLE_WHEN_ACTIVE -> context.symphony.t.VisibleWhenActive
+    HomePageBottomBarLabelVisibility.BOTTOM_BAR_INVISIBLE -> context.symphony.t.Invisible
+    HomePageBottomBarLabelVisibility.UNRECOGNIZED -> "???"
 }

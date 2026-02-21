@@ -7,16 +7,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.datastore.core.DataStore
+import io.github.zyrouge.symphony.datastore.SettingsDefaults
+import io.github.zyrouge.symphony.datastore.SettingsMigration
+import io.github.zyrouge.symphony.datastore.settingsDataStore
 import io.github.zyrouge.symphony.services.AppMeta
 import io.github.zyrouge.symphony.services.Permissions
-import io.github.zyrouge.symphony.services.Settings__OLD
-import androidx.datastore.core.DataStore
-import io.github.zyrouge.symphony.datastore.settingsDataStore
 import io.github.zyrouge.symphony.services.database.Database
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.i18n.Translator
 import io.github.zyrouge.symphony.services.radio.Radio
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -30,8 +34,21 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
     }
 
     val permission = Permissions(this)
-    val settingsOLD = Settings__OLD(this)
+
+    /** Proto DataStore — use for writes: [settings].updateData { } */
     val settings: DataStore<Settings> = applicationContext.settingsDataStore
+
+    /**
+     * Eagerly-collected StateFlow of the current settings.
+     * Use for synchronous reads in service code: [settingsState].value.fieldName
+     * Use for reactive reads in Compose: [settingsState].map { it.fieldName }.collectAsState()
+     *
+     * Starts with [SettingsDefaults.INSTANCE] (all correct defaults) until the
+     * DataStore has loaded from disk, which typically happens within a few ms.
+     */
+    val settingsState: StateFlow<Settings> = applicationContext.settingsDataStore.data
+        .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsDefaults.INSTANCE)
+
     val database = Database(this)
     val groove = Groove(this)
     val radio = Radio(this)
@@ -43,6 +60,12 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
     var closeApp: (() -> Unit)? = null
     private var isReady = false
     private var hooks = listOf(this, radio, groove)
+
+    init {
+        viewModelScope.launch {
+            SettingsMigration.migrate(applicationContext)
+        }
+    }
 
     internal fun emitReady() {
         if (isReady) {
@@ -88,9 +111,9 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
     }
 
     private fun checkVersion() {
-         if (!settingsOLD.checkForUpdates.value) {
-             return
-         }
+        if (!settingsState.value.checkForUpdates) {
+            return
+        }
         viewModelScope.launch {
             val latestVersion = withContext(Dispatchers.IO) {
                 AppMeta.fetchLatestVersion()
@@ -99,13 +122,13 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
                 return@launch
             }
             withContext(Dispatchers.Main) {
-                 if (settingsOLD.showUpdateToast.value && AppMeta.version != latestVersion) {
-                     Toast.makeText(
-                         applicationContext,
-                         t.NewVersionAvailableX(latestVersion),
-                         Toast.LENGTH_SHORT,
-                     ).show()
-                 }
+                if (settingsState.value.showUpdateToast && AppMeta.version != latestVersion) {
+                    Toast.makeText(
+                        applicationContext,
+                        t.NewVersionAvailableX(latestVersion),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
             }
         }
     }

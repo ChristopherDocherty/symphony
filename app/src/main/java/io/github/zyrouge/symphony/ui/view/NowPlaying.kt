@@ -7,8 +7,9 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import io.github.zyrouge.symphony.LoopMode
+import io.github.zyrouge.symphony.NowPlayingControlsLayout
+import io.github.zyrouge.symphony.NowPlayingLyricsLayout
 import io.github.zyrouge.symphony.services.groove.Song
-import io.github.zyrouge.symphony.services.radio.RadioQueue
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NothingPlaying
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NowPlayingBody
@@ -43,17 +44,6 @@ data class NowPlayingStates(
 
 object NowPlayingDefaults {
     var showLyrics = false
-}
-
-enum class NowPlayingControlsLayout {
-    CompactLeft,
-    CompactRight,
-    Traditional,
-}
-
-enum class NowPlayingLyricsLayout {
-    ReplaceArtwork,
-    SeparatePage,
 }
 
 @Serializable
@@ -94,12 +84,13 @@ fun NowPlayingObserver(
     val persistedPitch by context.symphony.radio.observatory.persistedPitch.collectAsState()
     val sleepTimer by context.symphony.radio.observatory.sleepTimer.collectAsState()
     val pauseOnCurrentSongEnd by context.symphony.radio.observatory.pauseOnCurrentSongEnd.collectAsState()
-    val showSongAdditionalInfo by context.symphony.settingsOLD.nowPlayingAdditionalInfo.flow.collectAsState()
-    val enableSeekControls by context.symphony.settingsOLD.nowPlayingSeekControls.flow.collectAsState()
-    val seekBackDuration by context.symphony.settingsOLD.seekBackDuration.flow.collectAsState()
-    val seekForwardDuration by context.symphony.settingsOLD.seekForwardDuration.flow.collectAsState()
-    val controlsLayout by context.symphony.settingsOLD.nowPlayingControlsLayout.flow.collectAsState()
-    val lyricsLayout by context.symphony.settingsOLD.nowPlayingLyricsLayout.flow.collectAsState()
+    val settings by context.symphony.settingsState.collectAsState()
+    val showSongAdditionalInfo = settings.nowPlayingAdditionalInfo
+    val enableSeekControls = settings.nowPlayingSeekControls
+    val seekBackDuration = settings.seekBackDuration.let { if (it == 0) 15 else it }
+    val seekForwardDuration = settings.seekForwardDuration.let { if (it == 0) 30 else it }
+    val controlsLayout = settings.nowPlayingControlsLayout
+    val lyricsLayout = settings.nowPlayingLyricsLayout
 
     val data = when {
         isViable -> NowPlayingData(

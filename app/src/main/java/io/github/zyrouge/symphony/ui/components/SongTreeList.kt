@@ -57,6 +57,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import io.github.zyrouge.symphony.PathSortBy
 import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
@@ -82,8 +83,9 @@ fun SongTreeList(
             addAll(initialDisabled)
         }
     }
-    val pathsSortBy by context.symphony.settingsOLD.lastUsedTreePathSortBy.flow.collectAsState()
-    val pathsSortReverse by context.symphony.settingsOLD.lastUsedTreePathSortReverse.flow.collectAsState()
+    val treeSettings by context.symphony.settingsState.collectAsState()
+    val pathsSortBy = treeSettings.treePathSortBy
+    val pathsSortReverse = treeSettings.treePathSortReverse
     val songsSortBy by context.symphony.settings.data.map{it.uiDefaultSongSort.by}.collectAsState(SongSortBy.SONG_TITLE)
     val songsSortReverse by context.symphony.settings.data.map{it.uiDefaultSongSort.reverse}.collectAsState(false)
     val sortedTree by remember(tree, pathsSortBy, pathsSortReverse, songsSortBy, songsSortReverse) {
@@ -113,11 +115,19 @@ fun SongTreeList(
                 pathsSortReverse = pathsSortReverse,
                 songsSortBy = songsSortBy,
                 songsSortReverse = songsSortReverse,
-                setPathsSortBy = {
-                    context.symphony.settingsOLD.lastUsedTreePathSortBy.setValue(it)
+                setPathsSortBy = { sort ->
+                    coroutineScope.launch {
+                        context.symphony.settings.updateData { s ->
+                            s.copy { treePathSortBy = sort }
+                        }
+                    }
                 },
-                setPathsSortReverse = {
-                    context.symphony.settingsOLD.lastUsedTreePathSortReverse.setValue(it)
+                setPathsSortReverse = { reverse ->
+                    coroutineScope.launch {
+                        context.symphony.settings.updateData { s ->
+                            s.copy { treePathSortReverse = reverse }
+                        }
+                    }
                 },
                 setSongsSortBy = { sort ->
                     coroutineScope.launch {
@@ -365,11 +375,11 @@ fun SongTreeListSongCardIconButton(
 private fun SongTreeListMediaSortBar(
     context: ViewContext,
     songsCount: Int,
-    pathsSortBy: StringListUtils.SortBy,
+    pathsSortBy: PathSortBy,
     pathsSortReverse: Boolean,
     songsSortBy: SongSortBy,
     songsSortReverse: Boolean,
-    setPathsSortBy: (StringListUtils.SortBy) -> Unit,
+    setPathsSortBy: (PathSortBy) -> Unit,
     setPathsSortReverse: (Boolean) -> Unit,
     setSongsSortBy: (SongSortBy) -> Unit,
     setSongsSortReverse: (Boolean) -> Unit,
@@ -437,7 +447,7 @@ private fun SongTreeListMediaSortBar(
                             style = currentTextStyle,
                             modifier = Modifier.padding(16.dp, 8.dp),
                         )
-                        StringListUtils.SortBy.entries.forEach { sortBy ->
+                        PathSortBy.entries.filter { it != PathSortBy.UNRECOGNIZED }.forEach { sortBy ->
                             SongTreeListMediaSortBarDropdownMenuItem(
                                 selected = pathsSortBy == sortBy,
                                 reversed = pathsSortReverse,
@@ -524,9 +534,9 @@ private fun SongTreeListMediaSortBarDropdownMenuItem(
     )
 }
 
-fun StringListUtils.SortBy.label(context: ViewContext) = when (this) {
-    StringListUtils.SortBy.CUSTOM -> context.symphony.t.Custom
-    StringListUtils.SortBy.NAME -> context.symphony.t.Name
+fun PathSortBy.label(context: ViewContext) = when (this) {
+    PathSortBy.PATH_SORT_CUSTOM -> context.symphony.t.Custom
+    else -> context.symphony.t.Name
 }
 
 private fun createLinearTree(

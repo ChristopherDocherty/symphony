@@ -47,6 +47,8 @@ import io.github.zyrouge.symphony.ui.helpers.FadeTransition
 import io.github.zyrouge.symphony.ui.helpers.SlideTransition
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.nowPlaying.defaultHorizontalPadding
+import io.github.zyrouge.symphony.PathSortBy
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.utils.SimpleFileSystem
 import io.github.zyrouge.symphony.utils.StringListUtils
 import kotlinx.coroutines.flow.first
@@ -155,15 +157,17 @@ private fun FoldersGrid(
     folders: Map<String, SimpleFileSystem.Folder>,
     onClick: (SimpleFileSystem.Folder) -> Unit,
 ) {
-    val sortBy by context.symphony.settingsOLD.lastUsedFoldersSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settingsOLD.lastUsedFoldersSortReverse.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val foldersSettings by context.symphony.settingsState.collectAsState()
+    val sortBy = foldersSettings.foldersSortBy
+    val sortReverse = foldersSettings.foldersSortReverse
     val sortedFolderNames by remember(folders, sortBy, sortReverse) {
         derivedStateOf {
             StringListUtils.sort(folders.keys.toList(), sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedFoldersHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settingsOLD.lastUsedFoldersVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns = foldersSettings.foldersHorizontalGridColumns
+    val verticalGridColumns = foldersSettings.foldersVerticalGridColumns
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -177,13 +181,22 @@ private fun FoldersGrid(
                 context,
                 reverse = sortReverse,
                 onReverseChange = {
-                    context.symphony.settingsOLD.lastUsedFoldersSortReverse.setValue(it)
+                    scope.launch {
+                        context.symphony.settings.updateData { s ->
+                            s.copy { foldersSortReverse = it }
+                        }
+                    }
                 },
                 sort = sortBy,
-                sorts = StringListUtils.SortBy.entries
+                sorts = PathSortBy.entries
+                    .filter { it != PathSortBy.UNRECOGNIZED }
                     .associateWith { x -> ViewContext.parameterizedFn { x.label(context) } },
                 onSortChange = {
-                    context.symphony.settingsOLD.lastUsedFoldersSortBy.setValue(it)
+                    scope.launch {
+                        context.symphony.settings.updateData { s ->
+                            s.copy { foldersSortBy = it }
+                        }
+                    }
                 },
                 label = {
                     Text(context.symphony.t.XFolders(folders.size.toString()))
@@ -226,13 +239,15 @@ private fun FoldersGrid(
                 ResponsiveGridSizeAdjustBottomSheet(
                     context,
                     columns = gridColumns,
-                    onColumnsChange = {
-                        context.symphony.settingsOLD.lastUsedFoldersHorizontalGridColumns.setValue(
-                            it.horizontal
-                        )
-                        context.symphony.settingsOLD.lastUsedFoldersVerticalGridColumns.setValue(
-                            it.vertical
-                        )
+                    onColumnsChange = { cols ->
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy {
+                                    foldersHorizontalGridColumns = cols.horizontal
+                                    foldersVerticalGridColumns = cols.vertical
+                                }
+                            }
+                        }
                     },
                     onDismissRequest = {
                         showModifyLayoutSheet = false
@@ -348,6 +363,11 @@ private fun SimpleFileSystem.Folder.createArtworkImageRequest(context: ViewConte
             context.symphony.groove.song.createArtworkImageRequest(songId)
         }
         ?: Assets.createPlaceholderImageRequest(context.symphony)
+
+private fun PathSortBy.label(context: ViewContext) = when (this) {
+    PathSortBy.PATH_SORT_CUSTOM -> context.symphony.t.Custom
+    else -> context.symphony.t.Name
+}
 
 private suspend fun SimpleFileSystem.Folder.getSortedSongIds(context: ViewContext): List<String> {
     val songIds = children.values.mapNotNull {

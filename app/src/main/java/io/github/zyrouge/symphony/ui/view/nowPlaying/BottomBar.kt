@@ -52,7 +52,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.LyricsViewRoute
 import io.github.zyrouge.symphony.ui.view.NowPlayingData
 import io.github.zyrouge.symphony.ui.view.NowPlayingDefaults
-import io.github.zyrouge.symphony.ui.view.NowPlayingLyricsLayout
+import io.github.zyrouge.symphony.NowPlayingLyricsLayout
 import io.github.zyrouge.symphony.ui.view.NowPlayingStates
 import io.github.zyrouge.symphony.ui.view.QueueViewRoute
 import io.github.zyrouge.symphony.utils.Logger
@@ -113,13 +113,13 @@ fun NowPlayingBodyBottomBar(
                 IconButton(
                     onClick = {
                         when (lyricsLayout) {
-                            NowPlayingLyricsLayout.ReplaceArtwork -> {
+                            NowPlayingLyricsLayout.LYRICS_REPLACE_ARTWORK -> {
                                 val nShowLyrics = !showLyricsState.value
                                 showLyricsState.value = nShowLyrics
                                 NowPlayingDefaults.showLyrics = nShowLyrics
                             }
 
-                            NowPlayingLyricsLayout.SeparatePage -> {
+                            else -> {
                                 context.navController.navigate(LyricsViewRoute)
                             }
                         }

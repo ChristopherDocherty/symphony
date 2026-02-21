@@ -24,16 +24,19 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import io.github.zyrouge.symphony.NowPlayingControlsLayout
+import io.github.zyrouge.symphony.NowPlayingLyricsLayout
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsOptionTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSideHeading
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
-import io.github.zyrouge.symphony.ui.view.NowPlayingControlsLayout
-import io.github.zyrouge.symphony.ui.view.NowPlayingLyricsLayout
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -43,11 +46,8 @@ object NowPlayingSettingsViewRoute
 @Composable
 fun NowPlayingSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val nowPlayingControlsLayout by context.symphony.settingsOLD.nowPlayingControlsLayout.flow.collectAsState()
-    val nowPlayingAdditionalInfo by context.symphony.settingsOLD.nowPlayingAdditionalInfo.flow.collectAsState()
-    val nowPlayingSeekControls by context.symphony.settingsOLD.nowPlayingSeekControls.flow.collectAsState()
-    val nowPlayingLyricsLayout by context.symphony.settingsOLD.nowPlayingLyricsLayout.flow.collectAsState()
-    val lyricsKeepScreenAwake by context.symphony.settingsOLD.lyricsKeepScreenAwake.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -90,11 +90,14 @@ fun NowPlayingSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.ControlsLayout)
                         },
-                        value = nowPlayingControlsLayout,
+                        value = settings.nowPlayingControlsLayout,
                         values = NowPlayingControlsLayout.entries
+                            .filter { it != NowPlayingControlsLayout.UNRECOGNIZED }
                             .associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settingsOLD.nowPlayingControlsLayout.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { nowPlayingControlsLayout = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -105,11 +108,14 @@ fun NowPlayingSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.LyricsLayout)
                         },
-                        value = nowPlayingLyricsLayout,
+                        value = settings.nowPlayingLyricsLayout,
                         values = NowPlayingLyricsLayout.entries
+                            .filter { it != NowPlayingLyricsLayout.UNRECOGNIZED }
                             .associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settingsOLD.nowPlayingLyricsLayout.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { nowPlayingLyricsLayout = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -120,9 +126,11 @@ fun NowPlayingSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.ShowAudioInformation)
                         },
-                        value = nowPlayingAdditionalInfo,
+                        value = settings.nowPlayingAdditionalInfo,
                         onChange = { value ->
-                            context.symphony.settingsOLD.nowPlayingAdditionalInfo.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { nowPlayingAdditionalInfo = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -133,9 +141,11 @@ fun NowPlayingSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.ShowSeekControls)
                         },
-                        value = nowPlayingSeekControls,
+                        value = settings.nowPlayingSeekControls,
                         onChange = { value ->
-                            context.symphony.settingsOLD.nowPlayingSeekControls.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { nowPlayingSeekControls = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -146,9 +156,11 @@ fun NowPlayingSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.KeepScreenAwakeOnLyrics)
                         },
-                        value = lyricsKeepScreenAwake,
+                        value = settings.lyricsKeepScreenAwake,
                         onChange = { value ->
-                            context.symphony.settingsOLD.lyricsKeepScreenAwake.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { lyricsKeepScreenAwake = value } }
+                            }
                         }
                     )
                 }
@@ -158,12 +170,14 @@ fun NowPlayingSettingsView(context: ViewContext) {
 }
 
 fun NowPlayingControlsLayout.label(context: ViewContext) = when (this) {
-    NowPlayingControlsLayout.CompactLeft -> context.symphony.t.CompactLeft
-    NowPlayingControlsLayout.CompactRight -> context.symphony.t.CompactRight
-    NowPlayingControlsLayout.Traditional -> context.symphony.t.Traditional
+    NowPlayingControlsLayout.CONTROLS_COMPACT_LEFT -> context.symphony.t.CompactLeft
+    NowPlayingControlsLayout.CONTROLS_COMPACT_RIGHT -> context.symphony.t.CompactRight
+    NowPlayingControlsLayout.CONTROLS_TRADITIONAL -> context.symphony.t.Traditional
+    NowPlayingControlsLayout.UNRECOGNIZED -> "???"
 }
 
 fun NowPlayingLyricsLayout.label(context: ViewContext) = when (this) {
-    NowPlayingLyricsLayout.ReplaceArtwork -> context.symphony.t.ReplaceArtwork
-    NowPlayingLyricsLayout.SeparatePage -> context.symphony.t.SeparatePage
+    NowPlayingLyricsLayout.LYRICS_REPLACE_ARTWORK -> context.symphony.t.ReplaceArtwork
+    NowPlayingLyricsLayout.LYRICS_SEPARATE_PAGE -> context.symphony.t.SeparatePage
+    NowPlayingLyricsLayout.UNRECOGNIZED -> "???"
 }

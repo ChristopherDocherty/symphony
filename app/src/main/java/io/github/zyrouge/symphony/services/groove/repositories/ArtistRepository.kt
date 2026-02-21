@@ -117,7 +117,7 @@ class ArtistRepository(private val symphony: Symphony) {
         .search(terms, artistNames, maxLength = limit)
 
     fun sort(artistNames: List<String>, by: ArtistSortBy, reverse: Boolean): List<String> {
-        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
+        val sensitive = symphony.settingsState.value.caseSensitiveSorting
         val sorted = when (by) {
             ArtistSortBy.ARTIST_CUSTOM -> artistNames
             ArtistSortBy.ARTIST_NAME -> artistNames.sortedBy {

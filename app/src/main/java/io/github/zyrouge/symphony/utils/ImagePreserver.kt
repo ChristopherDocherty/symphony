@@ -1,6 +1,7 @@
 package io.github.zyrouge.symphony.utils
 
 import android.graphics.Bitmap
+import io.github.zyrouge.symphony.ArtworkQuality
 import kotlin.math.max
 
 object ImagePreserver {
@@ -24,4 +25,11 @@ object ImagePreserver {
         width < height -> (width * (maxSide.toFloat() / height)).toInt() to maxSide
         else -> maxSide to maxSide
     }
+}
+
+fun ArtworkQuality.toImagePreserverQuality(): ImagePreserver.Quality = when (this) {
+    ArtworkQuality.ARTWORK_LOW -> ImagePreserver.Quality.Low
+    ArtworkQuality.ARTWORK_HIGH -> ImagePreserver.Quality.High
+    ArtworkQuality.ARTWORK_LOSELESS -> ImagePreserver.Quality.Loseless
+    else -> ImagePreserver.Quality.Medium
 }

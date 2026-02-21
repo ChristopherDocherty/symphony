@@ -26,14 +26,17 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSideHeading
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSliderTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
 
@@ -44,15 +47,8 @@ object PlayerSettingsViewRoute
 @Composable
 fun PlayerSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val fadePlayback by context.symphony.settingsOLD.fadePlayback.flow.collectAsState()
-    val fadePlaybackDuration by context.symphony.settingsOLD.fadePlaybackDuration.flow.collectAsState()
-    val requireAudioFocus by context.symphony.settingsOLD.requireAudioFocus.flow.collectAsState()
-    val ignoreAudioFocusLoss by context.symphony.settingsOLD.ignoreAudioFocusLoss.flow.collectAsState()
-    val playOnHeadphonesConnect by context.symphony.settingsOLD.playOnHeadphonesConnect.flow.collectAsState()
-    val pauseOnHeadphonesDisconnect by context.symphony.settingsOLD.pauseOnHeadphonesDisconnect.flow.collectAsState()
-    val seekBackDuration by context.symphony.settingsOLD.seekBackDuration.flow.collectAsState()
-    val seekForwardDuration by context.symphony.settingsOLD.seekForwardDuration.flow.collectAsState()
-    val gaplessPlayback by context.symphony.settingsOLD.gaplessPlayback.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -97,9 +93,11 @@ fun PlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.FadePlaybackInOut)
                         },
-                        value = fadePlayback,
+                        value = settings.fadePlayback,
                         onChange = { value ->
-                            context.symphony.settingsOLD.fadePlayback.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { fadePlayback = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -115,17 +113,19 @@ fun PlayerSettingsView(context: ViewContext) {
                             Text(context.symphony.t.XSecs(value.toString()))
                         },
                         range = 0.5f..6f,
-                        initialValue = fadePlaybackDuration,
+                        initialValue = settings.fadePlaybackDuration.let { if (it == 0f) 1f else it },
                         onValue = { value ->
                             value.times(2).roundToInt().toFloat().div(2)
                         },
                         onChange = { value ->
-                            context.symphony.settingsOLD.fadePlaybackDuration.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { fadePlaybackDuration = value } }
+                            }
                         },
                         onReset = {
-                            context.symphony.settingsOLD.fadePlaybackDuration.setValue(
-                                context.symphony.settingsOLD.fadePlaybackDuration.defaultValue,
-                            )
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { fadePlaybackDuration = 1f } }
+                            }
                         },
                     )
                     HorizontalDivider()
@@ -136,9 +136,11 @@ fun PlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.RequireAudioFocus)
                         },
-                        value = requireAudioFocus,
+                        value = settings.requireAudioFocus,
                         onChange = { value ->
-                            context.symphony.settingsOLD.requireAudioFocus.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { requireAudioFocus = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -149,9 +151,11 @@ fun PlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.IgnoreAudioFocusLoss)
                         },
-                        value = ignoreAudioFocusLoss,
+                        value = settings.ignoreAudioFocusLoss,
                         onChange = { value ->
-                            context.symphony.settingsOLD.ignoreAudioFocusLoss.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { ignoreAudioFocusLoss = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -162,9 +166,11 @@ fun PlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.PlayOnHeadphonesConnect)
                         },
-                        value = playOnHeadphonesConnect,
+                        value = settings.playOnHeadphonesConnect,
                         onChange = { value ->
-                            context.symphony.settingsOLD.playOnHeadphonesConnect.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { playOnHeadphonesConnect = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -175,9 +181,11 @@ fun PlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.PauseOnHeadphonesDisconnect)
                         },
-                        value = pauseOnHeadphonesDisconnect,
+                        value = settings.pauseOnHeadphonesDisconnect,
                         onChange = { value ->
-                            context.symphony.settingsOLD.pauseOnHeadphonesDisconnect.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { pauseOnHeadphonesDisconnect = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -193,17 +201,19 @@ fun PlayerSettingsView(context: ViewContext) {
                             Text(context.symphony.t.XSecs(value.toString()))
                         },
                         range = seekDurationRange,
-                        initialValue = seekBackDuration.toFloat(),
+                        initialValue = settings.seekBackDuration.let { if (it == 0) 15 else it }.toFloat(),
                         onValue = { value ->
                             value.roundToInt().toFloat()
                         },
                         onChange = { value ->
-                            context.symphony.settingsOLD.seekBackDuration.setValue(value.toInt())
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { seekBackDuration = value.toInt() } }
+                            }
                         },
                         onReset = {
-                            context.symphony.settingsOLD.seekBackDuration.setValue(
-                                context.symphony.settingsOLD.seekBackDuration.defaultValue,
-                            )
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { seekBackDuration = 15 } }
+                            }
                         },
                     )
                     HorizontalDivider()
@@ -219,17 +229,19 @@ fun PlayerSettingsView(context: ViewContext) {
                             Text(context.symphony.t.XSecs(value.toString()))
                         },
                         range = seekDurationRange,
-                        initialValue = seekForwardDuration.toFloat(),
+                        initialValue = settings.seekForwardDuration.let { if (it == 0) 30 else it }.toFloat(),
                         onValue = { value ->
                             value.roundToInt().toFloat()
                         },
                         onChange = { value ->
-                            context.symphony.settingsOLD.seekForwardDuration.setValue(value.toInt())
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { seekForwardDuration = value.toInt() } }
+                            }
                         },
                         onReset = {
-                            context.symphony.settingsOLD.seekForwardDuration.setValue(
-                                context.symphony.settingsOLD.seekForwardDuration.defaultValue,
-                            )
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { seekForwardDuration = 30 } }
+                            }
                         },
                     )
                     HorizontalDivider()
@@ -240,9 +252,11 @@ fun PlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.GaplessPlayback)
                         },
-                        value = gaplessPlayback,
+                        value = settings.gaplessPlayback,
                         onChange = { value ->
-                            context.symphony.settingsOLD.gaplessPlayback.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { gaplessPlayback = value } }
+                            }
                         },
                     )
                 }

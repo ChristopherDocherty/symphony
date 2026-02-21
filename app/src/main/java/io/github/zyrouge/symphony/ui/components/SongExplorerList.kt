@@ -48,6 +48,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.Groove
+import androidx.compose.runtime.rememberCoroutineScope
+import io.github.zyrouge.symphony.copy
+import kotlinx.coroutines.launch
 import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
 import io.github.zyrouge.symphony.services.radio.Radio
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
@@ -75,8 +78,10 @@ fun SongExplorerList(
             initialPath?.let { explorer.navigateToFolder(it) } ?: explorer
         )
     }
-    val sortBy by context.symphony.settingsOLD.lastUsedBrowserSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settingsOLD.lastUsedBrowserSortReverse.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val explorerSettings by context.symphony.settingsState.collectAsState()
+    val sortBy = explorerSettings.browserSortBy
+    val sortReverse = explorerSettings.browserSortReverse
     val sortedEntities by remember(key, currentFolder) {
         derivedStateOf {
             val categorized = currentFolder.categorizedChildren()
@@ -154,13 +159,21 @@ fun SongExplorerList(
                     context,
                     reverse = sortReverse,
                     onReverseChange = {
-                        context.symphony.settingsOLD.lastUsedBrowserSortReverse.setValue(it)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { browserSortReverse = it }
+                            }
+                        }
                     },
                     sort = sortBy,
                     sorts = SongSortBy.entries
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
-                        context.symphony.settingsOLD.lastUsedBrowserSortBy.setValue(it)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { browserSortBy = it }
+                            }
+                        }
                     },
                     label = {
                         Text(

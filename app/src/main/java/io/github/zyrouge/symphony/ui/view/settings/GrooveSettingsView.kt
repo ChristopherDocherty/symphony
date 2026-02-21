@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.ui.view.settings
 
+import android.net.Uri
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.repeatable
@@ -44,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import io.github.zyrouge.symphony.AlbumSortBy
+import io.github.zyrouge.symphony.ArtworkQuality
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
@@ -63,7 +65,6 @@ import io.github.zyrouge.symphony.ui.components.settings.SettingsTextInputTile
 import io.github.zyrouge.symphony.ui.helpers.TransitionDurations
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.SettingsViewRoute
-import io.github.zyrouge.symphony.utils.ImagePreserver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -79,17 +80,19 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
-    val songsFilterPattern by context.symphony.settingsOLD.songsFilterPattern.flow.collectAsState()
-    val minSongDuration by context.symphony.settingsOLD.minSongDuration.flow.collectAsState()
-    val blacklistFolders by context.symphony.settingsOLD.blacklistFolders.flow.collectAsState()
-    val whitelistFolders by context.symphony.settingsOLD.whitelistFolders.flow.collectAsState()
-    val artistTagSeparators by context.symphony.settingsOLD.artistTagSeparators.flow.collectAsState()
-    val genreTagSeparators by context.symphony.settingsOLD.genreTagSeparators.flow.collectAsState()
-    val mediaFolders by context.symphony.settingsOLD.mediaFolders.flow.collectAsState()
-    val artworkQuality by context.symphony.settingsOLD.artworkQuality.flow.collectAsState()
-    val caseSensitiveSorting by context.symphony.settingsOLD.caseSensitiveSorting.flow.collectAsState()
-    val useMetaphony by context.symphony.settingsOLD.useMetaphony.flow.collectAsState()
-    val artistAlbumsview by context.symphony.settings.data.map{it.uiArtistViewAlbumSortBy.by}.collectAsState(
+    val settings by context.symphony.settingsState.collectAsState()
+
+    val songsFilterPattern = settings.songsFilterPattern.takeIf { it.isNotEmpty() }
+    val minSongDuration = settings.minSongDuration
+    val blacklistFolders = settings.blacklistFoldersList.toSet()
+    val whitelistFolders = settings.whitelistFoldersList.toSet()
+    val artistTagSeparators = settings.artistTagSeparatorsList.toSet()
+    val genreTagSeparators = settings.genreTagSeparatorsList.toSet()
+    val mediaFolders = settings.mediaFoldersList.map { Uri.parse(it) }.toSet()
+    val artworkQuality = settings.artworkQuality
+    val caseSensitiveSorting = settings.caseSensitiveSorting
+    val useMetaphony = settings.useMetaphony
+    val artistAlbumsview by context.symphony.settings.data.map { it.uiArtistViewAlbumSortBy.by }.collectAsState(
         AlbumSortBy.ALBUM_YEAR)
 
     Scaffold(
@@ -145,8 +148,15 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             },
                             initialValues = mediaFolders,
                             onChange = { values ->
-                                context.symphony.settingsOLD.mediaFolders.setValue(values)
-                                refreshMediaLibrary(context.symphony)
+                                coroutineScope.launch {
+                                    context.symphony.settings.updateData {
+                                        it.copy {
+                                            this.mediaFolders.clear()
+                                            this.mediaFolders.addAll(values.map { uri -> uri.toString() })
+                                        }
+                                    }
+                                    refreshMediaLibrary(context.symphony)
+                                }
                             }
                         )
                     }
@@ -161,16 +171,23 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         },
                         value = songsFilterPattern ?: defaultSongsFilterPattern,
                         onReset = {
-                            context.symphony.settingsOLD.songsFilterPattern.setValue(null)
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.songsFilterPattern = "" } }
+                                refreshMediaLibrary(context.symphony)
+                            }
                         },
                         onChange = { value ->
-                            context.symphony.settingsOLD.songsFilterPattern.setValue(
-                                when (value) {
-                                    defaultSongsFilterPattern -> null
-                                    else -> value
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy {
+                                        this.songsFilterPattern = when (value) {
+                                            defaultSongsFilterPattern -> ""
+                                            else -> value
+                                        }
+                                    }
                                 }
-                            )
-                            refreshMediaLibrary(context.symphony)
+                                refreshMediaLibrary(context.symphony)
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -191,12 +208,14 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             value.roundToInt().toFloat()
                         },
                         onChange = { value ->
-                            context.symphony.settingsOLD.minSongDuration.setValue(value.toInt())
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.minSongDuration = value.toInt() } }
+                            }
                         },
                         onReset = {
-                            context.symphony.settingsOLD.minSongDuration.setValue(
-                                context.symphony.settingsOLD.minSongDuration.defaultValue,
-                            )
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.minSongDuration = 0 } }
+                            }
                         },
                     )
                     HorizontalDivider()
@@ -211,8 +230,15 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         explorer = context.symphony.groove.exposer.explorer,
                         initialValues = blacklistFolders,
                         onChange = { values ->
-                            context.symphony.settingsOLD.blacklistFolders.setValue(values)
-                            refreshMediaLibrary(context.symphony)
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy {
+                                        this.blacklistFolders.clear()
+                                        this.blacklistFolders.addAll(values)
+                                    }
+                                }
+                                refreshMediaLibrary(context.symphony)
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -227,8 +253,15 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         explorer = context.symphony.groove.exposer.explorer,
                         initialValues = whitelistFolders,
                         onChange = { values ->
-                            context.symphony.settingsOLD.whitelistFolders.setValue(values)
-                            refreshMediaLibrary(context.symphony)
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy {
+                                        this.whitelistFolders.clear()
+                                        this.whitelistFolders.addAll(values)
+                                    }
+                                }
+                                refreshMediaLibrary(context.symphony)
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -241,9 +274,16 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Text(context.symphony.t.ArtistTagValueSeparators)
                         },
                         values = artistTagSeparators.toList(),
-                        onChange = {
-                            context.symphony.settingsOLD.artistTagSeparators.setValue(it.toSet())
-                            refreshMediaLibrary(context.symphony)
+                        onChange = { newValues ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy {
+                                        this.artistTagSeparators.clear()
+                                        this.artistTagSeparators.addAll(newValues.toSet())
+                                    }
+                                }
+                                refreshMediaLibrary(context.symphony)
+                            }
                         },
                     )
                     HorizontalDivider()
@@ -256,9 +296,16 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Text(context.symphony.t.GenreTagValueSeparators)
                         },
                         values = genreTagSeparators.toList(),
-                        onChange = {
-                            context.symphony.settingsOLD.genreTagSeparators.setValue(it.toSet())
-                            refreshMediaLibrary(context.symphony)
+                        onChange = { newValues ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy {
+                                        this.genreTagSeparators.clear()
+                                        this.genreTagSeparators.addAll(newValues.toSet())
+                                    }
+                                }
+                                refreshMediaLibrary(context.symphony)
+                            }
                         },
                     )
                     HorizontalDivider()
@@ -270,10 +317,13 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Text(context.symphony.t.ArtworkQuality)
                         },
                         value = artworkQuality,
-                        values = ImagePreserver.Quality.entries
+                        values = ArtworkQuality.entries
+                            .filter { it != ArtworkQuality.UNRECOGNIZED }
                             .associateWith { it.label(context) },
                         onChange = { value ->
-                            context.symphony.settingsOLD.artworkQuality.setValue(value)
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.artworkQuality = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -284,9 +334,11 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         title = {
                             Text(context.symphony.t.CaseSensitiveSorting)
                         },
-                        value = caseSensitiveSorting, // Changed from value to checked
+                        value = caseSensitiveSorting,
                         onChange = { value ->
-                            context.symphony.settingsOLD.caseSensitiveSorting.setValue(value)
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.caseSensitiveSorting = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -297,9 +349,11 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         title = {
                             Text(context.symphony.t.UseMetaphonyMetadataDecoder)
                         },
-                        value = useMetaphony, // Changed from value to checked
+                        value = useMetaphony,
                         onChange = { value ->
-                            context.symphony.settingsOLD.useMetaphony.setValue(value)
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.useMetaphony = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -332,7 +386,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         values = AlbumSortBy.entries.associateWith { it.label(context) },
                         onChange = { value ->
                             coroutineScope.launch {
-                                context.symphony.settings.updateData { it.copy { uiArtistViewAlbumSortBy = uiArtistViewAlbumSortBy.copy {by = value}} }
+                                context.symphony.settings.updateData { it.copy { uiArtistViewAlbumSortBy = uiArtistViewAlbumSortBy.copy { by = value } } }
                             }
                         }
                     )
@@ -342,11 +396,12 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
     )
 }
 
-fun ImagePreserver.Quality.label(context: ViewContext) = when (this) {
-    ImagePreserver.Quality.Low -> context.symphony.t.Low
-    ImagePreserver.Quality.Medium -> context.symphony.t.Medium
-    ImagePreserver.Quality.High -> context.symphony.t.High
-    ImagePreserver.Quality.Loseless -> context.symphony.t.Loseless
+fun ArtworkQuality.label(context: ViewContext) = when (this) {
+    ArtworkQuality.ARTWORK_LOW -> context.symphony.t.Low
+    ArtworkQuality.ARTWORK_MEDIUM -> context.symphony.t.Medium
+    ArtworkQuality.ARTWORK_HIGH -> context.symphony.t.High
+    ArtworkQuality.ARTWORK_LOSELESS -> context.symphony.t.Loseless
+    ArtworkQuality.UNRECOGNIZED -> "???"
 }
 
 private fun refreshMediaLibrary(symphony: Symphony, clearCache: Boolean = false) {

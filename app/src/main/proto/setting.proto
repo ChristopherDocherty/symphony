@@ -5,6 +5,10 @@ option java_multiple_files = true;
 
 package settings;
 
+// ---------------------------------------------------------------------------
+// Existing enums (unchanged)
+// ---------------------------------------------------------------------------
+
 enum SongSortBy {
   SONG_CUSTOM = 0;
   SONG_TITLE = 1;
@@ -25,11 +29,11 @@ message SongSortPreference {
 }
 
 enum AlbumSortBy {
-  ALBUM_CUSTOM= 0;
-  ALBUM_NAME= 1;
-  ALBUM_ARTIST_NAME= 2;
-  ALBUM_TRACKS_COUNT= 3;
-  ALBUM_YEAR= 4;
+  ALBUM_CUSTOM = 0;
+  ALBUM_NAME = 1;
+  ALBUM_ARTIST_NAME = 2;
+  ALBUM_TRACKS_COUNT = 3;
+  ALBUM_YEAR = 4;
 }
 
 message AlbumSortPreference {
@@ -38,10 +42,10 @@ message AlbumSortPreference {
 }
 
 enum ArtistSortBy {
-    ARTIST_CUSTOM= 0;
-    ARTIST_NAME= 1;
-    ARTIST_TRACKS_COUNT= 2;
-    ARTIST_ALBUMS_COUNT = 3;
+  ARTIST_CUSTOM = 0;
+  ARTIST_NAME = 1;
+  ARTIST_TRACKS_COUNT = 2;
+  ARTIST_ALBUMS_COUNT = 3;
 }
 
 message ArtistSortPreference {
@@ -60,7 +64,6 @@ message PlaybackOptions {
   bool shuffle = 2;
 }
 
-
 message AlbumFilter {
   repeated string release_type = 1;
   repeated string original_owner = 2;
@@ -71,8 +74,82 @@ message AlbumFilter {
   repeated uint32 release_year = 7;
 }
 
+// ---------------------------------------------------------------------------
+// New enums
+// ---------------------------------------------------------------------------
+
+// Maps to ThemeMode kotlin enum. Default (0) = SYSTEM.
+enum ThemeMode {
+  THEME_SYSTEM = 0;
+  THEME_SYSTEM_BLACK = 1;
+  THEME_LIGHT = 2;
+  THEME_DARK = 3;
+  THEME_BLACK = 4;
+}
+
+// Maps to HomePageBottomBarLabelVisibility kotlin enum. Default (0) = ALWAYS_VISIBLE.
+enum HomePageBottomBarLabelVisibility {
+  BOTTOM_BAR_ALWAYS_VISIBLE = 0;
+  BOTTOM_BAR_VISIBLE_WHEN_ACTIVE = 1;
+  BOTTOM_BAR_INVISIBLE = 2;
+}
+
+// Maps to NowPlayingControlsLayout kotlin enum. Default (0) = CompactLeft.
+enum NowPlayingControlsLayout {
+  CONTROLS_COMPACT_LEFT = 0;
+  CONTROLS_COMPACT_RIGHT = 1;
+  CONTROLS_TRADITIONAL = 2;
+}
+
+// Maps to NowPlayingLyricsLayout kotlin enum. Default (0) = ReplaceArtwork.
+enum NowPlayingLyricsLayout {
+  LYRICS_REPLACE_ARTWORK = 0;
+  LYRICS_SEPARATE_PAGE = 1;
+}
+
+// Maps to ImagePreserver.Quality kotlin enum. Default (0) = Low; migration writes MEDIUM for existing users.
+enum ArtworkQuality {
+  ARTWORK_LOW = 0;
+  ARTWORK_MEDIUM = 1;
+  ARTWORK_HIGH = 2;
+  ARTWORK_LOSELESS = 3;
+}
+
+// Maps to AlbumArtistRepository.SortBy. Default (0) = CUSTOM; migration writes ARTIST_NAME for existing users.
+enum AlbumArtistSortBy {
+  ALBUM_ARTIST_CUSTOM = 0;
+  ALBUM_ARTIST_SORT_NAME = 1;
+  ALBUM_ARTIST_TRACKS_COUNT = 2;
+  ALBUM_ARTIST_ALBUMS_COUNT = 3;
+}
+
+// Maps to GenreRepository.SortBy. Default (0) = CUSTOM; migration writes GENRE for existing users.
+enum GenreSortBy {
+  GENRE_SORT_CUSTOM = 0;
+  GENRE_SORT_GENRE = 1;
+  GENRE_SORT_TRACKS_COUNT = 2;
+}
+
+// Maps to PlaylistRepository.SortBy. Default (0) = CUSTOM — matches kotlin default.
+enum PlaylistSortBy {
+  PLAYLIST_SORT_CUSTOM = 0;
+  PLAYLIST_SORT_TITLE = 1;
+  PLAYLIST_SORT_TRACKS_COUNT = 2;
+}
+
+// Maps to StringListUtils.SortBy. Default (0) = CUSTOM; migration writes NAME for existing users.
+enum PathSortBy {
+  PATH_SORT_CUSTOM = 0;
+  PATH_SORT_NAME = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Root settings message
+// ---------------------------------------------------------------------------
+
 message Settings {
 
+  // --- Existing sort preferences (field numbers preserved) ---
   SongSortPreference ui_default_song_sort = 2;
   SongSortPreference ui_album_view_songs_sort = 3;
   SongSortPreference ui_artist_view_songs_sort = 4;
@@ -83,10 +160,97 @@ message Settings {
 
   ArtistSortPreference ui_default_artist_sort = 8;
 
+  // Sentinel: false until migration or fresh-install initialisation has run.
+  bool settings_initialized = 9;
 
+  // --- App (10–19) ---
+  string language = 10;                // empty = system default
+  bool check_for_updates = 11;
+  bool show_update_toast = 12;         // default true — written by migration
+  bool read_introductory_message = 13;
+  ArtworkQuality artwork_quality = 14; // default MEDIUM — written by migration
+  bool use_metaphony = 15;             // default true — written by migration
+  bool case_sensitive_sorting = 16;
+  string previous_song_queue = 17;     // serialised RadioQueue.Serialized string
+
+  // --- Appearance (20–29) ---
+  ThemeMode theme_mode = 20;
+  bool material_you = 21;              // default true — written by migration
+  string primary_color = 22;           // empty = unset
+  string font_family = 23;             // empty = unset
+  float font_scale = 24;               // 0.0 treated as default (1.0) in code
+  float content_scale = 25;            // 0.0 treated as default (1.0) in code
+
+  // --- Home page (30–39) ---
+  string last_home_tab = 30;                               // HomePage.name
+  repeated string home_tabs = 31;                          // Set<HomePage.name>
+  HomePageBottomBarLabelVisibility home_page_bottom_bar_label_visibility = 32;
+  repeated string for_you_contents = 33;                   // Set<ForYou.name>
+
+  // --- Library — sort & grid (40–79) ---
+  uint32 artists_horizontal_grid_columns = 40;
+  uint32 artists_vertical_grid_columns = 41;
+  AlbumArtistSortBy album_artists_sort_by = 42;            // default ARTIST_NAME — written by migration
+  bool album_artists_sort_reverse = 43;
+  uint32 album_artists_horizontal_grid_columns = 44;
+  uint32 album_artists_vertical_grid_columns = 45;
+  uint32 albums_horizontal_grid_columns = 46;
+  uint32 albums_vertical_grid_columns = 47;
+  GenreSortBy genres_sort_by = 48;                         // default GENRE — written by migration
+  bool genres_sort_reverse = 49;
+  uint32 genres_horizontal_grid_columns = 50;
+  uint32 genres_vertical_grid_columns = 51;
+  PlaylistSortBy playlists_sort_by = 52;
+  bool playlists_sort_reverse = 53;
+  uint32 playlists_horizontal_grid_columns = 54;
+  uint32 playlists_vertical_grid_columns = 55;
+  SongSortBy browser_sort_by = 60;                         // default SONG_FILENAME — written by migration
+  bool browser_sort_reverse = 61;
+  string browser_path = 62;                                // empty = unset
+  PathSortBy tree_path_sort_by = 63;                       // default PATH_NAME — written by migration
+  bool tree_path_sort_reverse = 64;
+  PathSortBy folders_sort_by = 65;                         // default PATH_NAME — written by migration
+  bool folders_sort_reverse = 66;
+  uint32 folders_horizontal_grid_columns = 67;
+  uint32 folders_vertical_grid_columns = 68;
+  repeated string disabled_tree_paths = 69;
+  repeated string blacklist_folders = 70;
+  repeated string whitelist_folders = 71;
+  repeated string media_folders = 72;                      // URIs as strings
+
+  // --- Content filtering (80–89) ---
+  string songs_filter_pattern = 80;                        // empty = unset
+  uint32 min_song_duration = 81;
+  repeated string artist_tag_separators = 82;
+  repeated string genre_tag_separators = 83;
+
+  // --- Existing album filters (field numbers preserved) ---
   AlbumFilter ui_album_grid_album_filter = 801;
   AlbumFilter ui_album_row_album_filter = 802;
 
-  PlaybackOptions playback_options = 901;
-}
+  // --- Playback (300–399, alongside existing 901) ---
+  bool fade_playback = 300;
+  float fade_playback_duration = 301;                      // 0.0 treated as default (1.0) in code
+  bool require_audio_focus = 302;                          // default true — written by migration
+  bool ignore_audio_focus_loss = 303;
+  bool play_on_headphones_connect = 304;
+  bool pause_on_headphones_disconnect = 305;               // default true — written by migration
+  bool gapless_playback = 306;                             // default true — written by migration
 
+  // --- Existing playback options (field number preserved) ---
+  PlaybackOptions playback_options = 901;
+
+  // --- Now playing (400–499) ---
+  bool now_playing_additional_info = 400;                  // default true — written by migration
+  bool now_playing_seek_controls = 401;
+  uint32 seek_back_duration = 402;                         // 0 treated as default (15) in code
+  uint32 seek_forward_duration = 403;                      // 0 treated as default (30) in code
+  NowPlayingControlsLayout now_playing_controls_layout = 404;
+  NowPlayingLyricsLayout now_playing_lyrics_layout = 405;
+  bool lyrics_keep_screen_awake = 406;                     // default true — written by migration
+
+  // --- Mini player (500–599) ---
+  bool mini_player_track_controls = 500;
+  bool mini_player_seek_controls = 501;
+  bool mini_player_text_marquee = 502;                     // default true — written by migration
+}

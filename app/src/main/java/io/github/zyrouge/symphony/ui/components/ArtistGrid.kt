@@ -30,6 +30,7 @@ fun ArtistGrid(
     artistName: List<String>,
     artistsCount: Int? = null,
 ) {
+    val settings by context.symphony.settingsState.collectAsState()
     val sortBy by context.symphony.settings.data.map { it.uiDefaultArtistSort.by }.collectAsState(
         ArtistSortBy.ARTIST_NAME)
     val sortReverse by context.symphony.settings.data.map { it.uiDefaultArtistSort.reverse }.collectAsState(false)
@@ -39,8 +40,8 @@ fun ArtistGrid(
             context.symphony.groove.artist.sort(filteredArtistNames, sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedArtistsHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settingsOLD.lastUsedArtistsVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns = settings.artistsHorizontalGridColumns
+    val verticalGridColumns = settings.artistsVerticalGridColumns
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -107,13 +108,15 @@ fun ArtistGrid(
                 ResponsiveGridSizeAdjustBottomSheet(
                     context,
                     columns = gridColumns,
-                    onColumnsChange = {
-                        context.symphony.settingsOLD.lastUsedArtistsHorizontalGridColumns.setValue(
-                            it.horizontal
-                        )
-                        context.symphony.settingsOLD.lastUsedArtistsVerticalGridColumns.setValue(
-                            it.vertical
-                        )
+                    onColumnsChange = { cols ->
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy {
+                                    artistsHorizontalGridColumns = cols.horizontal
+                                    artistsVerticalGridColumns = cols.vertical
+                                }
+                            }
+                        }
                     },
                     onDismissRequest = {
                         showModifyLayoutSheet = false

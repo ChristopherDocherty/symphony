@@ -24,10 +24,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 
 @Composable
@@ -35,8 +38,10 @@ fun IntroductoryDialog(
     context: ViewContext,
     onDismissRequest: () -> Unit,
 ) {
-    val checkForUpdates by context.symphony.settingsOLD.checkForUpdates.flow.collectAsState()
-    val showUpdateToast by context.symphony.settingsOLD.showUpdateToast.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
+    val checkForUpdates = settings.checkForUpdates
+    val showUpdateToast = settings.showUpdateToast
 
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
@@ -54,7 +59,11 @@ fun IntroductoryDialog(
                     content = { Text(context.symphony.t.CheckForUpdates) },
                     value = checkForUpdates,
                     onChange = { value ->
-                        context.symphony.settingsOLD.checkForUpdates.setValue(value)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { this.checkForUpdates = value }
+                            }
+                        }
                     }
                 )
                 Box(modifier = Modifier.height(8.dp))
@@ -62,7 +71,11 @@ fun IntroductoryDialog(
                     content = { Text(context.symphony.t.ShowUpdateToast) },
                     value = showUpdateToast,
                     onChange = { value ->
-                        context.symphony.settingsOLD.showUpdateToast.setValue(value)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { this.showUpdateToast = value }
+                            }
+                        }
                     },
                     enabled = checkForUpdates,
                 )

@@ -32,6 +32,7 @@ import io.github.zyrouge.symphony.ui.components.LyricsText
 import io.github.zyrouge.symphony.ui.components.TimedContentTextStyle
 import io.github.zyrouge.symphony.ui.components.swipeable
 import io.github.zyrouge.symphony.ui.helpers.FadeTransition
+import kotlinx.coroutines.flow.map
 import io.github.zyrouge.symphony.ui.helpers.ScreenOrientation
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
@@ -69,7 +70,7 @@ fun NowPlayingBodyCover(
 
 @Composable
 private fun NowPlayingBodyCoverLyrics(context: ViewContext, orientation: ScreenOrientation) {
-    val keepScreenAwake by context.symphony.settingsOLD.lyricsKeepScreenAwake.flow.collectAsState()
+    val keepScreenAwake by context.symphony.settingsState.map { it.lyricsKeepScreenAwake }.collectAsState(false)
 
     if (keepScreenAwake) {
         KeepScreenAwake()

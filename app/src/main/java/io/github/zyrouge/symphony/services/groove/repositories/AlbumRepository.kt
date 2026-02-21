@@ -190,7 +190,7 @@ class AlbumRepository(private val symphony: Symphony) {
         .search(terms, albumIds, maxLength = limit)
 
     fun getAlbums(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean, filter: AlbumFilter = AlbumFilter.getDefaultInstance()): List<String> {
-        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
+        val sensitive = symphony.settingsState.value.caseSensitiveSorting
 
         val filteredAlbumIds = albumIds.filter { albumId ->
             ALBUM_STRING_FILTER_FIELDS.all { field ->

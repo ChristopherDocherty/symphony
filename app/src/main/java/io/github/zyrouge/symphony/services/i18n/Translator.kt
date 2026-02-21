@@ -2,17 +2,21 @@ package io.github.zyrouge.symphony.services.i18n
 
 import androidx.core.os.LocaleListCompat
 import io.github.zyrouge.symphony.Symphony
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 class Translator(private val symphony: Symphony) {
     val translations = Translations(symphony)
 
     suspend fun onChange(fn: (Translation) -> Unit) {
-        symphony.settingsOLD.language.flow.collect {
-            fn(getCurrentTranslation())
-        }
+        symphony.settingsState
+            .map { it.language }
+            .distinctUntilChanged()
+            .collect { fn(getCurrentTranslation()) }
     }
 
-    fun getCurrentTranslation() = symphony.settingsOLD.language.value
+    fun getCurrentTranslation() = symphony.settingsState.value.language
+        .takeIf { it.isNotEmpty() }
         ?.let { translations.parse(it) }
         ?: getDefaultTranslation()
 

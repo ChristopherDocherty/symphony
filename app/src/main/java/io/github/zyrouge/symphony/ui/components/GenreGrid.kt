@@ -25,6 +25,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,10 +35,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.GenreSortBy
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
-import io.github.zyrouge.symphony.services.groove.repositories.GenreRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.GenreViewRoute
+import kotlinx.coroutines.launch
 
 private object GenreTile {
     val colors = listOf(
@@ -69,15 +72,17 @@ fun GenreGrid(
     genreNames: List<String>,
     genresCount: Int? = null,
 ) {
-    val sortBy by context.symphony.settingsOLD.lastUsedGenresSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settingsOLD.lastUsedGenresSortReverse.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
+    val sortBy = settings.genresSortBy
+    val sortReverse = settings.genresSortReverse
     val sortedGenreNames by remember(genreNames, sortBy, sortReverse) {
         derivedStateOf {
             context.symphony.groove.genre.sort(genreNames, sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedGenresHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settingsOLD.lastUsedGenresVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns = settings.genresHorizontalGridColumns
+    val verticalGridColumns = settings.genresVerticalGridColumns
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -92,13 +97,22 @@ fun GenreGrid(
                     context,
                     reverse = sortReverse,
                     onReverseChange = {
-                        context.symphony.settingsOLD.lastUsedGenresSortReverse.setValue(it)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { genresSortReverse = it }
+                            }
+                        }
                     },
                     sort = sortBy,
-                    sorts = GenreRepository.SortBy.entries
+                    sorts = GenreSortBy.entries
+                        .filter { it != GenreSortBy.UNRECOGNIZED }
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
-                        context.symphony.settingsOLD.lastUsedGenresSortBy.setValue(it)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { genresSortBy = it }
+                            }
+                        }
                     },
                     label = {
                         Text(
@@ -197,13 +211,15 @@ fun GenreGrid(
                 ResponsiveGridSizeAdjustBottomSheet(
                     context,
                     columns = gridColumns,
-                    onColumnsChange = {
-                        context.symphony.settingsOLD.lastUsedGenresHorizontalGridColumns.setValue(
-                            it.horizontal
-                        )
-                        context.symphony.settingsOLD.lastUsedGenresVerticalGridColumns.setValue(
-                            it.vertical
-                        )
+                    onColumnsChange = { cols ->
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy {
+                                    genresHorizontalGridColumns = cols.horizontal
+                                    genresVerticalGridColumns = cols.vertical
+                                }
+                            }
+                        }
                     },
                     onDismissRequest = {
                         showModifyLayoutSheet = false
@@ -214,8 +230,9 @@ fun GenreGrid(
     )
 }
 
-private fun GenreRepository.SortBy.label(context: ViewContext) = when (this) {
-    GenreRepository.SortBy.CUSTOM -> context.symphony.t.Custom
-    GenreRepository.SortBy.GENRE -> context.symphony.t.Genre
-    GenreRepository.SortBy.TRACKS_COUNT -> context.symphony.t.TrackCount
+private fun GenreSortBy.label(context: ViewContext) = when (this) {
+    GenreSortBy.GENRE_SORT_CUSTOM -> context.symphony.t.Custom
+    GenreSortBy.GENRE_SORT_GENRE -> context.symphony.t.Genre
+    GenreSortBy.GENRE_SORT_TRACKS_COUNT -> context.symphony.t.TrackCount
+    else -> "???"
 }

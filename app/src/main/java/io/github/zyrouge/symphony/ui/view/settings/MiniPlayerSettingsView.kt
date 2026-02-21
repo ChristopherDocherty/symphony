@@ -22,13 +22,16 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSideHeading
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -38,9 +41,8 @@ object MiniPlayerSettingsViewRoute
 @Composable
 fun MiniPlayerSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val miniPlayerTrackControls by context.symphony.settingsOLD.miniPlayerTrackControls.flow.collectAsState()
-    val miniPlayerSeekControls by context.symphony.settingsOLD.miniPlayerSeekControls.flow.collectAsState()
-    val miniPlayerTextMarquee by context.symphony.settingsOLD.miniPlayerTextMarquee.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -83,9 +85,11 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.ShowTrackControls)
                         },
-                        value = miniPlayerTrackControls,
+                        value = settings.miniPlayerTrackControls,
                         onChange = { value ->
-                            context.symphony.settingsOLD.miniPlayerTrackControls.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { miniPlayerTrackControls = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -96,9 +100,11 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.ShowSeekControls)
                         },
-                        value = miniPlayerSeekControls,
+                        value = settings.miniPlayerSeekControls,
                         onChange = { value ->
-                            context.symphony.settingsOLD.miniPlayerSeekControls.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { miniPlayerSeekControls = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -109,9 +115,11 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.MiniPlayerTextMarquee)
                         },
-                        value = miniPlayerTextMarquee,
+                        value = settings.miniPlayerTextMarquee,
                         onChange = { value ->
-                            context.symphony.settingsOLD.miniPlayerTextMarquee.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { miniPlayerTextMarquee = value } }
+                            }
                         }
                     )
                 }

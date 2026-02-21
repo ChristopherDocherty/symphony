@@ -45,8 +45,9 @@ fun AlbumGrid(
             context.symphony.groove.album.getAlbums(albumIds, sortBy, sortReverse, albumFilter)
         }
     }
-    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedAlbumsHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settingsOLD.lastUsedAlbumsVerticalGridColumns.flow.collectAsState()
+    val settings by context.symphony.settingsState.collectAsState()
+    val horizontalGridColumns = settings.albumsHorizontalGridColumns
+    val verticalGridColumns = settings.albumsVerticalGridColumns
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -116,13 +117,15 @@ fun AlbumGrid(
                 ResponsiveGridSizeAdjustBottomSheet(
                     context,
                     columns = gridColumns,
-                    onColumnsChange = {
-                        context.symphony.settingsOLD.lastUsedAlbumsHorizontalGridColumns.setValue(
-                            it.horizontal
-                        )
-                        context.symphony.settingsOLD.lastUsedAlbumsVerticalGridColumns.setValue(
-                            it.vertical
-                        )
+                    onColumnsChange = { cols ->
+                        coroutineScope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy {
+                                    albumsHorizontalGridColumns = cols.horizontal
+                                    albumsVerticalGridColumns = cols.vertical
+                                }
+                            }
+                        }
                     },
                     onDismissRequest = {
                         showModifyLayoutSheet = false

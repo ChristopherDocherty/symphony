@@ -32,6 +32,7 @@ import io.github.zyrouge.symphony.ui.components.LyricsText
 import io.github.zyrouge.symphony.ui.components.TimedContentTextStyle
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.flow.map
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NothingPlaying
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NowPlayingSeekBar
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NowPlayingTraditionalControls
@@ -44,7 +45,7 @@ object LyricsViewRoute
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LyricsView(context: ViewContext) {
-    val keepScreenAwake by context.symphony.settingsOLD.lyricsKeepScreenAwake.flow.collectAsState()
+    val keepScreenAwake by context.symphony.settingsState.map { it.lyricsKeepScreenAwake }.collectAsState(false)
 
     if (keepScreenAwake) {
         KeepScreenAwake()

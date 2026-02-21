@@ -20,13 +20,16 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSideHeading
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -36,8 +39,8 @@ object UpdateSettingsViewRoute
 @Composable
 fun UpdateSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
-    val checkForUpdates by context.symphony.settingsOLD.checkForUpdates.flow.collectAsState()
-    val showUpdateToast by context.symphony.settingsOLD.showUpdateToast.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -80,9 +83,11 @@ fun UpdateSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.CheckForUpdates)
                         },
-                        value = checkForUpdates,
+                        value = settings.checkForUpdates,
                         onChange = { value ->
-                            context.symphony.settingsOLD.checkForUpdates.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { checkForUpdates = value } }
+                            }
                         }
                     )
                     HorizontalDivider()
@@ -93,9 +98,11 @@ fun UpdateSettingsView(context: ViewContext) {
                         title = {
                             Text(context.symphony.t.ShowUpdateToast)
                         },
-                        value = showUpdateToast,
+                        value = settings.showUpdateToast,
                         onChange = { value ->
-                            context.symphony.settingsOLD.showUpdateToast.setValue(value)
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { showUpdateToast = value } }
+                            }
                         }
                     )
                 }

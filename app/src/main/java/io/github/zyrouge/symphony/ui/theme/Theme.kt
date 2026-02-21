@@ -19,15 +19,8 @@ import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.ThemeMode
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
-
-enum class ThemeMode {
-    SYSTEM,
-    SYSTEM_BLACK,
-    LIGHT,
-    DARK,
-    BLACK,
-}
 
 enum class ColorSchemeMode {
     LIGHT,
@@ -40,12 +33,13 @@ fun SymphonyTheme(
     context: ViewContext,
     content: @Composable () -> Unit,
 ) {
-    val themeMode by context.symphony.settingsOLD.themeMode.flow.collectAsState()
-    val useMaterialYou by context.symphony.settingsOLD.useMaterialYou.flow.collectAsState()
-    val primaryColorName by context.symphony.settingsOLD.primaryColor.flow.collectAsState()
-    val fontName by context.symphony.settingsOLD.fontFamily.flow.collectAsState()
-    val fontScale by context.symphony.settingsOLD.fontScale.flow.collectAsState()
-    val contentScale by context.symphony.settingsOLD.contentScale.flow.collectAsState()
+    val settings by context.symphony.settingsState.collectAsState()
+    val themeMode = settings.themeMode
+    val useMaterialYou = settings.materialYou
+    val primaryColorName = settings.primaryColor
+    val fontName = settings.fontFamily
+    val fontScale = settings.fontScale.let { if (it <= 0f) 1f else it }
+    val contentScale = settings.contentScale.let { if (it <= 0f) 1f else it }
 
     val colorSchemeMode = themeMode.toColorSchemeMode(isSystemInDarkTheme())
     val colorScheme = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && useMaterialYou) {
@@ -109,11 +103,12 @@ fun ThemeMode.toColorSchemeMode(symphony: Symphony): ColorSchemeMode {
 }
 
 fun ThemeMode.toColorSchemeMode(isSystemInDarkTheme: Boolean) = when (this) {
-    ThemeMode.SYSTEM -> if (isSystemInDarkTheme) ColorSchemeMode.DARK else ColorSchemeMode.LIGHT
-    ThemeMode.SYSTEM_BLACK -> if (isSystemInDarkTheme) ColorSchemeMode.BLACK else ColorSchemeMode.LIGHT
-    ThemeMode.LIGHT -> ColorSchemeMode.LIGHT
-    ThemeMode.DARK -> ColorSchemeMode.DARK
-    ThemeMode.BLACK -> ColorSchemeMode.BLACK
+    ThemeMode.THEME_SYSTEM -> if (isSystemInDarkTheme) ColorSchemeMode.DARK else ColorSchemeMode.LIGHT
+    ThemeMode.THEME_SYSTEM_BLACK -> if (isSystemInDarkTheme) ColorSchemeMode.BLACK else ColorSchemeMode.LIGHT
+    ThemeMode.THEME_LIGHT -> ColorSchemeMode.LIGHT
+    ThemeMode.THEME_DARK -> ColorSchemeMode.DARK
+    ThemeMode.THEME_BLACK -> ColorSchemeMode.BLACK
+    else -> ColorSchemeMode.LIGHT
 }
 
 fun ColorSchemeMode.isLight() = this == ColorSchemeMode.LIGHT

@@ -1,6 +1,7 @@
 package io.github.zyrouge.symphony.services.groove.repositories
 
 import android.net.Uri
+import io.github.zyrouge.symphony.PlaylistSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.Playlist
 import io.github.zyrouge.symphony.utils.ActivityUtils
@@ -18,12 +19,6 @@ import java.io.FileNotFoundException
 import java.util.concurrent.ConcurrentHashMap
 
 class PlaylistRepository(private val symphony: Symphony) {
-    enum class SortBy {
-        CUSTOM,
-        TITLE,
-        TRACKS_COUNT,
-    }
-
     private val cache = ConcurrentHashMap<String, Playlist>()
     internal val idGenerator = KeyGenerator.TimeIncremental()
     private val searcher = FuzzySearcher<String>(
@@ -103,18 +98,19 @@ class PlaylistRepository(private val symphony: Symphony) {
     fun search(playlistIds: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, playlistIds, maxLength = limit)
 
-    fun sort(playlistIds: List<String>, by: SortBy, reverse: Boolean): List<String> {
-        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
+    fun sort(playlistIds: List<String>, by: PlaylistSortBy, reverse: Boolean): List<String> {
+        val sensitive = symphony.settingsState.value.caseSensitiveSorting
         val sorted = when (by) {
-            SortBy.CUSTOM -> {
+            PlaylistSortBy.PLAYLIST_SORT_CUSTOM -> {
                 val prefix = listOfNotNull(FAVORITE_PLAYLIST)
                 val others = playlistIds.toMutableList()
                 prefix.forEach { others.remove(it) }
                 prefix + others
             }
 
-            SortBy.TITLE -> playlistIds.sortedBy { get(it)?.title?.withCase(sensitive) }
-            SortBy.TRACKS_COUNT -> playlistIds.sortedBy { get(it)?.numberOfTracks }
+            PlaylistSortBy.PLAYLIST_SORT_TITLE -> playlistIds.sortedBy { get(it)?.title?.withCase(sensitive) }
+            PlaylistSortBy.PLAYLIST_SORT_TRACKS_COUNT -> playlistIds.sortedBy { get(it)?.numberOfTracks }
+            else -> playlistIds
         }
         return if (reverse) sorted.reversed() else sorted
     }

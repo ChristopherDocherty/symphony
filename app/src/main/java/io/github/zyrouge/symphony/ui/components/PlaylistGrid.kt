@@ -13,10 +13,13 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import io.github.zyrouge.symphony.PlaylistSortBy
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
-import io.github.zyrouge.symphony.services.groove.repositories.PlaylistRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,15 +29,17 @@ fun PlaylistGrid(
     playlistsCount: Int? = null,
     leadingContent: @Composable () -> Unit = {},
 ) {
-    val sortBy by context.symphony.settingsOLD.lastUsedPlaylistsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settingsOLD.lastUsedPlaylistsSortReverse.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
+    val sortBy = settings.playlistsSortBy
+    val sortReverse = settings.playlistsSortReverse
     val sortedPlaylistIds by remember(playlistIds, sortBy, sortReverse) {
         derivedStateOf {
             context.symphony.groove.playlist.sort(playlistIds.toList(), sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedPlaylistsHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settingsOLD.lastUsedPlaylistsVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns = settings.playlistsHorizontalGridColumns
+    val verticalGridColumns = settings.playlistsVerticalGridColumns
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -50,13 +55,22 @@ fun PlaylistGrid(
                     context,
                     reverse = sortReverse,
                     onReverseChange = {
-                        context.symphony.settingsOLD.lastUsedPlaylistsSortReverse.setValue(it)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { playlistsSortReverse = it }
+                            }
+                        }
                     },
                     sort = sortBy,
-                    sorts = PlaylistRepository.SortBy.entries
+                    sorts = PlaylistSortBy.entries
+                        .filter { it != PlaylistSortBy.UNRECOGNIZED }
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
-                        context.symphony.settingsOLD.lastUsedPlaylistsSortBy.setValue(it)
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { playlistsSortBy = it }
+                            }
+                        }
                     },
                     label = {
                         Text(
@@ -103,13 +117,15 @@ fun PlaylistGrid(
                 ResponsiveGridSizeAdjustBottomSheet(
                     context,
                     columns = gridColumns,
-                    onColumnsChange = {
-                        context.symphony.settingsOLD.lastUsedPlaylistsHorizontalGridColumns.setValue(
-                            it.horizontal
-                        )
-                        context.symphony.settingsOLD.lastUsedPlaylistsVerticalGridColumns.setValue(
-                            it.vertical
-                        )
+                    onColumnsChange = { cols ->
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy {
+                                    playlistsHorizontalGridColumns = cols.horizontal
+                                    playlistsVerticalGridColumns = cols.vertical
+                                }
+                            }
+                        }
                     },
                     onDismissRequest = {
                         showModifyLayoutSheet = false
@@ -120,8 +136,9 @@ fun PlaylistGrid(
     )
 }
 
-private fun PlaylistRepository.SortBy.label(context: ViewContext) = when (this) {
-    PlaylistRepository.SortBy.CUSTOM -> context.symphony.t.Custom
-    PlaylistRepository.SortBy.TITLE -> context.symphony.t.Title
-    PlaylistRepository.SortBy.TRACKS_COUNT -> context.symphony.t.TrackCount
+private fun PlaylistSortBy.label(context: ViewContext) = when (this) {
+    PlaylistSortBy.PLAYLIST_SORT_CUSTOM -> context.symphony.t.Custom
+    PlaylistSortBy.PLAYLIST_SORT_TITLE -> context.symphony.t.Title
+    PlaylistSortBy.PLAYLIST_SORT_TRACKS_COUNT -> context.symphony.t.TrackCount
+    else -> "???"
 }

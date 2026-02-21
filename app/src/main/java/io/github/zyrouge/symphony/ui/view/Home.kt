@@ -91,6 +91,9 @@ import io.github.zyrouge.symphony.ui.view.home.GenresView
 import io.github.zyrouge.symphony.ui.view.home.PlaylistsView
 import io.github.zyrouge.symphony.ui.view.home.SongsView
 import io.github.zyrouge.symphony.ui.view.home.TreeView
+import io.github.zyrouge.symphony.HomePageBottomBarLabelVisibility
+import io.github.zyrouge.symphony.copy
+import kotlinx.coroutines.launch
 import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import io.github.zyrouge.symphony.ui.view.home.HomePageState
 import kotlinx.serialization.Serializable
@@ -157,12 +160,6 @@ enum class HomePage(
         selectedIcon = { Icons.Filled.AccountTree },
         unselectedIcon = { Icons.Outlined.AccountTree }
     );
-}
-
-enum class HomePageBottomBarLabelVisibility {
-    ALWAYS_VISIBLE,
-    VISIBLE_WHEN_ACTIVE,
-    INVISIBLE,
 }
 
 @Serializable
@@ -332,10 +329,10 @@ private fun HomeBottomBar(
                             )
                         }
                     },
-                    label = if (labelVisibility != HomePageBottomBarLabelVisibility.INVISIBLE) {
+                    label = if (labelVisibility != HomePageBottomBarLabelVisibility.BOTTOM_BAR_INVISIBLE) {
                         { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     } else null,
-                    alwaysShowLabel = labelVisibility == HomePageBottomBarLabelVisibility.ALWAYS_VISIBLE,
+                    alwaysShowLabel = labelVisibility == HomePageBottomBarLabelVisibility.BOTTOM_BAR_ALWAYS_VISIBLE,
                 )
             }
             Spacer(modifier = Modifier.width(2.dp))
@@ -347,10 +344,17 @@ private fun HomeBottomBar(
 @Composable
 fun HomeView(context: ViewContext) {
     val coroutineScope = rememberCoroutineScope()
-    val readIntroductoryMessage by context.symphony.settingsOLD.readIntroductoryMessage.flow.collectAsState()
-    val tabs by context.symphony.settingsOLD.homeTabs.flow.collectAsState()
-    val labelVisibility by context.symphony.settingsOLD.homePageBottomBarLabelVisibility.flow.collectAsState()
-    val currentTab by context.symphony.settingsOLD.lastHomeTab.flow.collectAsState()
+    val settings by context.symphony.settingsState.collectAsState()
+    val readIntroductoryMessage = settings.readIntroductoryMessage
+    val tabs = remember(settings.homeTabsList) {
+        settings.homeTabsList.mapNotNull { runCatching { HomePage.valueOf(it) }.getOrNull() }.toSet()
+    }
+    val labelVisibility = settings.homePageBottomBarLabelVisibility
+    val currentTab = remember(settings.lastHomeTab) {
+        settings.lastHomeTab.takeIf { it.isNotEmpty() }
+            ?.let { runCatching { HomePage.valueOf(it) }.getOrNull() }
+            ?: HomePage.ForYou
+    }
     var showOptionsDropdown by remember { mutableStateOf(false) }
     var showTabsSheet by remember { mutableStateOf(false) }
     val pageStates = remember { mapOf(
@@ -388,7 +392,11 @@ fun HomeView(context: ViewContext) {
                 tabs = tabs,
                 labelVisibility = labelVisibility,
                 onTabClick = { newTab ->
-                    context.symphony.settingsOLD.lastHomeTab.setValue(newTab) // Persist the tab change
+                    coroutineScope.launch {
+                        context.symphony.settings.updateData { s ->
+                            s.copy { lastHomeTab = newTab.name }
+                        }
+                    }
                 },
                 onShowTabsSheet = { showTabsSheet = true }
             )
@@ -433,7 +441,11 @@ fun HomeView(context: ViewContext) {
                             .padding(2.dp, 0.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .clickable {
-                                context.symphony.settingsOLD.lastHomeTab.setValue(x)
+                                coroutineScope.launch {
+                                    context.symphony.settings.updateData { s ->
+                                        s.copy { lastHomeTab = x.name }
+                                    }
+                                }
                                 showTabsSheet = false
                             }
                             .background(containerColor)
@@ -465,7 +477,11 @@ fun HomeView(context: ViewContext) {
         IntroductoryDialog(
             context,
             onDismissRequest = {
-                context.symphony.settingsOLD.readIntroductoryMessage.setValue(true)
+                coroutineScope.launch {
+                    context.symphony.settings.updateData { s ->
+                        s.copy { this.readIntroductoryMessage = true }
+                    }
+                }
             },
         )
     }

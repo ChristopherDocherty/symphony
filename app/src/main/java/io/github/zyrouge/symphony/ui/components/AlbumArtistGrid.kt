@@ -12,10 +12,13 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import io.github.zyrouge.symphony.AlbumArtistSortBy
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
-import io.github.zyrouge.symphony.services.groove.repositories.AlbumArtistRepository
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,15 +27,17 @@ fun AlbumArtistGrid(
     albumArtistNames: List<String>,
     albumArtistsCount: Int? = null,
 ) {
-    val sortBy by context.symphony.settingsOLD.lastUsedAlbumArtistsSortBy.flow.collectAsState()
-    val sortReverse by context.symphony.settingsOLD.lastUsedAlbumArtistsSortReverse.flow.collectAsState()
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
+    val sortBy = settings.albumArtistsSortBy
+    val sortReverse = settings.albumArtistsSortReverse
     val sortedAlbumArtistNames by remember(albumArtistNames, sortBy, sortReverse) {
         derivedStateOf {
             context.symphony.groove.albumArtist.sort(albumArtistNames, sortBy, sortReverse)
         }
     }
-    val horizontalGridColumns by context.symphony.settingsOLD.lastUsedAlbumArtistsHorizontalGridColumns.flow.collectAsState()
-    val verticalGridColumns by context.symphony.settingsOLD.lastUsedAlbumArtistsVerticalGridColumns.flow.collectAsState()
+    val horizontalGridColumns = settings.albumArtistsHorizontalGridColumns
+    val verticalGridColumns = settings.albumArtistsVerticalGridColumns
     val gridColumns by remember(horizontalGridColumns, verticalGridColumns) {
         derivedStateOf {
             ResponsiveGridColumns(horizontalGridColumns, verticalGridColumns)
@@ -45,14 +50,19 @@ fun AlbumArtistGrid(
             MediaSortBar(
                 context,
                 reverse = sortReverse,
-                onReverseChange = {
-                    context.symphony.settingsOLD.lastUsedAlbumArtistsSortReverse.setValue(it)
+                onReverseChange = { value ->
+                    scope.launch {
+                        context.symphony.settings.updateData { s -> s.copy { albumArtistsSortReverse = value } }
+                    }
                 },
                 sort = sortBy,
-                sorts = AlbumArtistRepository.SortBy.entries
+                sorts = AlbumArtistSortBy.entries
+                    .filter { it != AlbumArtistSortBy.UNRECOGNIZED }
                     .associateWith { x -> ViewContext.parameterizedFn { x.label(context) } },
-                onSortChange = {
-                    context.symphony.settingsOLD.lastUsedAlbumArtistsSortBy.setValue(it)
+                onSortChange = { value ->
+                    scope.launch {
+                        context.symphony.settings.updateData { s -> s.copy { albumArtistsSortBy = value } }
+                    }
                 },
                 label = {
                     Text(
@@ -97,13 +107,15 @@ fun AlbumArtistGrid(
                 ResponsiveGridSizeAdjustBottomSheet(
                     context,
                     columns = gridColumns,
-                    onColumnsChange = {
-                        context.symphony.settingsOLD.lastUsedAlbumArtistsHorizontalGridColumns.setValue(
-                            it.horizontal
-                        )
-                        context.symphony.settingsOLD.lastUsedAlbumArtistsVerticalGridColumns.setValue(
-                            it.vertical
-                        )
+                    onColumnsChange = { cols ->
+                        scope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy {
+                                    albumArtistsHorizontalGridColumns = cols.horizontal
+                                    albumArtistsVerticalGridColumns = cols.vertical
+                                }
+                            }
+                        }
                     },
                     onDismissRequest = {
                         showModifyLayoutSheet = false
@@ -114,9 +126,10 @@ fun AlbumArtistGrid(
     )
 }
 
-private fun AlbumArtistRepository.SortBy.label(context: ViewContext) = when (this) {
-    AlbumArtistRepository.SortBy.CUSTOM -> context.symphony.t.Custom
-    AlbumArtistRepository.SortBy.ARTIST_NAME -> context.symphony.t.Artist
-    AlbumArtistRepository.SortBy.ALBUMS_COUNT -> context.symphony.t.AlbumCount
-    AlbumArtistRepository.SortBy.TRACKS_COUNT -> context.symphony.t.TrackCount
+private fun AlbumArtistSortBy.label(context: ViewContext) = when (this) {
+    AlbumArtistSortBy.ALBUM_ARTIST_CUSTOM -> context.symphony.t.Custom
+    AlbumArtistSortBy.ALBUM_ARTIST_SORT_NAME -> context.symphony.t.Artist
+    AlbumArtistSortBy.ALBUM_ARTIST_ALBUMS_COUNT -> context.symphony.t.AlbumCount
+    AlbumArtistSortBy.ALBUM_ARTIST_TRACKS_COUNT -> context.symphony.t.TrackCount
+    AlbumArtistSortBy.UNRECOGNIZED -> "???"
 }

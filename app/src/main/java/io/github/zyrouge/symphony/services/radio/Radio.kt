@@ -2,6 +2,7 @@ package io.github.zyrouge.symphony.services.radio
 
 import io.github.zyrouge.symphony.LoopMode
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.utils.Eventer
 import io.github.zyrouge.symphony.utils.Logger
 import kotlinx.coroutines.CoroutineScope
@@ -161,7 +162,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     }
 
     private fun prepareNextPlayer() {
-        if (!symphony.settingsOLD.gaplessPlayback.value) {
+        if (!symphony.settingsState.value.gaplessPlayback) {
             return
         }
         val (nextSongIndex) = getNextSong(SongFinishSource.Finish)
@@ -188,7 +189,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     private fun start() {
         player?.let {
             val hasFocus = focus.requestFocus()
-            if (symphony.settingsOLD.requireAudioFocus.value && !hasFocus) {
+            if (symphony.settingsState.value.requireAudioFocus && !hasFocus) {
                 return
             }
             if (it.fadePlayback) {
@@ -397,7 +398,10 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         if (!queue.isEmpty()) {
             return
         }
-        symphony.settingsOLD.previousSongQueue.value?.let { previous ->
+        symphony.settingsState.value.previousSongQueue
+            .takeIf { it.isNotEmpty() }
+            ?.let { RadioQueue.Serialized.parse(it) }
+            ?.let { previous ->
             var currentSongIndex = previous.currentSongIndex
             var playedDuration = previous.playedDuration
             val originalQueue = mutableListOf<String>()
@@ -461,11 +465,12 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         if (queue.isEmpty()) {
             return
         }
-        symphony.settingsOLD.previousSongQueue.setValue(
-            RadioQueue.Serialized.create(
-                queue = queue,
-                playbackPosition = currentPlaybackPosition ?: RadioPlayer.PlaybackPosition.zero
-            )
-        )
+        val serialized = RadioQueue.Serialized.create(
+            queue = queue,
+            playbackPosition = currentPlaybackPosition ?: RadioPlayer.PlaybackPosition.zero,
+        ).serialize()
+        radioScope.launch {
+            symphony.settings.updateData { it.copy { previousSongQueue = serialized } }
+        }
     }
 }

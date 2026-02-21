@@ -80,6 +80,12 @@ fun ForYouView(context: ViewContext) {
     val songIds by context.symphony.groove.song.all.collectAsState()
     val sortBy by context.symphony.settings.data.map { it.uiDefaultSongSort.by }.collectAsState(SongSortBy.SONG_TITLE)
     val sortReverse by context.symphony.settings.data.map { it.uiDefaultSongSort.reverse }.collectAsState(false)
+    val forYouSettings by context.symphony.settingsState.collectAsState()
+    val contents = remember(forYouSettings.forYouContentsList) {
+        forYouSettings.forYouContentsList
+            .mapNotNull { runCatching { ForYou.valueOf(it) }.getOrNull() }
+            .toSet()
+    }
 
     when {
         songIds.isNotEmpty() -> {
@@ -267,7 +273,6 @@ fun ForYouView(context: ViewContext) {
                         }
                     }
                 }
-                val contents by context.symphony.settingsOLD.forYouContents.flow.collectAsState()
                 contents.forEach {
                     when (it) {
                         ForYou.Albums -> SuggestedAlbums(

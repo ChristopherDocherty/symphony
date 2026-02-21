@@ -19,7 +19,7 @@ import io.github.zyrouge.symphony.ui.helpers.ScreenOrientation
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.NowPlayingData
 import io.github.zyrouge.symphony.ui.view.NowPlayingDefaults
-import io.github.zyrouge.symphony.ui.view.NowPlayingLyricsLayout
+import io.github.zyrouge.symphony.NowPlayingLyricsLayout
 import io.github.zyrouge.symphony.ui.view.NowPlayingStates
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -30,7 +30,7 @@ fun NowPlayingBody(context: ViewContext, data: NowPlayingData) {
     val states = remember {
         NowPlayingStates(
             showLyrics = MutableStateFlow(
-                data.lyricsLayout == NowPlayingLyricsLayout.ReplaceArtwork && NowPlayingDefaults.showLyrics
+                data.lyricsLayout == NowPlayingLyricsLayout.LYRICS_REPLACE_ARTWORK && NowPlayingDefaults.showLyrics
             ),
         )
     }

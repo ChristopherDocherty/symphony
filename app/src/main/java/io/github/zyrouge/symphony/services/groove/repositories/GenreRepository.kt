@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.services.groove.repositories
 
+import io.github.zyrouge.symphony.GenreSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.Genre
 import io.github.zyrouge.symphony.services.groove.Song
@@ -14,12 +15,6 @@ import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
 class GenreRepository(private val symphony: Symphony) {
-    enum class SortBy {
-        CUSTOM,
-        GENRE,
-        TRACKS_COUNT,
-    }
-
     private val cache = ConcurrentHashMap<String, Genre>()
     private val songIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
     private val searcher = FuzzySearcher<String>(
@@ -98,12 +93,13 @@ class GenreRepository(private val symphony: Symphony) {
     fun search(genreNames: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, genreNames, maxLength = limit)
 
-    fun sort(genreNames: List<String>, by: SortBy, reverse: Boolean): List<String> {
-        val sensitive = symphony.settingsOLD.caseSensitiveSorting.value
+    fun sort(genreNames: List<String>, by: GenreSortBy, reverse: Boolean): List<String> {
+        val sensitive = symphony.settingsState.value.caseSensitiveSorting
         val sorted = when (by) {
-            SortBy.CUSTOM -> genreNames
-            SortBy.GENRE -> genreNames.sortedBy { get(it)?.name?.withCase(sensitive) }
-            SortBy.TRACKS_COUNT -> genreNames.sortedBy { get(it)?.numberOfTracks }
+            GenreSortBy.GENRE_SORT_CUSTOM -> genreNames
+            GenreSortBy.GENRE_SORT_GENRE -> genreNames.sortedBy { get(it)?.name?.withCase(sensitive) }
+            GenreSortBy.GENRE_SORT_TRACKS_COUNT -> genreNames.sortedBy { get(it)?.numberOfTracks }
+            else -> genreNames
         }
         return if (reverse) sorted.reversed() else sorted
     }

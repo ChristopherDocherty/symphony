@@ -55,7 +55,7 @@ import io.github.zyrouge.symphony.ui.components.SongDropdownMenu
 import io.github.zyrouge.symphony.ui.helpers.FadeTransition
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
-import io.github.zyrouge.symphony.ui.view.NowPlayingControlsLayout
+import io.github.zyrouge.symphony.NowPlayingControlsLayout
 import io.github.zyrouge.symphony.ui.view.NowPlayingData
 import io.github.zyrouge.symphony.utils.DurationUtils
 
@@ -163,18 +163,18 @@ fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData) {
             }
             Spacer(modifier = Modifier.height(defaultHorizontalPadding + 8.dp))
             when (controlsLayout) {
-                NowPlayingControlsLayout.CompactLeft -> NowPlayingCompactControls(
+                NowPlayingControlsLayout.CONTROLS_COMPACT_LEFT -> NowPlayingCompactControls(
                     context,
                     data = data
                 )
 
-                NowPlayingControlsLayout.CompactRight -> NowPlayingCompactControls(
+                NowPlayingControlsLayout.CONTROLS_COMPACT_RIGHT -> NowPlayingCompactControls(
                     context,
                     data = data,
                     modifier = Modifier.align(Alignment.End)
                 )
 
-                NowPlayingControlsLayout.Traditional -> NowPlayingTraditionalControls(
+                else -> NowPlayingTraditionalControls(
                     context,
                     data = data,
                 )

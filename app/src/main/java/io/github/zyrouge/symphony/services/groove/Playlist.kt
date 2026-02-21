@@ -39,8 +39,8 @@ data class Playlist(
 
     fun getSortedSongIds(symphony: Symphony) = symphony.groove.song.sort(
         getSongIds(symphony),
-        symphony.settingsOLD.lastUsedPlaylistSongsSortBy.value,
-        symphony.settingsOLD.lastUsedPlaylistSongsSortReverse.value,
+        symphony.settingsState.value.uiPlaylistViewSongsSort.by,
+        symphony.settingsState.value.uiPlaylistViewSongsSort.reverse,
     )
 
     fun withTitle(title: String) = Playlist(

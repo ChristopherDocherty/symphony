@@ -1,15 +1,12 @@
 package io.github.zyrouge.symphony.utils
 
-object StringListUtils {
-    enum class SortBy {
-        CUSTOM,
-        NAME,
-    }
+import io.github.zyrouge.symphony.PathSortBy
 
-    fun sort(values: List<String>, by: SortBy, reverse: Boolean): List<String> {
+object StringListUtils {
+    fun sort(values: List<String>, by: PathSortBy, reverse: Boolean): List<String> {
         val sorted = when (by) {
-            SortBy.CUSTOM -> values
-            SortBy.NAME -> values.sorted()
+            PathSortBy.PATH_SORT_CUSTOM -> values
+            else -> values.sorted()
         }
         return if (reverse) sorted.reversed() else sorted
     }
