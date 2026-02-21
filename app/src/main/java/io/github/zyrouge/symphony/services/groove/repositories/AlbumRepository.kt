@@ -221,4 +221,6 @@ class AlbumRepository(private val symphony: Symphony) {
     fun get(albumId: String) = cache[albumId]
     fun get(albumIds: List<String>) = albumIds.mapNotNull { get(it) }.toList()
     fun getSongIds(albumId: String) = songIdsCache[albumId]?.toList() ?: emptyList()
+    fun getCustomTagValues(albumId: String, tagName: String): Set<String> =
+        customTagValuesCache[albumId]?.get(tagName) ?: emptySet()
 }

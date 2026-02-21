@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.services.groove.repositories
 
+import android.net.Uri
 import io.github.zyrouge.symphony.ArtistSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.Artist
@@ -17,6 +18,16 @@ import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
 
 class ArtistRepository(private val symphony: Symphony) {
+
+    companion object {
+        private val ARTWORK_RELEASE_TYPE_PRIORITY = listOf(
+            "Studio Album",
+            "EP",
+            "Single",
+            "Live Album",
+            "Compilation",
+        )
+    }
 
     private val cache = ConcurrentHashMap<String, Artist>()
     private val songIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
@@ -103,9 +114,21 @@ class ArtistRepository(private val symphony: Symphony) {
         emitCount()
     }
 
-    fun getArtworkUri(artistName: String) = songIdsCache[artistName]?.firstOrNull()
-        ?.let { symphony.groove.song.getArtworkUri(it) }
-        ?: symphony.groove.song.getDefaultArtworkUri()
+    fun getArtworkUri(artistName: String): Uri {
+        val albumIds = albumIdsCache[artistName]?.toList() ?: emptyList()
+        val bestAlbumId = albumIds.minByOrNull { albumId ->
+            val releaseTypes = symphony.groove.album.getCustomTagValues(albumId, "RELEASETYPE")
+            releaseTypes
+                .mapNotNull { ARTWORK_RELEASE_TYPE_PRIORITY.indexOf(it).takeIf { i -> i >= 0 } }
+                .minOrNull() ?: Int.MAX_VALUE
+        }
+        return bestAlbumId
+            ?.let { symphony.groove.album.getSongIds(it).firstOrNull() }
+            ?.let { symphony.groove.song.getArtworkUri(it) }
+            ?: songIdsCache[artistName]?.firstOrNull()
+                ?.let { symphony.groove.song.getArtworkUri(it) }
+            ?: symphony.groove.song.getDefaultArtworkUri()
+    }
 
     fun createArtworkImageRequest(artistName: String) = createHandyImageRequest(
         symphony.applicationContext,
