@@ -467,7 +467,7 @@ private fun SongTreeListMediaSortBar(
                             style = currentTextStyle,
                             modifier = Modifier.padding(16.dp, 8.dp),
                         )
-                        SongSortBy.entries.forEach { sortBy ->
+                        SongSortBy.entries.filter { it != SongSortBy.UNRECOGNIZED }.forEach { sortBy ->
                             SongTreeListMediaSortBarDropdownMenuItem(
                                 selected = songsSortBy == sortBy,
                                 reversed = songsSortReverse,

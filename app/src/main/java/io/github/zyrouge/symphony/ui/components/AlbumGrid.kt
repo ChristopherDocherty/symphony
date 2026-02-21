@@ -71,9 +71,9 @@ fun AlbumGrid(
                     }
                 },
                 sort = sortBy,
-                sorts = AlbumSortBy.entries.associateWith { x ->
-                    ViewContext.parameterizedFn { x.label(it) }
-                },
+                sorts = AlbumSortBy.entries
+                    .filter { it != AlbumSortBy.UNRECOGNIZED }
+                    .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                 onSortChange = {
                     coroutineScope.launch {
                         type.setLastUsedSortBy(context, it)

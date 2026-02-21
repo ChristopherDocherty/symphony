@@ -63,6 +63,7 @@ fun ArtistGrid(
                 },
                 sort = sortBy,
                 sorts = ArtistSortBy.entries
+                    .filter { it != ArtistSortBy.UNRECOGNIZED }
                     .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                 onSortChange = {value ->
                     scope.launch {

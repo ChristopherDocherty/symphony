@@ -167,6 +167,7 @@ fun SongExplorerList(
                     },
                     sort = sortBy,
                     sorts = SongSortBy.entries
+                        .filter { it != SongSortBy.UNRECOGNIZED }
                         .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                     onSortChange = {
                         scope.launch {

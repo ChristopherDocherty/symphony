@@ -80,6 +80,7 @@ fun SongList(
                 },
                 sort = sortBy,
                 sorts = SongSortBy.entries
+                    .filter { it != SongSortBy.UNRECOGNIZED }
                     .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
                 onSortChange = { newSort ->
                     coroutineScope.launch {

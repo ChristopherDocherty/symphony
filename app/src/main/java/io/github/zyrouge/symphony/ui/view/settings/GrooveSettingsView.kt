@@ -383,7 +383,9 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Text("Artist View Album Sort")
                         },
                         value = artistAlbumsview,
-                        values = AlbumSortBy.entries.associateWith { it.label(context) },
+                        values = AlbumSortBy.entries
+                            .filter { it != AlbumSortBy.UNRECOGNIZED }
+                            .associateWith { it.label(context) },
                         onChange = { value ->
                             coroutineScope.launch {
                                 context.symphony.settings.updateData { it.copy { uiArtistViewAlbumSortBy = uiArtistViewAlbumSortBy.copy { by = value } } }
