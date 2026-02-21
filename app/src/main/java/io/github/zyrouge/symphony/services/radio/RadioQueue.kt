@@ -115,6 +115,24 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
         }
     }
 
+    fun move(fromIndex: Int, toIndex: Int) {
+        if (fromIndex == toIndex) return
+        val item = currentQueue.removeAt(fromIndex)
+        currentQueue.add(toIndex, item)
+        val originalItem = originalQueue.removeAt(fromIndex)
+        originalQueue.add(toIndex, originalItem)
+        val newSongIndex = when {
+            currentSongIndex == fromIndex -> toIndex
+            fromIndex < toIndex && currentSongIndex in (fromIndex + 1)..toIndex -> currentSongIndex - 1
+            fromIndex > toIndex && currentSongIndex in toIndex until fromIndex -> currentSongIndex + 1
+            else -> currentSongIndex
+        }
+        if (newSongIndex != currentSongIndex) {
+            currentSongIndex = newSongIndex
+        }
+        symphony.radio.onUpdate.dispatch(Radio.Events.Queue.Modified)
+    }
+
     fun remove(indices: List<Int>) {
         var deflection = 0
         var currentSongRemoved = false

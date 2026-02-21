@@ -141,6 +141,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
     implementation(libs.room.runtime)
+    implementation(libs.reorderable)
     implementation(libs.datastore.proto)
     implementation(libs.protobuf.kotlin.lite)
 

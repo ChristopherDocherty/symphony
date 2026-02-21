@@ -62,6 +62,7 @@ fun SongCard(
     highlighted: Boolean = false,
     autoHighlight: Boolean = true,
     disableHeartIcon: Boolean = false,
+    disableOptions: Boolean = false,
     leading: @Composable () -> Unit = {},
     thumbnailLabel: (@Composable () -> Unit)? = null,
     thumbnailLabelStyle: SongCardThumbnailLabelStyle = SongCardThumbnailLabelStyle.Default,
@@ -163,25 +164,27 @@ fun SongCard(
                         }
                     }
 
-                    var showOptionsMenu by remember { mutableStateOf(false) }
-                    IconButton(
-                        onClick = { showOptionsMenu = !showOptionsMenu }
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreVert,
-                            null,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        SongDropdownMenu(
-                            context,
-                            song,
-                            isFavorite = isFavorite,
-                            trailingContent = trailingOptionsContent,
-                            expanded = showOptionsMenu,
-                            onDismissRequest = {
-                                showOptionsMenu = false
-                            }
-                        )
+                    if (!disableOptions) {
+                        var showOptionsMenu by remember { mutableStateOf(false) }
+                        IconButton(
+                            onClick = { showOptionsMenu = !showOptionsMenu }
+                        ) {
+                            Icon(
+                                Icons.Filled.MoreVert,
+                                null,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            SongDropdownMenu(
+                                context,
+                                song,
+                                isFavorite = isFavorite,
+                                trailingContent = trailingOptionsContent,
+                                expanded = showOptionsMenu,
+                                onDismissRequest = {
+                                    showOptionsMenu = false
+                                }
+                            )
+                        }
                     }
                 }
             }

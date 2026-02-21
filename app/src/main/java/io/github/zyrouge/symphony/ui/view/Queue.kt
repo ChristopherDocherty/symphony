@@ -2,22 +2,20 @@ package io.github.zyrouge.symphony.ui.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -33,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -45,6 +45,8 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NothingPlayingBody
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Serializable
 object QueueViewRoute
@@ -55,11 +57,32 @@ fun QueueView(context: ViewContext) {
     val coroutineScope = rememberCoroutineScope()
     val queue by context.symphony.radio.observatory.queue.collectAsState()
     val queueIndex by context.symphony.radio.observatory.queueIndex.collectAsState()
-    val selectedSongIndices = remember { mutableStateListOf<Int>() }
+    var showSaveDialog by remember { mutableStateOf(false) }
+
+    data class QueueEntry(val key: Int, val songId: String)
+
+    val localQueue = remember { mutableStateListOf<QueueEntry>() }
+    var dragOriginIndex by remember { mutableStateOf(-1) }
+    var dragCurrentIndex by remember { mutableStateOf(-1) }
+
+    // Sync local queue from the StateFlow when not dragging
+    LaunchedEffect(queue) {
+        if (dragOriginIndex == -1) {
+            localQueue.clear()
+            queue.forEachIndexed { i, songId ->
+                localQueue.add(QueueEntry(i, songId))
+            }
+        }
+    }
+
     val listState = rememberLazyListState(
         initialFirstVisibleItemIndex = queueIndex,
     )
-    var showSaveDialog by remember { mutableStateOf(false) }
+    val reorderState = rememberReorderableLazyListState(listState) { from, to ->
+        localQueue.apply { add(to.index, removeAt(from.index)) }
+        if (dragOriginIndex == -1) dragOriginIndex = from.index
+        dragCurrentIndex = to.index
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -89,29 +112,16 @@ fun QueueView(context: ViewContext) {
                     }
                 },
                 actions = {
-                    when {
-                        selectedSongIndices.isNotEmpty() -> IconButton(
-                            onClick = {
-                                context.symphony.radio.queue.remove(selectedSongIndices.toList())
-                                selectedSongIndices.clear()
-                            }
-                        ) {
-                            Icon(Icons.Filled.Delete, null)
+                    IconButton(
+                        onClick = {
+                            showSaveDialog = !showSaveDialog
                         }
-
-                        else -> IconButton(
-                            onClick = {
-                                showSaveDialog = !showSaveDialog
-                            }
-                        ) {
-                            Icon(Icons.Default.Save, null)
-                        }
+                    ) {
+                        Icon(Icons.Default.Save, null)
                     }
-
                     IconButton(
                         onClick = {
                             context.symphony.radio.stop()
-                            selectedSongIndices.clear()
                         }
                     ) {
                         Icon(Icons.Filled.ClearAll, null)
@@ -130,49 +140,66 @@ fun QueueView(context: ViewContext) {
                 } else {
                     LazyColumn(state = listState) {
                         itemsIndexed(
-                            queue,
-                            key = { i, id -> "$i-$id" },
+                            localQueue,
+                            key = { _, entry -> entry.key },
                             contentType = { _, _ -> Groove.Kind.SONG },
-                        ) { i, songId ->
-                            context.symphony.groove.song.get(songId)?.let { song ->
-                                Box {
-                                    SongCard(
-                                        context,
-                                        song,
-                                        autoHighlight = false,
-                                        highlighted = i == queueIndex,
-                                        leading = {
-                                            Checkbox(
-                                                checked = selectedSongIndices.contains(i),
-                                                onCheckedChange = {
-                                                    if (selectedSongIndices.contains(i)) {
-                                                        selectedSongIndices.remove(i)
-                                                    } else {
-                                                        selectedSongIndices.add(i)
-                                                    }
-                                                },
-                                                modifier = Modifier.offset((-4).dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                        },
-                                        thumbnailLabel = {
-                                            Text((i + 1).toString())
-                                        },
-                                        onClick = {
-                                            context.symphony.radio.jumpTo(i)
-                                            coroutineScope.launch {
-                                                listState.animateScrollToItem(i)
-                                            }
-                                        },
-                                    )
-                                    if (i < queueIndex) {
-                                        Box(
-                                            modifier = Modifier
-                                                .matchParentSize()
-                                                .background(
-                                                    MaterialTheme.colorScheme.background.copy(alpha = 0.3f)
+                        ) { i, entry ->
+                            ReorderableItem(reorderState, key = entry.key) {
+                                context.symphony.groove.song.get(entry.songId)?.let { song ->
+                                    Box {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth(),
+                                        ) {
+                                            Box(modifier = Modifier.weight(1f)) {
+                                                SongCard(
+                                                    context,
+                                                    song,
+                                                    autoHighlight = false,
+                                                    highlighted = i == queueIndex,
+                                                    disableOptions = true,
+                                                    thumbnailLabel = {
+                                                        Text((i + 1).toString())
+                                                    },
+                                                    onClick = {
+                                                        context.symphony.radio.jumpTo(i)
+                                                        coroutineScope.launch {
+                                                            listState.animateScrollToItem(i)
+                                                        }
+                                                    },
                                                 )
-                                        )
+                                            }
+                                            Icon(
+                                                Icons.Filled.DragHandle,
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .draggableHandle(
+                                                        onDragStopped = {
+                                                            if (dragOriginIndex != -1 && dragOriginIndex != dragCurrentIndex) {
+                                                                context.symphony.radio.queue.move(
+                                                                    dragOriginIndex,
+                                                                    dragCurrentIndex,
+                                                                )
+                                                            }
+                                                            dragOriginIndex = -1
+                                                            dragCurrentIndex = -1
+                                                        }
+                                                    )
+                                                    .padding(horizontal = 16.dp)
+                                                    .size(24.dp),
+                                            )
+                                        }
+                                        if (i < queueIndex) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .matchParentSize()
+                                                    .background(
+                                                        MaterialTheme.colorScheme.background.copy(
+                                                            alpha = 0.3f
+                                                        )
+                                                    )
+                                            )
+                                        }
                                     }
                                 }
                             }
