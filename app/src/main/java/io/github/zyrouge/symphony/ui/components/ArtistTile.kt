@@ -2,19 +2,14 @@ package io.github.zyrouge.symphony.ui.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -68,7 +63,6 @@ fun ArtistDropdownMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
 ) {
-    var showAddToPlaylistDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
 
@@ -78,7 +72,7 @@ fun ArtistDropdownMenu(
     ) {
         DropdownMenuItem(
             leadingIcon = {
-                Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
+                Icon(Icons.Filled.Shuffle, null)
             },
             text = {
                 Text(context.symphony.t.ShufflePlay)
@@ -95,49 +89,6 @@ fun ArtistDropdownMenu(
         )
         DropdownMenuItem(
             leadingIcon = {
-                Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
-            },
-            text = {
-                Text(context.symphony.t.PlayNext)
-            },
-            onClick = {
-                onDismissRequest()
-                scope.launch {
-                    context.symphony.radio.queue.add(
-                        artist.getSortedSongIds(context.symphony),
-                        context.symphony.radio.queue.currentSongIndex + 1
-                    )
-                }
-            }
-        )
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
-            },
-            text = {
-                Text(context.symphony.t.AddToQueue)
-            },
-            onClick = {
-                onDismissRequest()
-                scope.launch {
-                    context.symphony.radio.queue.add(artist.getSortedSongIds(context.symphony))
-                }
-            }
-        )
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
-            },
-            text = {
-                Text(context.symphony.t.AddToPlaylist)
-            },
-            onClick = {
-                onDismissRequest()
-                showAddToPlaylistDialog = true
-            }
-        )
-        DropdownMenuItem(
-            leadingIcon = {
                 Icon(painter=painterResource(R.drawable.last_fm), "last.fm icon",
                     modifier = Modifier.size(24.dp))
             },
@@ -147,21 +98,6 @@ fun ArtistDropdownMenu(
             onClick = {
                 onDismissRequest()
                 uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl( artist.name)}")
-            }
-        )
-    }
-
-    if (showAddToPlaylistDialog) {
-        AddToPlaylistDialog(
-            context,
-            // This still uses getSongIds, which is not a suspend function.
-            // If getSongIds also becomes a suspend function in the future,
-            // this will need to be adjusted similarly, possibly by making
-            // this part of the composable also launch a coroutine or
-            // by passing the songIds fetched from a coroutine.
-            songIds = artist.getSongIds(context.symphony),
-            onDismissRequest = {
-                showAddToPlaylistDialog = false
             }
         )
     }

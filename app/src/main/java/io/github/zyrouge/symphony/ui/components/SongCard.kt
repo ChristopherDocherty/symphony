@@ -15,12 +15,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
@@ -28,12 +31,17 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
+import io.github.zyrouge.symphony.R
+import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -203,151 +211,185 @@ fun SongDropdownMenu(
 ) {
     var showInfoDialog by remember { mutableStateOf(false) }
     var showAddToPlaylistDialog by remember { mutableStateOf(false) }
+    var showEnqueueSubmenu by remember { mutableStateOf(false) }
+    var showLastFmSubmenu by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
 
     DropdownMenu(
         expanded = expanded,
-        onDismissRequest = onDismissRequest
+        onDismissRequest = {
+            showEnqueueSubmenu = false
+            showLastFmSubmenu = false
+            onDismissRequest()
+        }
     ) {
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.Filled.Favorite, null)
-            },
-            text = {
-                Text(
-                    if (isFavorite) context.symphony.t.Unfavorite
-                    else context.symphony.t.Favorite
+        if (showEnqueueSubmenu) {
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) },
+                text = { Text("Enqueue") },
+                onClick = { showEnqueueSubmenu = false }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null) },
+                text = { Text(context.symphony.t.PlayNext) },
+                onClick = {
+                    onDismissRequest()
+                    context.symphony.radio.queue.add(
+                        song.id,
+                        context.symphony.radio.queue.currentSongIndex + 1
+                    )
+                }
+            )
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null) },
+                text = { Text(context.symphony.t.AddToQueue) },
+                onClick = {
+                    onDismissRequest()
+                    context.symphony.radio.queue.add(song.id)
+                }
+            )
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
+                text = { Text(context.symphony.t.AddToPlaylist) },
+                onClick = {
+                    onDismissRequest()
+                    showAddToPlaylistDialog = true
+                }
+            )
+        } else if (showLastFmSubmenu) {
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) },
+                text = { Text("Last.fm") },
+                onClick = { showLastFmSubmenu = false }
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.Filled.MusicNote, null) },
+                text = { Text("Song") },
+                onClick = {
+                    onDismissRequest()
+                    val artist = song.artists.firstOrNull() ?: ""
+                    uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(artist)}/_/${escapeTextForLastFmUrl(song.title)}")
+                }
+            )
+            context.symphony.groove.album.getIdFromSong(song)?.let { albumId ->
+                val album = context.symphony.groove.album.get(albumId)
+                album?.let {
+                    DropdownMenuItem(
+                        leadingIcon = { Icon(Icons.Filled.Album, null) },
+                        text = { Text("Album: ${it.name}") },
+                        onClick = {
+                            onDismissRequest()
+                            val artist = it.artists.firstOrNull() ?: ""
+                            uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(artist)}/${escapeTextForLastFmUrl(it.name)}")
+                        }
+                    )
+                }
+            }
+            song.artists.forEach { artistName ->
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Filled.Person, null) },
+                    text = { Text("Artist: $artistName") },
+                    onClick = {
+                        onDismissRequest()
+                        uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(artistName)}")
+                    }
                 )
-            },
-            onClick = {
-                onDismissRequest()
-                context.symphony.groove.playlist.run {
-                    when {
-                        isFavorite -> unfavorite(song.id)
-                        else -> favorite(song.id)
+            }
+        } else {
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.Filled.Favorite, null) },
+                text = {
+                    Text(
+                        if (isFavorite) context.symphony.t.Unfavorite
+                        else context.symphony.t.Favorite
+                    )
+                },
+                onClick = {
+                    onDismissRequest()
+                    context.symphony.groove.playlist.run {
+                        when {
+                            isFavorite -> unfavorite(song.id)
+                            else -> favorite(song.id)
+                        }
                     }
                 }
-            }
-        )
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
-            },
-            text = {
-                Text(context.symphony.t.PlayNext)
-            },
-            onClick = {
-                onDismissRequest()
-                context.symphony.radio.queue.add(
-                    song.id,
-                    context.symphony.radio.queue.currentSongIndex + 1
+            )
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
+                text = { Text("Enqueue") },
+                trailingIcon = { Icon(Icons.Filled.KeyboardArrowRight, null) },
+                onClick = { showEnqueueSubmenu = true }
+            )
+            song.artists.forEach { artistName ->
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Filled.Person, null) },
+                    text = { Text("${context.symphony.t.ViewArtist}: $artistName") },
+                    onClick = {
+                        onDismissRequest()
+                        context.navController.navigate(ArtistViewRoute(artistName))
+                    }
                 )
             }
-        )
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
-            },
-            text = {
-                Text(context.symphony.t.AddToQueue)
-            },
-            onClick = {
-                onDismissRequest()
-                context.symphony.radio.queue.add(song.id)
-            }
-        )
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
-            },
-            text = {
-                Text(context.symphony.t.AddToPlaylist)
-            },
-            onClick = {
-                onDismissRequest()
-                showAddToPlaylistDialog = true
-            }
-        )
-        song.artists.forEach { artistName ->
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(Icons.Filled.Person, null)
-                },
-                text = {
-                    Text("${context.symphony.t.ViewArtist}: $artistName")
-                },
-                onClick = {
-                    onDismissRequest()
-                    context.navController.navigate(ArtistViewRoute(artistName))
-                }
-            )
-        }
-        song.albumArtists.forEach { albumArtist ->
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(Icons.Filled.Person, null)
-                },
-                text = {
-                    Text("${context.symphony.t.ViewAlbumArtist}: $albumArtist")
-                },
-                onClick = {
-                    onDismissRequest()
-                    context.navController.navigate(AlbumArtistViewRoute(albumArtist))
-                }
-            )
-        }
-        context.symphony.groove.album.getIdFromSong(song)?.let { albumId ->
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(Icons.Filled.Album, null)
-                },
-                text = {
-                    Text(context.symphony.t.ViewAlbum)
-                },
-                onClick = {
-                    onDismissRequest()
-                    context.navController.navigate(AlbumViewRoute(albumId))
-                }
-            )
-        }
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.Filled.Share, null)
-            },
-            text = {
-                Text(context.symphony.t.ShareSong)
-            },
-            onClick = {
-                onDismissRequest()
-                try {
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        putExtra(Intent.EXTRA_STREAM, song.uri)
-                        type = context.activity.contentResolver.getType(song.uri)
+            song.albumArtists.forEach { albumArtist ->
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Filled.Person, null) },
+                    text = { Text("${context.symphony.t.ViewAlbumArtist}: $albumArtist") },
+                    onClick = {
+                        onDismissRequest()
+                        context.navController.navigate(AlbumArtistViewRoute(albumArtist))
                     }
-                    context.activity.startActivity(intent)
-                } catch (err: Exception) {
-                    Logger.error("SongCard", "share failed", err)
-                    Toast.makeText(
-                        context.activity,
-                        context.symphony.t.ShareFailedX(err.localizedMessage ?: err.toString()),
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                )
+            }
+            context.symphony.groove.album.getIdFromSong(song)?.let { albumId ->
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Filled.Album, null) },
+                    text = { Text(context.symphony.t.ViewAlbum) },
+                    onClick = {
+                        onDismissRequest()
+                        context.navController.navigate(AlbumViewRoute(albumId))
+                    }
+                )
+            }
+            DropdownMenuItem(
+                leadingIcon = { Icon(painter = painterResource(R.drawable.last_fm), "last.fm icon") },
+                text = { Text("Last.fm") },
+                trailingIcon = { Icon(Icons.Filled.KeyboardArrowRight, null) },
+                onClick = { showLastFmSubmenu = true }
+            )
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.Filled.Share, null) },
+                text = { Text(context.symphony.t.ShareSong) },
+                onClick = {
+                    onDismissRequest()
+                    try {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            putExtra(Intent.EXTRA_STREAM, song.uri)
+                            type = context.activity.contentResolver.getType(song.uri)
+                        }
+                        context.activity.startActivity(intent)
+                    } catch (err: Exception) {
+                        Logger.error("SongCard", "share failed", err)
+                        Toast.makeText(
+                            context.activity,
+                            context.symphony.t.ShareFailedX(err.localizedMessage ?: err.toString()),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
                 }
-            }
-        )
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(Icons.Filled.Info, null)
-            },
-            text = {
-                Text(context.symphony.t.Details)
-            },
-            onClick = {
-                onDismissRequest()
-                showInfoDialog = true
-            }
-        )
-        trailingContent?.invoke(this, onDismissRequest)
+            )
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.Filled.Info, null) },
+                text = { Text(context.symphony.t.Details) },
+                onClick = {
+                    onDismissRequest()
+                    showInfoDialog = true
+                }
+            )
+            trailingContent?.invoke(this, onDismissRequest)
+        }
     }
 
     if (showInfoDialog) {
