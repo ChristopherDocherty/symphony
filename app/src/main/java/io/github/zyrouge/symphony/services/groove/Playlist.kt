@@ -61,7 +61,7 @@ data class Playlist(
                 .filter { it.isNotEmpty() && it[0] != '#' }
                 .toList()
             val path = DocumentFileX.getParentPathOfSingleUri(file.uri) ?: file.name
-            val id = path
+            val id = playlistId ?: path
             return Playlist(
                 id = id,
                 title = Path(path).nameWithoutExtension,

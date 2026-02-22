@@ -36,7 +36,7 @@ fun AddToPlaylistDialog(
         derivedStateOf {
             allPlaylistsIds
                 .mapNotNull { context.symphony.groove.playlist.get(it) }
-                .filter { it.isNotLocal }
+                .filter { !context.symphony.groove.playlist.isBuiltInPlaylist(it) }
                 .toMutableStateList()
         }
     }

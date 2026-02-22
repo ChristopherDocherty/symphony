@@ -37,18 +37,15 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
 
     private suspend fun fetch() {
         coroutineScope.launch {
-            awaitAll(
-    async { exposer.fetch() },
-            )
+            exposer.fetch()
+            playlist.fetch()
         }.join()
     }
 
     private suspend fun fetchFromCache() {
         coroutineScope.launch {
-            awaitAll(
-        async { exposer.loadFromCache() },
-                    async { playlist.fetch() },
-            )
+            exposer.loadFromCache()
+            playlist.fetch()
         }.join()
     }
 
@@ -70,6 +67,7 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
         symphony.database.songCache.clear()
         symphony.database.artworkCache.clear()
         symphony.database.lyricsCache.clear()
+        symphony.database.playlists.deleteAll()
     }
 
     data class FetchOptions(

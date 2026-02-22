@@ -23,6 +23,9 @@ interface PlaylistStore {
     @Query("DELETE FROM playlists WHERE id = :playlistId")
     suspend fun delete(playlistId: String): Int
 
+    @Query("DELETE FROM playlists")
+    suspend fun deleteAll(): Int
+
     @Query("SELECT * FROM playlists")
     suspend fun entries(): Map<@MapColumn("id") String, Playlist>
 }
