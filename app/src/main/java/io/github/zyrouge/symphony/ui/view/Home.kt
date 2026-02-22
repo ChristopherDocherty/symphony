@@ -95,6 +95,7 @@ import io.github.zyrouge.symphony.HomePageBottomBarLabelVisibility
 import io.github.zyrouge.symphony.copy
 import kotlinx.coroutines.launch
 import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
+import io.github.zyrouge.symphony.ui.view.home.ArtistsPageState
 import io.github.zyrouge.symphony.ui.view.home.HomePageState
 import kotlinx.serialization.Serializable
 
@@ -359,6 +360,7 @@ fun HomeView(context: ViewContext) {
     var showTabsSheet by remember { mutableStateOf(false) }
     val pageStates = remember { mapOf(
         HomePage.Albums to AlbumsPageState(),
+        HomePage.Artists to ArtistsPageState(),
     ) }
     val currentPageState = pageStates[currentTab]
 
