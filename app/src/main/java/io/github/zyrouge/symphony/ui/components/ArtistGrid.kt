@@ -14,6 +14,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import io.github.zyrouge.symphony.AlbumFilter
+import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.ArtistSortBy
 import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.copy
@@ -34,10 +36,18 @@ fun ArtistGrid(
     val sortBy by context.symphony.settings.data.map { it.uiDefaultArtistSort.by }.collectAsState(
         ArtistSortBy.ARTIST_NAME)
     val sortReverse by context.symphony.settings.data.map { it.uiDefaultArtistSort.reverse }.collectAsState(false)
-    val sortedArtistNames by remember(artistName, sortBy, sortReverse) {
+    val albumFilter by context.symphony.settings.data
+        .map { it.uiArtistViewAlbumFilter }
+        .collectAsState(AlbumFilter.getDefaultInstance())
+    val sortedArtistNames by remember(artistName, sortBy, sortReverse, albumFilter) {
         derivedStateOf {
-            val filteredArtistNames = context.symphony.groove.artist.filterByTrackCount(artistName)
-            context.symphony.groove.artist.sort(filteredArtistNames, sortBy, sortReverse)
+            val filtered = context.symphony.groove.artist.filterByTrackCount(artistName)
+            val sorted = context.symphony.groove.artist.sort(filtered, sortBy, sortReverse)
+            sorted.filter { name ->
+                val albumIds = context.symphony.groove.artist.getAlbumIds(name)
+                if (albumIds.isEmpty()) return@filter true
+                context.symphony.groove.album.getAlbums(albumIds, AlbumSortBy.ALBUM_NAME, false, albumFilter).isNotEmpty()
+            }
         }
     }
     val horizontalGridColumns = settings.artistsHorizontalGridColumns
@@ -48,6 +58,7 @@ fun ArtistGrid(
         }
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
+    var showFilterDialog by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
 
@@ -77,6 +88,7 @@ fun ArtistGrid(
                 onShowModifyLayout = {
                     showModifyLayoutSheet = true
                 },
+                onShowFilterDialog = { showFilterDialog = true },
             )
         },
         content = {
@@ -123,6 +135,10 @@ fun ArtistGrid(
                         showModifyLayoutSheet = false
                     }
                 )
+            }
+
+            if (showFilterDialog) {
+                ArtistAlbumFilterDialog(context, onDismissRequest = { showFilterDialog = false })
             }
         }
     )
