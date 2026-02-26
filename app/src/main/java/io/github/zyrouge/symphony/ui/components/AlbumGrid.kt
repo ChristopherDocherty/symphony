@@ -54,6 +54,7 @@ fun AlbumGrid(
         }
     }
     var showModifyLayoutSheet by remember { mutableStateOf(false) }
+    var showFilterDialog by remember { mutableStateOf(false) }
 
     SideEffect {
         pageState?.sortedAlbumIds = sortedAlbumIds
@@ -85,6 +86,9 @@ fun AlbumGrid(
                 onShowModifyLayout = {
                     showModifyLayoutSheet = true
                 },
+                onShowFilterDialog = {
+                    showFilterDialog = true
+                },
             )
         },
         content = {
@@ -111,6 +115,13 @@ fun AlbumGrid(
                         }
                     }
                 }
+            }
+
+            if (showFilterDialog) {
+                AlbumFilterDialog(
+                    context = context,
+                    onDismissRequest = { showFilterDialog = false },
+                )
             }
 
             if (showModifyLayoutSheet) {

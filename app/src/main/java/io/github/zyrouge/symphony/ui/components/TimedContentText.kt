@@ -95,7 +95,7 @@ fun TimedContentText(
                     return@collect
                 }
                 val isActiveIndexInvisible = activeIndex > -1 && visibleRange.run {
-                    activeIndex < first && activeIndex > second
+                    activeIndex < first || activeIndex > second
                 }
                 if (isActiveIndexInvisible) {
                     return@collect
@@ -107,7 +107,7 @@ fun TimedContentText(
                     return@collect
                 }
                 activeIndex = nActiveIndex
-                if (scrollState.isScrollInProgress) {
+                if (scrollState.isScrollInProgress || !scrollState.canScrollForward) {
                     return@collect
                 }
                 coroutineScope.launch {

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.ButtonDefaults
@@ -48,6 +49,7 @@ fun <T : Enum<T>> MediaSortBar(
     label: @Composable () -> Unit,
     onShufflePlay: (() -> Unit)? = null,
     onShowModifyLayout: (() -> Unit)? = null,
+    onShowFilterDialog: (() -> Unit)? = null,
 ) {
     var showDropdown by remember { mutableStateOf(false) }
     val currentTextStyle = MaterialTheme.typography.bodySmall.run {
@@ -126,6 +128,11 @@ fun <T : Enum<T>> MediaSortBar(
             onShowModifyLayout?.let {
                 IconButton(onClick = it) {
                     Icon(Icons.Filled.GridView, null, modifier = iconModifier)
+                }
+            }
+            onShowFilterDialog?.let {
+                IconButton(onClick = it) {
+                    Icon(Icons.Filled.FilterAlt, null, modifier = iconModifier)
                 }
             }
         }
