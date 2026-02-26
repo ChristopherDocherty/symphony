@@ -54,6 +54,8 @@ import io.github.zyrouge.symphony.utils.StringListUtils
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Stack
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun FoldersView(context: ViewContext) {
@@ -199,7 +201,7 @@ private fun FoldersGrid(
                     }
                 },
                 label = {
-                    Text(context.symphony.t.XFolders(folders.size.toString()))
+                    Text(stringResource(R.string.XFolders, folders.size.toString()))
                 },
                 onShowModifyLayout = {
                     showModifyLayoutSheet = true
@@ -216,7 +218,7 @@ private fun FoldersGrid(
                             modifier = modifier,
                         )
                     },
-                    content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
+                    content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) }
                 )
 
                 else -> ResponsiveGrid(gridColumns) {
@@ -280,7 +282,7 @@ private fun FolderTile(
                         Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
                     },
                     text = {
-                        Text(context.symphony.t.ShufflePlay)
+                        Text(stringResource(R.string.ShufflePlay))
                     },
                     onClick = {
                         onDismissRequest()
@@ -297,7 +299,7 @@ private fun FolderTile(
                         Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
                     },
                     text = {
-                        Text(context.symphony.t.PlayNext)
+                        Text(stringResource(R.string.PlayNext))
                     },
                     onClick = {
                         onDismissRequest()
@@ -314,7 +316,7 @@ private fun FolderTile(
                         Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
                     },
                     text = {
-                        Text(context.symphony.t.AddToPlaylist)
+                        Text(stringResource(R.string.AddToPlaylist))
                     },
                     onClick = {
                         onDismissRequest()
@@ -365,8 +367,8 @@ private fun SimpleFileSystem.Folder.createArtworkImageRequest(context: ViewConte
         ?: Assets.createPlaceholderImageRequest(context.symphony)
 
 private fun PathSortBy.label(context: ViewContext) = when (this) {
-    PathSortBy.PATH_SORT_CUSTOM -> context.symphony.t.Custom
-    else -> context.symphony.t.Name
+    PathSortBy.PATH_SORT_CUSTOM -> context.activity.getString(R.string.Custom)
+    else -> context.activity.getString(R.string.Name)
 }
 
 private suspend fun SimpleFileSystem.Folder.getSortedSongIds(context: ViewContext): List<String> {

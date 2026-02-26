@@ -45,6 +45,8 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.helpers.navigateToFolder
 import io.github.zyrouge.symphony.utils.SimpleFileSystem
 import io.github.zyrouge.symphony.utils.SimplePath
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 private const val SettingsFolderContentType = "folder"
 
@@ -70,7 +72,7 @@ fun SettingsMultiGrooveFolderTile(
             leadingContent = { icon() },
             headlineContent = { title() },
             supportingContent = {
-                Text(context.symphony.t.XFolders(initialValues.size.toString()))
+                Text(stringResource(R.string.XFolders, initialValues.size.toString()))
             },
         )
     }
@@ -127,7 +129,7 @@ fun SettingsMultiGrooveFolderTile(
                             showPicker = true
                         }
                     ) {
-                        Text(context.symphony.t.AddFolder)
+                        Text(stringResource(R.string.AddFolder))
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(
@@ -135,7 +137,7 @@ fun SettingsMultiGrooveFolderTile(
                             showDialog = false
                         }
                     ) {
-                        Text(context.symphony.t.Cancel)
+                        Text(stringResource(R.string.Cancel))
                     }
                     TextButton(
                         onClick = {
@@ -143,7 +145,7 @@ fun SettingsMultiGrooveFolderTile(
                             showDialog = false
                         }
                     ) {
-                        Text(context.symphony.t.Done)
+                        Text(stringResource(R.string.Done))
                     }
                 }
             )
@@ -204,7 +206,7 @@ private fun SettingsFolderTilePickerDialog(
             }
         },
         title = {
-            Text(context.symphony.t.PickFolder)
+            Text(stringResource(R.string.PickFolder))
         },
         topBar = {
             Row(
@@ -245,7 +247,7 @@ private fun SettingsFolderTilePickerDialog(
                 sortedEntities.isEmpty() -> Box(
                     modifier = Modifier.fillMaxHeight()
                 ) {
-                    SubtleCaptionText(context.symphony.t.NoFoldersFound)
+                    SubtleCaptionText(stringResource(R.string.NoFoldersFound))
                 }
 
                 else -> {
@@ -280,7 +282,7 @@ private fun SettingsFolderTilePickerDialog(
                                     Column {
                                         Text(folder.name)
                                         Text(
-                                            context.symphony.t.XFolders(
+                                            stringResource(R.string.XFolders, 
                                                 folder.childFoldersCount.toString()
                                             ),
                                             style = MaterialTheme.typography.labelSmall,
@@ -295,10 +297,10 @@ private fun SettingsFolderTilePickerDialog(
         },
         actions = {
             TextButton(onClick = { onSelect(null) }) {
-                Text(context.symphony.t.Cancel)
+                Text(stringResource(R.string.Cancel))
             }
             TextButton(onClick = { onSelect(currentPath) }) {
-                Text(context.symphony.t.Done)
+                Text(stringResource(R.string.Done))
             }
         },
     )

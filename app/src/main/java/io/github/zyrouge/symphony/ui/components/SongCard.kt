@@ -62,6 +62,7 @@ import io.github.zyrouge.symphony.ui.view.AlbumArtistViewRoute
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.utils.Logger
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun SongCard(
@@ -232,7 +233,7 @@ fun SongDropdownMenu(
             HorizontalDivider()
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null) },
-                text = { Text(context.symphony.t.PlayNext) },
+                text = { Text(stringResource(R.string.PlayNext)) },
                 onClick = {
                     onDismissRequest()
                     context.symphony.radio.queue.add(
@@ -243,7 +244,7 @@ fun SongDropdownMenu(
             )
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null) },
-                text = { Text(context.symphony.t.AddToQueue) },
+                text = { Text(stringResource(R.string.AddToQueue)) },
                 onClick = {
                     onDismissRequest()
                     context.symphony.radio.queue.add(song.id)
@@ -251,7 +252,7 @@ fun SongDropdownMenu(
             )
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
-                text = { Text(context.symphony.t.AddToPlaylist) },
+                text = { Text(stringResource(R.string.AddToPlaylist)) },
                 onClick = {
                     onDismissRequest()
                     showAddToPlaylistDialog = true
@@ -302,8 +303,8 @@ fun SongDropdownMenu(
                 leadingIcon = { Icon(Icons.Filled.Favorite, null) },
                 text = {
                     Text(
-                        if (isFavorite) context.symphony.t.Unfavorite
-                        else context.symphony.t.Favorite
+                        if (isFavorite) stringResource(R.string.Unfavorite)
+                        else stringResource(R.string.Favorite)
                     )
                 },
                 onClick = {
@@ -325,7 +326,7 @@ fun SongDropdownMenu(
             song.artists.forEach { artistName ->
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Filled.Person, null) },
-                    text = { Text("${context.symphony.t.ViewArtist}: $artistName") },
+                    text = { Text("${stringResource(R.string.ViewArtist)}: $artistName") },
                     onClick = {
                         onDismissRequest()
                         context.navController.navigate(ArtistViewRoute(artistName))
@@ -335,7 +336,7 @@ fun SongDropdownMenu(
             song.albumArtists.forEach { albumArtist ->
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Filled.Person, null) },
-                    text = { Text("${context.symphony.t.ViewAlbumArtist}: $albumArtist") },
+                    text = { Text("${stringResource(R.string.ViewAlbumArtist)}: $albumArtist") },
                     onClick = {
                         onDismissRequest()
                         context.navController.navigate(AlbumArtistViewRoute(albumArtist))
@@ -345,7 +346,7 @@ fun SongDropdownMenu(
             context.symphony.groove.album.getIdFromSong(song)?.let { albumId ->
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Filled.Album, null) },
-                    text = { Text(context.symphony.t.ViewAlbum) },
+                    text = { Text(stringResource(R.string.ViewAlbum)) },
                     onClick = {
                         onDismissRequest()
                         context.navController.navigate(AlbumViewRoute(albumId))
@@ -360,7 +361,7 @@ fun SongDropdownMenu(
             )
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.Filled.Share, null) },
-                text = { Text(context.symphony.t.ShareSong) },
+                text = { Text(stringResource(R.string.ShareSong)) },
                 onClick = {
                     onDismissRequest()
                     try {
@@ -374,7 +375,7 @@ fun SongDropdownMenu(
                         Logger.error("SongCard", "share failed", err)
                         Toast.makeText(
                             context.activity,
-                            context.symphony.t.ShareFailedX(err.localizedMessage ?: err.toString()),
+                            context.activity.getString(R.string.ShareFailedX, err.localizedMessage ?: err.toString()),
                             Toast.LENGTH_SHORT,
                         ).show()
                     }
@@ -382,7 +383,7 @@ fun SongDropdownMenu(
             )
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.Filled.Info, null) },
-                text = { Text(context.symphony.t.Details) },
+                text = { Text(stringResource(R.string.Details)) },
                 onClick = {
                     onDismissRequest()
                     showInfoDialog = true

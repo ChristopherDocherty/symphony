@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.R
 
 object ActivityUtils {
     fun startBrowserActivity(activity: Context, uri: Uri) {
@@ -17,7 +18,7 @@ object ActivityUtils {
         val context = symphony.applicationContext
         val clipboardManager = context.getSystemService(ClipboardManager::class.java)
         clipboardManager.setPrimaryClip(ClipData.newPlainText(null, text))
-        Toast.makeText(context, symphony.t.CopiedXToClipboard(text), Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, symphony.applicationContext.getString(R.string.CopiedXToClipboard, text), Toast.LENGTH_SHORT).show()
     }
 
     fun makePersistableReadableUri(context: Context, uri: Uri) {

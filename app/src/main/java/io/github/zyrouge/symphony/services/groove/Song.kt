@@ -20,6 +20,7 @@ import java.io.FileOutputStream
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.util.regex.Pattern
+import io.github.zyrouge.symphony.R
 
 @Immutable
 @Entity("songs")
@@ -85,15 +86,15 @@ data class Song(
             values.add(it)
         }
         channels?.let {
-            values.add(symphony.t.XChannels(it.toString()))
+            values.add(symphony.applicationContext.getString(R.string.XChannels, it.toString()))
         }
         bitrateK?.let {
             values.add(buildString {
-                append(symphony.t.XKbps(it.toString()))
+                append(symphony.applicationContext.getString(R.string.XKbps, it.toString()))
             })
         }
         samplingRateK?.let {
-            values.add(symphony.t.XKHz(it.toString()))
+            values.add(symphony.applicationContext.getString(R.string.XKHz, it.toString()))
         }
         return when {
             values.isNotEmpty() -> values.joinToString(", ")

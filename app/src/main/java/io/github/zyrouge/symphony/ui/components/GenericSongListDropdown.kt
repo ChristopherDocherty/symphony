@@ -13,6 +13,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun GenericSongListDropdown(
@@ -32,7 +34,7 @@ fun GenericSongListDropdown(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.ShufflePlay)
+                Text(stringResource(R.string.ShufflePlay))
             },
             onClick = {
                 onDismissRequest()
@@ -44,7 +46,7 @@ fun GenericSongListDropdown(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.PlayNext)
+                Text(stringResource(R.string.PlayNext))
             },
             onClick = {
                 onDismissRequest()
@@ -59,7 +61,7 @@ fun GenericSongListDropdown(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.AddToQueue)
+                Text(stringResource(R.string.AddToQueue))
             },
             onClick = {
                 onDismissRequest()
@@ -71,7 +73,7 @@ fun GenericSongListDropdown(
                 Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
             },
             text = {
-                Text(context.symphony.t.AddToPlaylist)
+                Text(stringResource(R.string.AddToPlaylist))
             },
             onClick = {
                 onDismissRequest()

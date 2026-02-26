@@ -22,6 +22,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ArtistTile(context: ViewContext, artist: Artist) {
@@ -75,7 +76,7 @@ fun ArtistDropdownMenu(
                 Icon(Icons.Filled.Shuffle, null)
             },
             text = {
-                Text(context.symphony.t.ShufflePlay)
+                Text(stringResource(R.string.ShufflePlay))
             },
             onClick = {
                 onDismissRequest()

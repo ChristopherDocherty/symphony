@@ -31,6 +31,8 @@ import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 data class GenreViewRoute(val genreName: String)
@@ -75,7 +77,7 @@ fun GenreView(context: ViewContext, route: GenreViewRoute) {
                 },
                 title = {
                     TopAppBarMinimalTitle {
-                        Text(context.symphony.t.Genre
+                        Text(stringResource(R.string.Genre)
                                 + (genre?.let { " - ${it.name}" } ?: ""))
                     }
                 },
@@ -132,7 +134,7 @@ private fun UnknownGenre(context: ViewContext, genre: String) {
             )
         },
         content = {
-            Text(context.symphony.t.UnknownGenreX(genre))
+            Text(stringResource(R.string.UnknownGenreX, genre))
         }
     )
 }

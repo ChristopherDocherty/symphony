@@ -37,6 +37,8 @@ import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 data class ArtistViewRoute(val artistName: String)
@@ -92,7 +94,7 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
                 title = {
                     TopAppBarMinimalTitle {
                         Text(
-                            context.symphony.t.Artist + (artist?.let { " - ${it.name}" } ?: ""),
+                            stringResource(R.string.Artist) + (artist?.let { " - ${it.name}" } ?: ""),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -168,7 +170,7 @@ private fun UnknownArtist(context: ViewContext, artistName: String) {
             )
         },
         content = {
-            Text(context.symphony.t.UnknownArtistX(artistName))
+            Text(stringResource(R.string.UnknownArtistX, artistName))
         }
     )
 }

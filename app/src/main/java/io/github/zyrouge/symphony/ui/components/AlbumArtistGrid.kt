@@ -19,6 +19,8 @@ import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +68,7 @@ fun AlbumArtistGrid(
                 },
                 label = {
                     Text(
-                        context.symphony.t.XArtists(
+                        stringResource(R.string.XArtists, 
                             (albumArtistsCount ?: albumArtistNames.size).toString()
                         )
                     )
@@ -86,7 +88,7 @@ fun AlbumArtistGrid(
                             modifier = modifier,
                         )
                     },
-                    content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
+                    content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) }
                 )
 
                 else -> ResponsiveGrid(gridColumns) {
@@ -127,9 +129,9 @@ fun AlbumArtistGrid(
 }
 
 private fun AlbumArtistSortBy.label(context: ViewContext) = when (this) {
-    AlbumArtistSortBy.ALBUM_ARTIST_CUSTOM -> context.symphony.t.Custom
-    AlbumArtistSortBy.ALBUM_ARTIST_SORT_NAME -> context.symphony.t.Artist
-    AlbumArtistSortBy.ALBUM_ARTIST_ALBUMS_COUNT -> context.symphony.t.AlbumCount
-    AlbumArtistSortBy.ALBUM_ARTIST_TRACKS_COUNT -> context.symphony.t.TrackCount
+    AlbumArtistSortBy.ALBUM_ARTIST_CUSTOM -> context.activity.getString(R.string.Custom)
+    AlbumArtistSortBy.ALBUM_ARTIST_SORT_NAME -> context.activity.getString(R.string.Artist)
+    AlbumArtistSortBy.ALBUM_ARTIST_ALBUMS_COUNT -> context.activity.getString(R.string.AlbumCount)
+    AlbumArtistSortBy.ALBUM_ARTIST_TRACKS_COUNT -> context.activity.getString(R.string.TrackCount)
     AlbumArtistSortBy.UNRECOGNIZED -> "???"
 }

@@ -60,6 +60,7 @@ import io.github.zyrouge.symphony.ui.view.settings.PlayerSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.UpdateSettingsViewRoute
 import io.github.zyrouge.symphony.utils.ActivityUtils
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
 
 @Serializable
 data class SettingsViewRoute(val initialElement: String? = null) {
@@ -80,7 +81,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text(context.symphony.t.Settings)
+                        Text(stringResource(R.string.Settings))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -118,7 +119,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             AppMeta.latestVersion?.takeIf { AppMeta.version != it }?.let {
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
-                                    context.symphony.t.NewVersionAvailableX(it),
+                                    stringResource(R.string.NewVersionAvailableX, it),
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = MaterialTheme.colorScheme.primary,
                                     ),
@@ -132,7 +133,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Icon(Icons.Filled.LibraryMusic, null)
                         },
                         title = {
-                            Text(context.symphony.t.Groove)
+                            Text(stringResource(R.string.Groove))
                         },
                         onClick = {
                             context.navController.navigate(
@@ -146,7 +147,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Icon(Icons.Filled.Radio, null)
                         },
                         title = {
-                            Text(context.symphony.t.Player)
+                            Text(stringResource(R.string.Player))
                         },
                         onClick = {
                             context.navController.navigate(PlayerSettingsViewRoute)
@@ -158,7 +159,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Icon(Icons.Filled.Palette, null)
                         },
                         title = {
-                            Text(context.symphony.t.Appearance)
+                            Text(stringResource(R.string.Appearance))
                         },
                         onClick = {
                             context.navController.navigate(AppearanceSettingsViewRoute)
@@ -170,7 +171,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Icon(Icons.Filled.Home, null)
                         },
                         title = {
-                            Text(context.symphony.t.Home)
+                            Text(stringResource(R.string.Home))
                         },
                         onClick = {
                             context.navController.navigate(HomePageSettingsViewRoute)
@@ -182,7 +183,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Icon(Icons.Filled.MusicNote, null)
                         },
                         title = {
-                            Text(context.symphony.t.MiniPlayer)
+                            Text(stringResource(R.string.MiniPlayer))
                         },
                         onClick = {
                             context.navController.navigate(MiniPlayerSettingsViewRoute)
@@ -194,7 +195,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Icon(Icons.Filled.MusicNote, null)
                         },
                         title = {
-                            Text(context.symphony.t.NowPlaying)
+                            Text(stringResource(R.string.NowPlaying))
                         },
                         onClick = {
                             context.navController.navigate(NowPlayingSettingsViewRoute)
@@ -206,7 +207,7 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Icon(Icons.Filled.Update, null)
                         },
                         title = {
-                            Text(context.symphony.t.Updates)
+                            Text(stringResource(R.string.Updates))
                         },
                         onClick = {
                             context.navController.navigate(UpdateSettingsViewRoute)

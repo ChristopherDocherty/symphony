@@ -125,6 +125,7 @@ android {
 dependencies {
     implementation(project(":metaphony"))
     implementation(libs.activity.compose)
+    implementation(libs.appcompat)
     implementation(libs.coil)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.material3)

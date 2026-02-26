@@ -27,6 +27,8 @@ import io.github.zyrouge.symphony.ui.components.ScaffoldDialog
 import io.github.zyrouge.symphony.ui.components.Slider
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun NowPlayingSpeedDialog(
@@ -44,7 +46,7 @@ fun NowPlayingSpeedDialog(
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(context.symphony.t.Speed)
+            Text(stringResource(R.string.Speed))
         },
         content = {
             Column(modifier = Modifier.padding(0.dp, 8.dp)) {
@@ -103,7 +105,7 @@ fun NowPlayingSpeedDialog(
                         }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(context.symphony.t.PersistUntilQueueEnd)
+                    Text(stringResource(R.string.PersistUntilQueueEnd))
                 }
             }
         },
@@ -114,12 +116,12 @@ fun NowPlayingSpeedDialog(
                     onDismissRequest()
                 }
             ) {
-                Text(context.symphony.t.Reset)
+                Text(stringResource(R.string.Reset))
             }
             TextButton(
                 onClick = onDismissRequest
             ) {
-                Text(context.symphony.t.Done)
+                Text(stringResource(R.string.Done))
             }
         },
     )

@@ -20,8 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.zyrouge.symphony.services.i18n.CommonTranslation
-
 @Composable
 fun ErrorComp(message: String, stackTrace: String) {
     Column(
@@ -43,14 +41,14 @@ fun ErrorComp(message: String, stackTrace: String) {
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                CommonTranslation.SomethingWentHorriblyWrong,
+                "Something went horribly wrong!",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 style = boldTextStyle,
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                CommonTranslation.ErrorX(message),
+                "Error: $message",
                 style = boldTextStyle,
             )
             Text(stackTrace)

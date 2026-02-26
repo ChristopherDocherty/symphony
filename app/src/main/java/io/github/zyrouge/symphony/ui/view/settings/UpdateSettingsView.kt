@@ -31,6 +31,8 @@ import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 object UpdateSettingsViewRoute
@@ -48,7 +50,7 @@ fun UpdateSettingsView(context: ViewContext) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text("${context.symphony.t.Settings} - ${context.symphony.t.Updates}")
+                        Text("${stringResource(R.string.Settings)} - ${stringResource(R.string.Updates)}")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -75,13 +77,13 @@ fun UpdateSettingsView(context: ViewContext) {
                     .fillMaxSize()
             ) {
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
-                    SettingsSideHeading(context.symphony.t.Updates)
+                    SettingsSideHeading(stringResource(R.string.Updates))
                     SettingsSwitchTile(
                         icon = {
                             Icon(Icons.Filled.Update, null)
                         },
                         title = {
-                            Text(context.symphony.t.CheckForUpdates)
+                            Text(stringResource(R.string.CheckForUpdates))
                         },
                         value = settings.checkForUpdates,
                         onChange = { value ->
@@ -96,7 +98,7 @@ fun UpdateSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Update, null)
                         },
                         title = {
-                            Text(context.symphony.t.ShowUpdateToast)
+                            Text(stringResource(R.string.ShowUpdateToast))
                         },
                         value = settings.showUpdateToast,
                         onChange = { value ->

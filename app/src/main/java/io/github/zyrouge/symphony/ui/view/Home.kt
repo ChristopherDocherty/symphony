@@ -98,6 +98,8 @@ import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import io.github.zyrouge.symphony.ui.view.home.ArtistsPageState
 import io.github.zyrouge.symphony.ui.view.home.HomePageState
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 enum class HomePage(
     val kind: Groove.Kind? = null,
@@ -106,58 +108,58 @@ enum class HomePage(
     val unselectedIcon: @Composable () -> ImageVector,
 ) {
     ForYou(
-        label = { it.symphony.t.ForYou },
+        label = { it.activity.getString(R.string.ForYou) },
         selectedIcon = { Icons.Filled.Face },
         unselectedIcon = { Icons.Outlined.Face }
     ),
     Songs(
         kind = Groove.Kind.SONG,
-        label = { it.symphony.t.Songs },
+        label = { it.activity.getString(R.string.Songs) },
         selectedIcon = { Icons.Filled.MusicNote },
         unselectedIcon = { Icons.Outlined.MusicNote }
     ),
     Artists(
         kind = Groove.Kind.ARTIST,
-        label = { it.symphony.t.Artists },
+        label = { it.activity.getString(R.string.Artists) },
         selectedIcon = { Icons.Filled.Group },
         unselectedIcon = { Icons.Outlined.Group }
     ),
     Albums(
         kind = Groove.Kind.ALBUM,
-        label = { it.symphony.t.Albums },
+        label = { it.activity.getString(R.string.Albums) },
         selectedIcon = { Icons.Filled.Album },
         unselectedIcon = { Icons.Outlined.Album }
     ),
     AlbumArtists(
         kind = Groove.Kind.ALBUM_ARTIST,
-        label = { it.symphony.t.AlbumArtists },
+        label = { it.activity.getString(R.string.AlbumArtists) },
         selectedIcon = { Icons.Filled.SupervisorAccount },
         unselectedIcon = { Icons.Outlined.SupervisorAccount }
     ),
     Genres(
         kind = Groove.Kind.GENRE,
-        label = { it.symphony.t.Genres },
+        label = { it.activity.getString(R.string.Genres) },
         selectedIcon = { Icons.Filled.Tune },
         unselectedIcon = { Icons.Outlined.Tune }
     ),
     Playlists(
         kind = Groove.Kind.PLAYLIST,
-        label = { it.symphony.t.Playlists },
+        label = { it.activity.getString(R.string.Playlists) },
         selectedIcon = { Icons.AutoMirrored.Filled.QueueMusic },
         unselectedIcon = { Icons.AutoMirrored.Outlined.QueueMusic }
     ),
     Browser(
-        label = { it.symphony.t.Browser },
+        label = { it.activity.getString(R.string.Browser) },
         selectedIcon = { Icons.Filled.Folder },
         unselectedIcon = { Icons.Outlined.Folder }
     ),
     Folders(
-        label = { it.symphony.t.Folders },
+        label = { it.activity.getString(R.string.Folders) },
         selectedIcon = { Icons.Filled.FolderOpen },
         unselectedIcon = { Icons.Outlined.FolderOpen }
     ),
     Tree(
-        label = { it.symphony.t.Tree },
+        label = { it.activity.getString(R.string.Tree) },
         selectedIcon = { Icons.Filled.AccountTree },
         unselectedIcon = { Icons.Outlined.AccountTree }
     );
@@ -272,16 +274,16 @@ private fun HomeTopAppBarDropdownMenu(
     ) {
         DropdownMenuItem(
             leadingIcon = {
-                Icon(Icons.Filled.Refresh, context.symphony.t.Rescan)
+                Icon(Icons.Filled.Refresh, stringResource(R.string.Rescan))
             },
-            text = { Text(context.symphony.t.Rescan) },
+            text = { Text(stringResource(R.string.Rescan)) },
             onClick = onRescanClick
         )
         DropdownMenuItem(
             leadingIcon = {
-                Icon(Icons.Filled.Settings, context.symphony.t.Settings)
+                Icon(Icons.Filled.Settings, stringResource(R.string.Settings))
             },
-            text = { Text(context.symphony.t.Settings) },
+            text = { Text(stringResource(R.string.Settings)) },
             onClick = onSettingsClick
         )
         extraItems()

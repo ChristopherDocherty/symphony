@@ -47,6 +47,8 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 object QueueViewRoute
@@ -92,7 +94,7 @@ fun QueueView(context: ViewContext) {
                     TopAppBarMinimalTitle(
                         modifier = Modifier.padding(start = IconButtonPlaceholderSize)
                     ) {
-                        Text(context.symphony.t.Queue)
+                        Text(stringResource(R.string.Queue))
                     }
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(

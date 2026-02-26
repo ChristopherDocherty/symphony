@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.utils.mutate
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun AddToPlaylistDialog(
@@ -44,11 +46,11 @@ fun AddToPlaylistDialog(
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(context.symphony.t.AddToPlaylist)
+            Text(stringResource(R.string.AddToPlaylist))
         },
         content = {
             when {
-                playlists.isEmpty() -> SubtleCaptionText(context.symphony.t.NoInAppPlaylistsFound)
+                playlists.isEmpty() -> SubtleCaptionText(stringResource(R.string.NoInAppPlaylistsFound))
                 else -> LazyColumn(modifier = Modifier.padding(bottom = 4.dp)) {
                     items(playlists) { playlist ->
                         val playlistSongIds = playlist.getSongIds(context.symphony)
@@ -99,7 +101,7 @@ fun AddToPlaylistDialog(
                     showNewPlaylistDialog = !showNewPlaylistDialog
                 }
             ) {
-                Text(context.symphony.t.NewPlaylist)
+                Text(stringResource(R.string.NewPlaylist))
             }
             Spacer(modifier = Modifier.weight(1f))
         },

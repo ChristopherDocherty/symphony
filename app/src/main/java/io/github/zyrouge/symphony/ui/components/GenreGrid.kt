@@ -41,6 +41,8 @@ import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.GenreViewRoute
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 private object GenreTile {
     val colors = listOf(
@@ -116,7 +118,7 @@ fun GenreGrid(
                     },
                     label = {
                         Text(
-                            context.symphony.t.XGenres(
+                            stringResource(R.string.XGenres, 
                                 (genresCount ?: genreNames.size).toString()
                             )
                         )
@@ -137,7 +139,7 @@ fun GenreGrid(
                             modifier = modifier,
                         )
                     },
-                    content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
+                    content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) }
                 )
 
                 else -> ResponsiveGrid(gridColumns) { gridData ->
@@ -195,7 +197,7 @@ fun GenreGrid(
                                                 .copy(fontWeight = FontWeight.Bold),
                                         )
                                         Text(
-                                            context.symphony.t.XSongs(genre.numberOfTracks.toString()),
+                                            stringResource(R.string.XSongs, genre.numberOfTracks.toString()),
                                             textAlign = TextAlign.Center,
                                             style = MaterialTheme.typography.labelSmall,
                                         )
@@ -231,8 +233,8 @@ fun GenreGrid(
 }
 
 private fun GenreSortBy.label(context: ViewContext) = when (this) {
-    GenreSortBy.GENRE_SORT_CUSTOM -> context.symphony.t.Custom
-    GenreSortBy.GENRE_SORT_GENRE -> context.symphony.t.Genre
-    GenreSortBy.GENRE_SORT_TRACKS_COUNT -> context.symphony.t.TrackCount
+    GenreSortBy.GENRE_SORT_CUSTOM -> context.activity.getString(R.string.Custom)
+    GenreSortBy.GENRE_SORT_GENRE -> context.activity.getString(R.string.Genre)
+    GenreSortBy.GENRE_SORT_TRACKS_COUNT -> context.activity.getString(R.string.TrackCount)
     else -> "???"
 }

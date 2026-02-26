@@ -14,9 +14,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.view.WindowCompat
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.ThemeMode
@@ -69,10 +71,9 @@ fun SymphonyTheme(
         }
     }
 
-    val textDirection = when (context.symphony.t.LocaleDirection) {
-        "ltr" -> TextDirection.Ltr
-        "rtl" -> TextDirection.Rtl
-        else -> TextDirection.Unspecified
+    val textDirection = when (LocalLayoutDirection.current) {
+        LayoutDirection.Rtl -> TextDirection.Rtl
+        else -> TextDirection.Ltr
     }
     val typography = SymphonyTypography.toTypography(
         SymphonyTypography.resolveFont(fontName),

@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSliderDialog
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 data class ResponsiveGridData(val columnsCount: Int)
 
@@ -85,7 +87,7 @@ fun ResponsiveGridSizeAdjustBottomSheet(
     SettingsSliderDialog(
         context,
         title = {
-            Text(context.symphony.t.GridColumns)
+            Text(stringResource(R.string.GridColumns))
         },
         initialValue = effectiveColumns.toFloat(),
         range = 1f..maxColumns.toFloat(),

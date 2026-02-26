@@ -60,11 +60,13 @@ import io.github.zyrouge.symphony.utils.randomSubList
 import io.github.zyrouge.symphony.utils.runIfOrDefault
 import io.github.zyrouge.symphony.utils.subListNonStrict
 import kotlinx.coroutines.flow.map
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 enum class ForYou(val label: (context: ViewContext) -> String) {
-    Albums(label = { it.symphony.t.SuggestedAlbums }),
-    Artists(label = { it.symphony.t.SuggestedArtists }),
-    AlbumArtists(label = { it.symphony.t.SuggestedAlbumArtists })
+    Albums(label = { it.activity.getString(R.string.SuggestedAlbums) }),
+    Artists(label = { it.activity.getString(R.string.SuggestedArtists) }),
+    AlbumArtists(label = { it.activity.getString(R.string.SuggestedAlbumArtists) })
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,7 +137,7 @@ fun ForYouView(context: ViewContext) {
                         ForYouButton(
                             icon = Icons.Filled.PlayArrow,
                             text = {
-                                Text(context.symphony.t.PlayAll)
+                                Text(stringResource(R.string.PlayAll))
                             },
                             enabled = !songsIsUpdating,
                             onClick = {
@@ -148,7 +150,7 @@ fun ForYouView(context: ViewContext) {
                         ForYouButton(
                             icon = Icons.Filled.Shuffle,
                             text = {
-                                Text(context.symphony.t.ShufflePlay)
+                                Text(stringResource(R.string.ShufflePlay))
                             },
                             enabled = !songsIsUpdating,
                             onClick = {
@@ -162,7 +164,7 @@ fun ForYouView(context: ViewContext) {
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 SideHeading {
-                    Text(context.symphony.t.RecentlyAddedSongs)
+                    Text(stringResource(R.string.RecentlyAddedSongs))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 when {
@@ -283,14 +285,14 @@ fun ForYouView(context: ViewContext) {
 
                         ForYou.Artists -> SuggestedArtists(
                             context,
-                            label = context.symphony.t.SuggestedArtists,
+                            label = stringResource(R.string.SuggestedArtists),
                             isLoading = artistsIsUpdating,
                             artistNames = randomArtists,
                         )
 
                         ForYou.AlbumArtists -> SuggestedAlbumArtists(
                             context,
-                            label = context.symphony.t.SuggestedAlbumArtists,
+                            label = stringResource(R.string.SuggestedAlbumArtists),
                             isLoading = albumArtistsIsUpdating,
                             albumArtistNames = randomAlbumArtists,
                         )
@@ -308,7 +310,7 @@ fun ForYouView(context: ViewContext) {
                     modifier = modifier,
                 )
             },
-            content = { Text(context.symphony.t.DamnThisIsSoEmpty) },
+            content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) },
         )
     }
 }
@@ -370,7 +372,7 @@ private fun SixGridEmpty(context: ViewContext) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            context.symphony.t.DamnThisIsSoEmpty,
+            stringResource(R.string.DamnThisIsSoEmpty),
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
@@ -442,7 +444,7 @@ private fun SuggestedAlbums(
 
     Spacer(modifier = Modifier.height(24.dp))
     SideHeading {
-        Text(context.symphony.t.SuggestedAlbums)
+        Text(stringResource(R.string.SuggestedAlbums))
     }
     Spacer(modifier = Modifier.height(12.dp))
     StatedSixGrid(context, isLoading, albums) { album ->

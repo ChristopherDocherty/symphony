@@ -33,6 +33,8 @@ import io.github.zyrouge.symphony.ui.view.SettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.GrooveSettingsViewRoute
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 enum class SongListType {
     Default,
@@ -88,8 +90,8 @@ fun SongList(
                     }
                 },
                 label = {
-                    Text(context.symphony.t.XAlbums((albumCount).toString()) + ", " +
-                        context.symphony.t.XSongs((songsCount ?: songIds.size).toString()))
+                    Text(stringResource(R.string.XAlbums, (albumCount).toString()) + ", " +
+                        stringResource(R.string.XSongs, (songsCount ?: songIds.size).toString()))
                 },
                 onShufflePlay = {
                     context.symphony.radio.shorty.playQueue(sortedSongIds, shuffle = true)
@@ -103,11 +105,11 @@ fun SongList(
                         Icon(Icons.Filled.MusicNote, null, modifier = modifier)
                     },
                     content = {
-                        Text(context.symphony.t.DamnThisIsSoEmpty)
+                        Text(stringResource(R.string.DamnThisIsSoEmpty))
                         if (enableAddMediaFoldersHint) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                context.symphony.t.HintAddMediaFolders,
+                                stringResource(R.string.HintAddMediaFolders),
                                 style = MaterialTheme.typography.labelMedium,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier
@@ -164,15 +166,15 @@ fun SongList(
 }
 
 fun SongSortBy.label(context: ViewContext) = when (this) {
-    SongSortBy.SONG_CUSTOM -> context.symphony.t.Custom
-    SongSortBy.SONG_TITLE -> context.symphony.t.Title
-    SongSortBy.SONG_ARTIST -> context.symphony.t.Artist
-    SongSortBy.SONG_ALBUM -> context.symphony.t.Album
-    SongSortBy.SONG_DURATION -> context.symphony.t.Duration
-    SongSortBy.SONG_COMPOSER -> context.symphony.t.Composer
-    SongSortBy.SONG_YEAR -> context.symphony.t.Year
-    SongSortBy.SONG_FILENAME -> context.symphony.t.Filename
-    SongSortBy.SONG_TRACK_NUMBER -> context.symphony.t.TrackNumber
+    SongSortBy.SONG_CUSTOM -> context.activity.getString(R.string.Custom)
+    SongSortBy.SONG_TITLE -> context.activity.getString(R.string.Title)
+    SongSortBy.SONG_ARTIST -> context.activity.getString(R.string.Artist)
+    SongSortBy.SONG_ALBUM -> context.activity.getString(R.string.Album)
+    SongSortBy.SONG_DURATION -> context.activity.getString(R.string.Duration)
+    SongSortBy.SONG_COMPOSER -> context.activity.getString(R.string.Composer)
+    SongSortBy.SONG_YEAR -> context.activity.getString(R.string.Year)
+    SongSortBy.SONG_FILENAME -> context.activity.getString(R.string.Filename)
+    SongSortBy.SONG_TRACK_NUMBER -> context.activity.getString(R.string.TrackNumber)
     SongSortBy.SONG_DATE_ADDED -> "Date Added"
     SongSortBy.SONG_DATE_MODIFIED -> "Date Modified"
     SongSortBy.UNRECOGNIZED -> "???"

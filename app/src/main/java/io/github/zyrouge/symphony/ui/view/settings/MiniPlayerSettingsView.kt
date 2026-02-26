@@ -33,6 +33,8 @@ import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 object MiniPlayerSettingsViewRoute
@@ -50,7 +52,7 @@ fun MiniPlayerSettingsView(context: ViewContext) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text("${context.symphony.t.Settings} - ${context.symphony.t.MiniPlayer}")
+                        Text("${stringResource(R.string.Settings)} - ${stringResource(R.string.MiniPlayer)}")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -77,13 +79,13 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                     .fillMaxSize()
             ) {
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
-                    SettingsSideHeading(context.symphony.t.MiniPlayer)
+                    SettingsSideHeading(stringResource(R.string.MiniPlayer))
                     SettingsSwitchTile(
                         icon = {
                             Icon(Icons.Filled.SkipNext, null)
                         },
                         title = {
-                            Text(context.symphony.t.ShowTrackControls)
+                            Text(stringResource(R.string.ShowTrackControls))
                         },
                         value = settings.miniPlayerTrackControls,
                         onChange = { value ->
@@ -98,7 +100,7 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Forward30, null)
                         },
                         title = {
-                            Text(context.symphony.t.ShowSeekControls)
+                            Text(stringResource(R.string.ShowSeekControls))
                         },
                         value = settings.miniPlayerSeekControls,
                         onChange = { value ->
@@ -113,7 +115,7 @@ fun MiniPlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.KeyboardDoubleArrowRight, null)
                         },
                         title = {
-                            Text(context.symphony.t.MiniPlayerTextMarquee)
+                            Text(stringResource(R.string.MiniPlayerTextMarquee))
                         },
                         value = settings.miniPlayerTextMarquee,
                         onChange = { value ->

@@ -51,6 +51,8 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.theme.ThemeColors
 import io.github.zyrouge.symphony.ui.view.PlaylistViewRoute
 import io.github.zyrouge.symphony.utils.Logger
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun PlaylistTile(context: ViewContext, playlist: Playlist) {
@@ -151,14 +153,14 @@ fun PlaylistDropdownMenu(
                 context.symphony.groove.playlist.savePlaylistToUri(playlist, uri)
                 Toast.makeText(
                     context.activity,
-                    context.symphony.t.ExportedX(playlist.title),
+                    context.activity.getString(R.string.ExportedX, playlist.title),
                     Toast.LENGTH_SHORT,
                 ).show()
             } catch (err: Exception) {
                 Logger.error("PlaylistTile", "export failed (activity result)", err)
                 Toast.makeText(
                     context.activity,
-                    context.symphony.t.ExportFailedX(
+                    context.activity.getString(R.string.ExportFailedX,
                         err.localizedMessage ?: err.toString()
                     ),
                     Toast.LENGTH_SHORT,
@@ -182,7 +184,7 @@ fun PlaylistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.ShufflePlay)
+                Text(stringResource(R.string.ShufflePlay))
             },
             onClick = {
                 onDismissRequest()
@@ -197,7 +199,7 @@ fun PlaylistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.PlayNext)
+                Text(stringResource(R.string.PlayNext))
             },
             onClick = {
                 onDismissRequest()
@@ -212,7 +214,7 @@ fun PlaylistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.AddToQueue)
+                Text(stringResource(R.string.AddToQueue))
             },
             onClick = {
                 onDismissRequest()
@@ -224,7 +226,7 @@ fun PlaylistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
             },
             text = {
-                Text(context.symphony.t.AddToPlaylist)
+                Text(stringResource(R.string.AddToPlaylist))
             },
             onClick = {
                 onDismissRequest()
@@ -237,7 +239,7 @@ fun PlaylistDropdownMenu(
                     Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
                 },
                 text = {
-                    Text(context.symphony.t.ManageSongs)
+                    Text(stringResource(R.string.ManageSongs))
                 },
                 onClick = {
                     onDismissRequest()
@@ -250,7 +252,7 @@ fun PlaylistDropdownMenu(
                 Icon(Icons.Filled.Info, null)
             },
             text = {
-                Text(context.symphony.t.Details)
+                Text(stringResource(R.string.Details))
             },
             onClick = {
                 onDismissRequest()
@@ -263,7 +265,7 @@ fun PlaylistDropdownMenu(
                     Icon(Icons.Filled.Save, null)
                 },
                 text = {
-                    Text(context.symphony.t.Export)
+                    Text(stringResource(R.string.Export))
                 },
                 onClick = {
                     onDismissRequest()
@@ -273,7 +275,7 @@ fun PlaylistDropdownMenu(
                         Logger.error("PlaylistTile", "export failed", err)
                         Toast.makeText(
                             context.activity,
-                            context.symphony.t.ExportFailedX(
+                            context.activity.getString(R.string.ExportFailedX,
                                 err.localizedMessage ?: err.toString()
                             ),
                             Toast.LENGTH_SHORT
@@ -286,7 +288,7 @@ fun PlaylistDropdownMenu(
                     Icon(Icons.Filled.Edit, null)
                 },
                 text = {
-                    Text(context.symphony.t.Rename)
+                    Text(stringResource(R.string.Rename))
                 },
                 onClick = {
                     onDismissRequest()
@@ -304,7 +306,7 @@ fun PlaylistDropdownMenu(
                     )
                 },
                 text = {
-                    Text(context.symphony.t.Delete)
+                    Text(stringResource(R.string.Delete))
                 },
                 onClick = {
                     onDismissRequest()
@@ -340,10 +342,10 @@ fun PlaylistDropdownMenu(
         ConfirmationDialog(
             context,
             title = {
-                Text(context.symphony.t.DeletePlaylist)
+                Text(stringResource(R.string.DeletePlaylist))
             },
             description = {
-                Text(context.symphony.t.AreYouSureThatYouWantToDeleteThisPlaylist)
+                Text(stringResource(R.string.AreYouSureThatYouWantToDeleteThisPlaylist))
             },
             onResult = { result ->
                 showDeleteDialog = false

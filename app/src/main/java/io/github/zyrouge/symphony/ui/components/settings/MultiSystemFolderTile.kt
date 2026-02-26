@@ -28,6 +28,8 @@ import io.github.zyrouge.symphony.ui.components.ScaffoldDialogDefaults
 import io.github.zyrouge.symphony.ui.components.drawScrollBar
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.utils.ActivityUtils
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun SettingsMultiSystemFolderTile(
@@ -50,7 +52,7 @@ fun SettingsMultiSystemFolderTile(
             leadingContent = { icon() },
             headlineContent = { title() },
             supportingContent = {
-                Text(context.symphony.t.XFolders(initialValues.size.toString()))
+                Text(stringResource(R.string.XFolders, initialValues.size.toString()))
             },
         )
     }
@@ -114,7 +116,7 @@ fun SettingsMultiSystemFolderTile(
                             pickFolderLauncher.launch(values.lastOrNull())
                         }
                     ) {
-                        Text(context.symphony.t.AddFolder)
+                        Text(stringResource(R.string.AddFolder))
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     TextButton(
@@ -122,7 +124,7 @@ fun SettingsMultiSystemFolderTile(
                             showDialog = false
                         }
                     ) {
-                        Text(context.symphony.t.Cancel)
+                        Text(stringResource(R.string.Cancel))
                     }
                     TextButton(
                         onClick = {
@@ -130,7 +132,7 @@ fun SettingsMultiSystemFolderTile(
                             showDialog = false
                         }
                     ) {
-                        Text(context.symphony.t.Done)
+                        Text(stringResource(R.string.Done))
                     }
                 }
             )

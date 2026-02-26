@@ -38,6 +38,8 @@ import io.github.zyrouge.symphony.ui.view.nowPlaying.NowPlayingSeekBar
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NowPlayingTraditionalControls
 import io.github.zyrouge.symphony.ui.view.nowPlaying.defaultHorizontalPadding
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 object LyricsViewRoute
@@ -72,7 +74,7 @@ fun LyricsView(context: ViewContext) {
                     title = {
                         TopAppBarMinimalTitle {
                             Text(
-                                context.symphony.t.Lyrics +
+                                stringResource(R.string.Lyrics) +
                                         (data?.song?.title?.let { " - $it" } ?: "")
                             )
                         }

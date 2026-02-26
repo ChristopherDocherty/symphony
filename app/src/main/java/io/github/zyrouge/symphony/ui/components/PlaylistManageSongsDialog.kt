@@ -34,6 +34,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun PlaylistManageSongsDialog(
@@ -57,7 +59,7 @@ fun PlaylistManageSongsDialog(
             onDone(nSelectedSongIds.toList())
         },
         title = {
-            Text(context.symphony.t.ManageSongs)
+            Text(stringResource(R.string.ManageSongs))
         },
         titleLeading = {
             Box(
@@ -104,7 +106,7 @@ fun PlaylistManageSongsDialog(
                         )
                     },
                     placeholder = {
-                        Text(context.symphony.t.SearchYourMusic)
+                        Text(stringResource(R.string.SearchYourMusic))
                     },
                     value = terms,
                     onValueChange = {
@@ -113,7 +115,7 @@ fun PlaylistManageSongsDialog(
                 )
                 when {
                     songIds.isEmpty() -> Box(modifier = Modifier.padding(0.dp, 12.dp)) {
-                        SubtleCaptionText(context.symphony.t.DamnThisIsSoEmpty)
+                        SubtleCaptionText(stringResource(R.string.DamnThisIsSoEmpty))
                     }
 
                     else -> BoxWithConstraints {

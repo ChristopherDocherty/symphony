@@ -57,6 +57,8 @@ import io.github.zyrouge.symphony.ui.view.NowPlayingStates
 import io.github.zyrouge.symphony.ui.view.QueueViewRoute
 import io.github.zyrouge.symphony.utils.Logger
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,7 +101,7 @@ fun NowPlayingBodyBottomBar(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    context.symphony.t.PlayingXofY(
+                    stringResource(R.string.PlayingXofY, 
                         (currentSongIndex + 1).toString(),
                         queueSize.toString(),
                     ),
@@ -246,7 +248,7 @@ fun NowPlayingBodyBottomBar(
                                 )
                                 Toast.makeText(
                                     context.activity,
-                                    context.symphony.t.LaunchingEqualizerFailedX(
+                                    context.activity.getString(R.string.LaunchingEqualizerFailedX,
                                         err.localizedMessage ?: err.toString()
                                     ),
                                     Toast.LENGTH_SHORT,
@@ -257,7 +259,7 @@ fun NowPlayingBodyBottomBar(
                             Icon(Icons.Filled.GraphicEq, null)
                         },
                         headlineContent = {
-                            Text(context.symphony.t.Equalizer)
+                            Text(stringResource(R.string.Equalizer))
                         },
                     )
                     ListItem(
@@ -276,12 +278,12 @@ fun NowPlayingBodyBottomBar(
                             )
                         },
                         headlineContent = {
-                            Text(context.symphony.t.PauseOnCurrentSongEnd)
+                            Text(stringResource(R.string.PauseOnCurrentSongEnd))
                         },
                         supportingContent = {
                             Text(
-                                if (pauseOnCurrentSongEnd) context.symphony.t.Enabled
-                                else context.symphony.t.Disabled
+                                if (pauseOnCurrentSongEnd) stringResource(R.string.Enabled)
+                                else stringResource(R.string.Disabled)
                             )
                         },
                     )
@@ -301,12 +303,12 @@ fun NowPlayingBodyBottomBar(
                             )
                         },
                         headlineContent = {
-                            Text(context.symphony.t.SleepTimer)
+                            Text(stringResource(R.string.SleepTimer))
                         },
                         supportingContent = {
                             Text(
-                                if (hasSleepTimer) context.symphony.t.Enabled
-                                else context.symphony.t.Disabled
+                                if (hasSleepTimer) stringResource(R.string.Enabled)
+                                else stringResource(R.string.Disabled)
                             )
                         },
                     )
@@ -319,7 +321,7 @@ fun NowPlayingBodyBottomBar(
                             Icon(Icons.Outlined.Speed, null)
                         },
                         headlineContent = {
-                            Text(context.symphony.t.Speed)
+                            Text(stringResource(R.string.Speed))
                         },
                         supportingContent = {
                             Text("x${data.currentSpeed}")
@@ -334,7 +336,7 @@ fun NowPlayingBodyBottomBar(
                             Icon(Icons.Outlined.Speed, null)
                         },
                         headlineContent = {
-                            Text(context.symphony.t.Pitch)
+                            Text(stringResource(R.string.Pitch))
                         },
                         supportingContent = {
                             Text("x${data.currentPitch}")

@@ -32,6 +32,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun LoaderScaffold(
@@ -92,7 +94,7 @@ fun LoaderScaffold(
                     )
                     Text(
                         text = scanProgress?.let { "Scanning ${it.completed} / ${it.total} files" }
-                            ?: context.symphony.t.Loading,
+                            ?: stringResource(R.string.Loading),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }

@@ -20,6 +20,8 @@ import io.github.zyrouge.symphony.services.groove.AlbumArtist
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumArtistViewRoute
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun AlbumArtistTile(context: ViewContext, albumArtist: AlbumArtist) {
@@ -73,7 +75,7 @@ fun AlbumArtistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.ShufflePlay)
+                Text(stringResource(R.string.ShufflePlay))
             },
             onClick = {
                 onDismissRequest()
@@ -90,7 +92,7 @@ fun AlbumArtistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.PlayNext)
+                Text(stringResource(R.string.PlayNext))
             },
             onClick = {
                 onDismissRequest()
@@ -107,7 +109,7 @@ fun AlbumArtistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
             },
             text = {
-                Text(context.symphony.t.AddToQueue)
+                Text(stringResource(R.string.AddToQueue))
             },
             onClick = {
                 onDismissRequest()
@@ -121,7 +123,7 @@ fun AlbumArtistDropdownMenu(
                 Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
             },
             text = {
-                Text(context.symphony.t.AddToPlaylist)
+                Text(stringResource(R.string.AddToPlaylist))
             },
             onClick = {
                 onDismissRequest()

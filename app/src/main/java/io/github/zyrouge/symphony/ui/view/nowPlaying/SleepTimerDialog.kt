@@ -43,6 +43,8 @@ import io.github.zyrouge.symphony.utils.DurationUtils
 import java.time.Duration
 import java.util.Timer
 import kotlin.concurrent.timer
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 
 @Composable
@@ -71,7 +73,7 @@ fun NowPlayingSleepTimerDialog(
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(context.symphony.t.SleepTimer)
+            Text(stringResource(R.string.SleepTimer))
         },
         content = {
             Text(
@@ -101,7 +103,7 @@ fun NowPlayingSleepTimerDialog(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    context.symphony.t.QuitAppOnEnd,
+                    stringResource(R.string.QuitAppOnEnd),
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
@@ -112,7 +114,7 @@ fun NowPlayingSleepTimerDialog(
                     onDismissRequest()
                 }
             ) {
-                Text(context.symphony.t.Stop)
+                Text(stringResource(R.string.Stop))
             }
         },
     )
@@ -150,7 +152,7 @@ fun NowPlayingSleepTimerSetDialog(
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(context.symphony.t.SleepTimer)
+            Text(stringResource(R.string.SleepTimer))
         },
         content = {
             Column(modifier = Modifier.padding(top = 12.dp)) {
@@ -195,7 +197,7 @@ fun NowPlayingSleepTimerSetDialog(
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         label = {
-                            Text(context.symphony.t.Hours)
+                            Text(stringResource(R.string.Hours))
                         },
                         value = inputHours.toString(),
                         onValueChange = {
@@ -213,7 +215,7 @@ fun NowPlayingSleepTimerSetDialog(
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         label = {
-                            Text(context.symphony.t.Minutes)
+                            Text(stringResource(R.string.Minutes))
                         },
                         value = inputMinutes.toString(),
                         onValueChange = {
@@ -233,13 +235,13 @@ fun NowPlayingSleepTimerSetDialog(
                         }
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(context.symphony.t.QuitAppOnEnd)
+                    Text(stringResource(R.string.QuitAppOnEnd))
                 }
             }
         },
         actions = {
             TextButton(onClick = onDismissRequest) {
-                Text(context.symphony.t.Cancel)
+                Text(stringResource(R.string.Cancel))
             }
             TextButton(
                 enabled = isValidDuration,
@@ -251,7 +253,7 @@ fun NowPlayingSleepTimerSetDialog(
                     onDismissRequest()
                 }
             ) {
-                Text(context.symphony.t.Done)
+                Text(stringResource(R.string.Done))
             }
         },
     )

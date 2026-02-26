@@ -25,6 +25,8 @@ import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun SelectAlbumDiscDialog(
@@ -108,12 +110,12 @@ fun SelectAlbumDiscDialog(
                 },
                 enabled = selectedDiscNumbers.isNotEmpty() || discNumbersForDisplay.isEmpty()
             ) {
-                Text(context.symphony.t.Play)
+                Text(stringResource(R.string.Play))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text(context.symphony.t.Cancel)
+                Text(stringResource(R.string.Cancel))
             }
         }
     )

@@ -57,6 +57,8 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.helpers.navigateToFolder
 import io.github.zyrouge.symphony.utils.SimpleFileSystem
 import io.github.zyrouge.symphony.utils.SimplePath
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 private data class SongExplorerResult(
     val folders: List<SimpleFileSystem.Folder>,
@@ -178,7 +180,7 @@ fun SongExplorerList(
                     },
                     label = {
                         Text(
-                            context.symphony.t.XFoldersYFiles(
+                            stringResource(R.string.XFoldersYFiles, 
                                 sortedEntities.folders.size.toString(),
                                 sortedEntities.files.size.toString(),
                             )
@@ -203,7 +205,7 @@ fun SongExplorerList(
                             modifier = modifier,
                         )
                     },
-                    content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
+                    content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) }
                 )
 
                 else -> {
@@ -247,7 +249,7 @@ fun SongExplorerList(
                                             overflow = TextOverflow.Ellipsis,
                                         )
                                         Text(
-                                            context.symphony.t.XItems(folder.children.size.toString()),
+                                            stringResource(R.string.XItems, folder.children.size.toString()),
                                             style = MaterialTheme.typography.labelSmall,
                                         )
                                     }

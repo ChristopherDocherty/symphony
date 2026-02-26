@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.github.zyrouge.symphony.ui.components.IconTextBody
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun NothingPlaying(context: ViewContext) {
@@ -43,7 +45,7 @@ fun NothingPlayingBody(context: ViewContext) {
             )
         },
         content = {
-            Text(context.symphony.t.NothingIsBeingPlayedRightNow)
+            Text(stringResource(R.string.NothingIsBeingPlayedRightNow))
         }
     )
 }

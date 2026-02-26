@@ -52,6 +52,8 @@ import io.github.zyrouge.symphony.utils.mutate
 import kotlinx.serialization.Serializable
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 data class PlaylistViewRoute(val playlistId: String)
@@ -112,7 +114,7 @@ fun PlaylistView(context: ViewContext, route: PlaylistViewRoute) {
                 title = {
                     TopAppBarMinimalTitle {
                         Text(
-                            context.symphony.t.Playlist
+                            stringResource(R.string.Playlist)
                                     + (playlist?.let { " - ${it.title}" } ?: "")
                         )
                     }
@@ -221,7 +223,7 @@ fun PlaylistView(context: ViewContext, route: PlaylistViewRoute) {
                                             tint = ThemeColors.Red,
                                         )
                                     },
-                                    text = { Text(context.symphony.t.RemoveFromPlaylist) },
+                                    text = { Text(stringResource(R.string.RemoveFromPlaylist)) },
                                     onClick = {
                                         onDismissRequest()
                                         context.symphony.groove.playlist.update(
@@ -253,7 +255,7 @@ private fun UnknownPlaylist(context: ViewContext, playlistId: String) {
             )
         },
         content = {
-            Text(context.symphony.t.UnknownPlaylistX(playlistId))
+            Text(stringResource(R.string.UnknownPlaylistX, playlistId))
         }
     )
 }

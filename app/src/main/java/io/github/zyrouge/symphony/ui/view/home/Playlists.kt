@@ -33,6 +33,8 @@ import io.github.zyrouge.symphony.ui.components.PlaylistGrid
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.utils.ActivityUtils
 import io.github.zyrouge.symphony.utils.Logger
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun PlaylistsView(context: ViewContext) {
@@ -53,7 +55,7 @@ fun PlaylistsView(context: ViewContext) {
                 Logger.error("PlaylistView", "import failed (activity result)", err)
                 Toast.makeText(
                     context.symphony.applicationContext,
-                    context.symphony.t.InvalidM3UFile,
+                    context.symphony.applicationContext.getString(R.string.InvalidM3UFile),
                     Toast.LENGTH_LONG,
                 ).show()
             }
@@ -115,7 +117,7 @@ private fun PlaylistControlBar(
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(context.symphony.t.NewPlaylist)
+                Text(stringResource(R.string.NewPlaylist))
             }
         }
         ElevatedButton(
@@ -129,7 +131,7 @@ private fun PlaylistControlBar(
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(context.symphony.t.ImportPlaylist)
+                Text(stringResource(R.string.ImportPlaylist))
             }
         }
     }

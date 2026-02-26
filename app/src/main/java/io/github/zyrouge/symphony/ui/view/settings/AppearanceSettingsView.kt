@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.ui.view.settings
 
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,9 +30,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.core.os.LocaleListCompat
 import io.github.zyrouge.symphony.ThemeMode
 import io.github.zyrouge.symphony.copy
-import io.github.zyrouge.symphony.services.i18n.CommonTranslation
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsFloatInputTile
@@ -43,6 +44,52 @@ import io.github.zyrouge.symphony.ui.theme.SymphonyTypography
 import io.github.zyrouge.symphony.ui.theme.ThemeColors
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
+
+private val supportedLocaleNativeNames = mapOf(
+    "" to "System",
+    "be" to "беларуская",
+    "zh-Hans" to "中文 (简体)",
+    "en" to "English",
+    "fi" to "suomi",
+    "fr" to "français",
+    "de" to "Deutsch",
+    "it" to "italiano",
+    "ja" to "日本語",
+    "ryu" to "うちなーぐち",
+    "fa" to "فارسی",
+    "pl" to "polski",
+    "pt" to "português",
+    "ro" to "română",
+    "ru" to "русский",
+    "es" to "español",
+    "tr" to "Türkçe",
+    "uk" to "українська",
+    "vi" to "Tiếng Việt",
+)
+
+private val supportedLocaleDisplayNames = mapOf(
+    "" to "System",
+    "be" to "Belarusian",
+    "zh-Hans" to "Chinese (Simplified)",
+    "en" to "English",
+    "fi" to "Finnish",
+    "fr" to "French",
+    "de" to "German",
+    "it" to "Italian",
+    "ja" to "Japanese",
+    "ryu" to "Okinawan",
+    "fa" to "Persian",
+    "pl" to "Polish",
+    "pt" to "Portuguese",
+    "ro" to "Romanian",
+    "ru" to "Russian",
+    "es" to "Spanish",
+    "tr" to "Turkish",
+    "uk" to "Ukrainian",
+    "vi" to "Vietnamese",
+)
 
 private val scalingPresets = listOf(
     0.25f, 0.5f, 0.75f, 0.9f, 1f,
@@ -59,7 +106,7 @@ fun AppearanceSettingsView(context: ViewContext) {
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     val settings by context.symphony.settingsState.collectAsState()
-    val language = settings.language
+    val currentLocale = AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag() ?: ""
     val fontFamily = settings.fontFamily
     val themeMode = settings.themeMode
     val useMaterialYou = settings.materialYou
@@ -73,7 +120,7 @@ fun AppearanceSettingsView(context: ViewContext) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text("${context.symphony.t.Settings} - ${context.symphony.t.Appearance}")
+                        Text("${stringResource(R.string.Settings)} - ${stringResource(R.string.Appearance)}")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -105,28 +152,20 @@ fun AppearanceSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Language, null)
                         },
                         title = {
-                            Text(context.symphony.t.Language_)
+                            Text(stringResource(R.string.Language_))
                         },
-                        value = language,
-                        values = run {
-                            val defaultLocaleNativeName =
-                                context.symphony.translator.getDefaultLocaleNativeName()
-                            mapOf(
-                                "" to "${context.symphony.t.System} (${defaultLocaleNativeName})"
-                            ) + context.symphony.translator.translations.localeNativeNames
-                        },
-                        captions = run {
-                            val defaultLocaleDisplayName =
-                                context.symphony.translator.getDefaultLocaleDisplayName()
-                            mapOf(
-                                "" to "${CommonTranslation.System} (${defaultLocaleDisplayName})"
-                            ) + context.symphony.translator.translations.localeDisplayNames
-                        },
+                        value = currentLocale,
+                        values = supportedLocaleNativeNames,
+                        captions = supportedLocaleDisplayNames,
                         onChange = { value ->
-                            scope.launch {
-                                context.symphony.settings.updateData { s ->
-                                    s.copy { this.language = value }
-                                }
+                            if (value.isEmpty()) {
+                                AppCompatDelegate.setApplicationLocales(
+                                    LocaleListCompat.getEmptyLocaleList()
+                                )
+                            } else {
+                                AppCompatDelegate.setApplicationLocales(
+                                    LocaleListCompat.forLanguageTags(value)
+                                )
                             }
                         }
                     )
@@ -136,7 +175,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.TextFormat, null)
                         },
                         title = {
-                            Text(context.symphony.t.Font)
+                            Text(stringResource(R.string.Font))
                         },
                         value = SymphonyTypography.resolveFont(fontFamily.takeIf { it.isNotEmpty() }).fontName,
                         values = SymphonyTypography.all.keys.associateWith { it },
@@ -155,7 +194,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.TextIncrease, null)
                         },
                         title = {
-                            Text(context.symphony.t.FontScale)
+                            Text(stringResource(R.string.FontScale))
                         },
                         value = fontScale,
                         presets = scalingPresets,
@@ -182,7 +221,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.PhotoSizeSelectLarge, null)
                         },
                         title = {
-                            Text(context.symphony.t.ContentScale)
+                            Text(stringResource(R.string.ContentScale))
                         },
                         value = contentScale,
                         presets = scalingPresets,
@@ -208,15 +247,15 @@ fun AppearanceSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Palette, null)
                         },
                         title = {
-                            Text(context.symphony.t.Theme)
+                            Text(stringResource(R.string.Theme))
                         },
                         value = themeMode,
                         values = mapOf(
-                            ThemeMode.THEME_SYSTEM to context.symphony.t.SystemLightDark,
-                            ThemeMode.THEME_SYSTEM_BLACK to context.symphony.t.SystemLightBlack,
-                            ThemeMode.THEME_LIGHT to context.symphony.t.Light,
-                            ThemeMode.THEME_DARK to context.symphony.t.Dark,
-                            ThemeMode.THEME_BLACK to context.symphony.t.Black,
+                            ThemeMode.THEME_SYSTEM to stringResource(R.string.SystemLightDark),
+                            ThemeMode.THEME_SYSTEM_BLACK to stringResource(R.string.SystemLightBlack),
+                            ThemeMode.THEME_LIGHT to stringResource(R.string.Light),
+                            ThemeMode.THEME_DARK to stringResource(R.string.Dark),
+                            ThemeMode.THEME_BLACK to stringResource(R.string.Black),
                         ),
                         onChange = { value ->
                             scope.launch {
@@ -232,7 +271,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Face, null)
                         },
                         title = {
-                            Text(context.symphony.t.MaterialYou)
+                            Text(stringResource(R.string.MaterialYou))
                         },
                         value = useMaterialYou,
                         onChange = { value ->
@@ -249,7 +288,7 @@ fun AppearanceSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Colorize, null)
                         },
                         title = {
-                            Text(context.symphony.t.PrimaryColor)
+                            Text(stringResource(R.string.PrimaryColor))
                         },
                         value = ThemeColors.resolvePrimaryColorKey(primaryColor.takeIf { it.isNotEmpty() }),
                         values = PrimaryThemeColor.entries.associateWith { it.label(context) },
@@ -269,21 +308,21 @@ fun AppearanceSettingsView(context: ViewContext) {
 }
 
 fun PrimaryThemeColor.label(context: ViewContext) = when (this) {
-    PrimaryThemeColor.Red -> context.symphony.t.Red
-    PrimaryThemeColor.Orange -> context.symphony.t.Orange
-    PrimaryThemeColor.Amber -> context.symphony.t.Amber
-    PrimaryThemeColor.Yellow -> context.symphony.t.Yellow
-    PrimaryThemeColor.Lime -> context.symphony.t.Lime
-    PrimaryThemeColor.Green -> context.symphony.t.Green
-    PrimaryThemeColor.Emerald -> context.symphony.t.Emerald
-    PrimaryThemeColor.Teal -> context.symphony.t.Teal
-    PrimaryThemeColor.Cyan -> context.symphony.t.Cyan
-    PrimaryThemeColor.Sky -> context.symphony.t.Sky
-    PrimaryThemeColor.Blue -> context.symphony.t.Blue
-    PrimaryThemeColor.Indigo -> context.symphony.t.Indigo
-    PrimaryThemeColor.Violet -> context.symphony.t.Violet
-    PrimaryThemeColor.Purple -> context.symphony.t.Purple
-    PrimaryThemeColor.Fuchsia -> context.symphony.t.Fuchsia
-    PrimaryThemeColor.Pink -> context.symphony.t.Pink
-    PrimaryThemeColor.Rose -> context.symphony.t.Rose
+    PrimaryThemeColor.Red -> context.activity.getString(R.string.Red)
+    PrimaryThemeColor.Orange -> context.activity.getString(R.string.Orange)
+    PrimaryThemeColor.Amber -> context.activity.getString(R.string.Amber)
+    PrimaryThemeColor.Yellow -> context.activity.getString(R.string.Yellow)
+    PrimaryThemeColor.Lime -> context.activity.getString(R.string.Lime)
+    PrimaryThemeColor.Green -> context.activity.getString(R.string.Green)
+    PrimaryThemeColor.Emerald -> context.activity.getString(R.string.Emerald)
+    PrimaryThemeColor.Teal -> context.activity.getString(R.string.Teal)
+    PrimaryThemeColor.Cyan -> context.activity.getString(R.string.Cyan)
+    PrimaryThemeColor.Sky -> context.activity.getString(R.string.Sky)
+    PrimaryThemeColor.Blue -> context.activity.getString(R.string.Blue)
+    PrimaryThemeColor.Indigo -> context.activity.getString(R.string.Indigo)
+    PrimaryThemeColor.Violet -> context.activity.getString(R.string.Violet)
+    PrimaryThemeColor.Purple -> context.activity.getString(R.string.Purple)
+    PrimaryThemeColor.Fuchsia -> context.activity.getString(R.string.Fuchsia)
+    PrimaryThemeColor.Pink -> context.activity.getString(R.string.Pink)
+    PrimaryThemeColor.Rose -> context.activity.getString(R.string.Rose)
 }

@@ -66,6 +66,8 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.utils.SimplePath
 import io.github.zyrouge.symphony.utils.StringListUtils
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun SongTreeList(
@@ -151,7 +153,7 @@ fun SongTreeList(
                             modifier = modifier,
                         )
                     },
-                    content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
+                    content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) }
                 )
 
                 else -> SongTreeListContent(
@@ -443,7 +445,7 @@ private fun SongTreeListMediaSortBar(
                 Row {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            context.symphony.t.Folders,
+                            stringResource(R.string.Folders),
                             style = currentTextStyle,
                             modifier = Modifier.padding(16.dp, 8.dp),
                         )
@@ -463,7 +465,7 @@ private fun SongTreeListMediaSortBar(
                     }
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            context.symphony.t.Songs,
+                            stringResource(R.string.Songs),
                             style = currentTextStyle,
                             modifier = Modifier.padding(16.dp, 8.dp),
                         )
@@ -485,7 +487,7 @@ private fun SongTreeListMediaSortBar(
             }
         }
         Text(
-            context.symphony.t.XSongs(songsCount.toString()),
+            stringResource(R.string.XSongs, songsCount.toString()),
             style = currentTextStyle,
             modifier = Modifier.padding(16.dp, 0.dp),
         )
@@ -535,8 +537,8 @@ private fun SongTreeListMediaSortBarDropdownMenuItem(
 }
 
 fun PathSortBy.label(context: ViewContext) = when (this) {
-    PathSortBy.PATH_SORT_CUSTOM -> context.symphony.t.Custom
-    else -> context.symphony.t.Name
+    PathSortBy.PATH_SORT_CUSTOM -> context.activity.getString(R.string.Custom)
+    else -> context.activity.getString(R.string.Name)
 }
 
 private fun createLinearTree(

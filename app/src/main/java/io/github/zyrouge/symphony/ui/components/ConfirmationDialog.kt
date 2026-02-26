@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun ConfirmationDialog(
@@ -32,10 +34,10 @@ fun ConfirmationDialog(
         },
         actions = {
             TextButton(onClick = { onResult(false) }) {
-                Text(context.symphony.t.No)
+                Text(stringResource(R.string.No))
             }
             TextButton(onClick = { onResult(true) }) {
-                Text(context.symphony.t.Yes)
+                Text(stringResource(R.string.Yes))
             }
         }
     )

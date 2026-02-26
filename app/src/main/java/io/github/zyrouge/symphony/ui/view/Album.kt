@@ -49,6 +49,8 @@ import io.github.zyrouge.symphony.ui.components.SongListType
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 data class AlbumViewRoute(val albumId: String)
@@ -80,7 +82,7 @@ fun AlbumView(context: ViewContext, route: AlbumViewRoute) {
                 title = {
                     TopAppBarMinimalTitle {
                         Text(
-                            context.symphony.t.Album + (album?.let { " - ${it.name}" } ?: ""),
+                            stringResource(R.string.Album) + (album?.let { " - ${it.name}" } ?: ""),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -111,7 +113,7 @@ fun AlbumView(context: ViewContext, route: AlbumViewRoute) {
                             }
                         },
                         cardThumbnailLabel = { _, song ->
-                            Text(song.trackNumber?.toString() ?: context.symphony.t.UnknownSymbol)
+                            Text(song.trackNumber?.toString() ?: stringResource(R.string.UnknownSymbol))
                         },
                         cardThumbnailLabelStyle = SongCardThumbnailLabelStyle.Subtle,
                     )
@@ -201,7 +203,7 @@ private fun UnknownAlbum(context: ViewContext, albumId: String) {
             Icon(Icons.Filled.Album, null, modifier = modifier)
         },
         content = {
-            Text(context.symphony.t.UnknownAlbumX(albumId))
+            Text(stringResource(R.string.UnknownAlbumX, albumId))
         }
     )
 }

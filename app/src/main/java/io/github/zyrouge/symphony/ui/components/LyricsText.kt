@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.util.Timer
 import kotlin.concurrent.timer
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun LyricsText(
@@ -118,8 +120,8 @@ fun LyricsText(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    if (targetLyricsState == 1) context.symphony.t.Loading
-                    else context.symphony.t.NoLyrics
+                    if (targetLyricsState == 1) stringResource(R.string.Loading)
+                    else stringResource(R.string.NoLyrics)
                 )
             }
         }

@@ -38,6 +38,8 @@ import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 object NowPlayingSettingsViewRoute
@@ -55,7 +57,7 @@ fun NowPlayingSettingsView(context: ViewContext) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text("${context.symphony.t.Settings} - ${context.symphony.t.NowPlaying}")
+                        Text("${stringResource(R.string.Settings)} - ${stringResource(R.string.NowPlaying)}")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -82,13 +84,13 @@ fun NowPlayingSettingsView(context: ViewContext) {
                     .fillMaxSize()
             ) {
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
-                    SettingsSideHeading(context.symphony.t.NowPlaying)
+                    SettingsSideHeading(stringResource(R.string.NowPlaying))
                     SettingsOptionTile(
                         icon = {
                             Icon(Icons.Filled.Dashboard, null)
                         },
                         title = {
-                            Text(context.symphony.t.ControlsLayout)
+                            Text(stringResource(R.string.ControlsLayout))
                         },
                         value = settings.nowPlayingControlsLayout,
                         values = NowPlayingControlsLayout.entries
@@ -106,7 +108,7 @@ fun NowPlayingSettingsView(context: ViewContext) {
                             Icon(Icons.AutoMirrored.Outlined.Article, null)
                         },
                         title = {
-                            Text(context.symphony.t.LyricsLayout)
+                            Text(stringResource(R.string.LyricsLayout))
                         },
                         value = settings.nowPlayingLyricsLayout,
                         values = NowPlayingLyricsLayout.entries
@@ -124,7 +126,7 @@ fun NowPlayingSettingsView(context: ViewContext) {
                             Icon(Icons.AutoMirrored.Filled.Wysiwyg, null)
                         },
                         title = {
-                            Text(context.symphony.t.ShowAudioInformation)
+                            Text(stringResource(R.string.ShowAudioInformation))
                         },
                         value = settings.nowPlayingAdditionalInfo,
                         onChange = { value ->
@@ -139,7 +141,7 @@ fun NowPlayingSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Forward30, null)
                         },
                         title = {
-                            Text(context.symphony.t.ShowSeekControls)
+                            Text(stringResource(R.string.ShowSeekControls))
                         },
                         value = settings.nowPlayingSeekControls,
                         onChange = { value ->
@@ -154,7 +156,7 @@ fun NowPlayingSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Lyrics, null)
                         },
                         title = {
-                            Text(context.symphony.t.KeepScreenAwakeOnLyrics)
+                            Text(stringResource(R.string.KeepScreenAwakeOnLyrics))
                         },
                         value = settings.lyricsKeepScreenAwake,
                         onChange = { value ->
@@ -170,14 +172,14 @@ fun NowPlayingSettingsView(context: ViewContext) {
 }
 
 fun NowPlayingControlsLayout.label(context: ViewContext) = when (this) {
-    NowPlayingControlsLayout.CONTROLS_COMPACT_LEFT -> context.symphony.t.CompactLeft
-    NowPlayingControlsLayout.CONTROLS_COMPACT_RIGHT -> context.symphony.t.CompactRight
-    NowPlayingControlsLayout.CONTROLS_TRADITIONAL -> context.symphony.t.Traditional
+    NowPlayingControlsLayout.CONTROLS_COMPACT_LEFT -> context.activity.getString(R.string.CompactLeft)
+    NowPlayingControlsLayout.CONTROLS_COMPACT_RIGHT -> context.activity.getString(R.string.CompactRight)
+    NowPlayingControlsLayout.CONTROLS_TRADITIONAL -> context.activity.getString(R.string.Traditional)
     NowPlayingControlsLayout.UNRECOGNIZED -> "???"
 }
 
 fun NowPlayingLyricsLayout.label(context: ViewContext) = when (this) {
-    NowPlayingLyricsLayout.LYRICS_REPLACE_ARTWORK -> context.symphony.t.ReplaceArtwork
-    NowPlayingLyricsLayout.LYRICS_SEPARATE_PAGE -> context.symphony.t.SeparatePage
+    NowPlayingLyricsLayout.LYRICS_REPLACE_ARTWORK -> context.activity.getString(R.string.ReplaceArtwork)
+    NowPlayingLyricsLayout.LYRICS_SEPARATE_PAGE -> context.activity.getString(R.string.SeparatePage)
     NowPlayingLyricsLayout.UNRECOGNIZED -> "???"
 }

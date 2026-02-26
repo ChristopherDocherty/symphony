@@ -32,6 +32,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun IntroductoryDialog(
@@ -46,17 +48,17 @@ fun IntroductoryDialog(
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text("\uD83D\uDC4B " + context.symphony.t.HelloThere)
+            Text("\uD83D\uDC4B " + stringResource(R.string.HelloThere))
         },
         content = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 Text(
-                    context.symphony.t.IntroductoryMessage.trim(),
+                    stringResource(R.string.IntroductoryMessage).trim(),
                     modifier = Modifier.padding(16.dp, 12.dp),
                 )
                 Box(modifier = Modifier.height(8.dp))
                 OptInTile(
-                    content = { Text(context.symphony.t.CheckForUpdates) },
+                    content = { Text(stringResource(R.string.CheckForUpdates)) },
                     value = checkForUpdates,
                     onChange = { value ->
                         scope.launch {
@@ -68,7 +70,7 @@ fun IntroductoryDialog(
                 )
                 Box(modifier = Modifier.height(8.dp))
                 OptInTile(
-                    content = { Text(context.symphony.t.ShowUpdateToast) },
+                    content = { Text(stringResource(R.string.ShowUpdateToast)) },
                     value = showUpdateToast,
                     onChange = { value ->
                         scope.launch {

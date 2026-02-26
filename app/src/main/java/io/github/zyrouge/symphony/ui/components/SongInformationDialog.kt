@@ -29,6 +29,8 @@ import io.github.zyrouge.symphony.utils.DurationUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.math.round
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: () -> Unit) {
@@ -42,11 +44,11 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
             }
         },
         content = {
-            InformationKeyValue(context.symphony.t.TrackName) {
+            InformationKeyValue(stringResource(R.string.TrackName)) {
                 LongPressCopyableText(context, song.title)
             }
             if (song.artists.isNotEmpty()) {
-                InformationKeyValue(context.symphony.t.Artist) {
+                InformationKeyValue(stringResource(R.string.Artist)) {
                     LongPressCopyableAndTappableText(context, song.artists) {
                         onDismissRequest()
                         context.navController.navigate(ArtistViewRoute(it))
@@ -54,7 +56,7 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                 }
             }
             if (song.albumArtists.isNotEmpty()) {
-                InformationKeyValue(context.symphony.t.AlbumArtist) {
+                InformationKeyValue(stringResource(R.string.AlbumArtist)) {
                     LongPressCopyableAndTappableText(context, song.albumArtists) {
                         onDismissRequest()
                         context.navController.navigate(AlbumArtistViewRoute(it))
@@ -62,7 +64,7 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                 }
             }
             if (song.composers.isNotEmpty()) {
-                InformationKeyValue(context.symphony.t.Composer) {
+                InformationKeyValue(stringResource(R.string.Composer)) {
                     // TODO composers page maybe?
                     LongPressCopyableAndTappableText(context, song.composers) {
                         onDismissRequest()
@@ -71,7 +73,7 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                 }
             }
             context.symphony.groove.album.getIdFromSong(song)?.let { albumId ->
-                InformationKeyValue(context.symphony.t.Album) {
+                InformationKeyValue(stringResource(R.string.Album)) {
                     LongPressCopyableAndTappableText(context, setOf(song.album!!)) {
                         onDismissRequest()
                         context.navController.navigate(AlbumViewRoute(albumId))
@@ -79,7 +81,7 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                 }
             }
             if (song.genres.isNotEmpty()) {
-                InformationKeyValue(context.symphony.t.Genre) {
+                InformationKeyValue(stringResource(R.string.Genre)) {
                     LongPressCopyableAndTappableText(context, song.genres) {
                         onDismissRequest()
                         context.navController.navigate(GenreViewRoute(it))
@@ -87,32 +89,32 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                 }
             }
             song.date?.let {
-                InformationKeyValue(context.symphony.t.Date) {
+                InformationKeyValue(stringResource(R.string.Date)) {
                     LongPressCopyableText(context, it.toString())
                 }
             }
             song.year?.let {
-                InformationKeyValue(context.symphony.t.Year) {
+                InformationKeyValue(stringResource(R.string.Year)) {
                     LongPressCopyableText(context, it.toString())
                 }
             }
             song.trackNumber?.let {
-                InformationKeyValue(context.symphony.t.TrackNumber) {
+                InformationKeyValue(stringResource(R.string.TrackNumber)) {
                     LongPressCopyableText(context, it.toString())
                 }
             }
             song.trackTotal?.let {
-                InformationKeyValue(context.symphony.t.TrackCount) {
+                InformationKeyValue(stringResource(R.string.TrackCount)) {
                     LongPressCopyableText(context, it.toString())
                 }
             }
             song.discNumber?.let {
-                InformationKeyValue(context.symphony.t.DiscNumber) {
+                InformationKeyValue(stringResource(R.string.DiscNumber)) {
                     LongPressCopyableText(context, it.toString())
                 }
             }
             song.discTotal?.let {
-                InformationKeyValue(context.symphony.t.DiscTotal) {
+                InformationKeyValue(stringResource(R.string.DiscTotal)) {
                     LongPressCopyableText(context, it.toString())
                 }
             }
@@ -124,48 +126,48 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
                     }
                 }
             }
-            InformationKeyValue(context.symphony.t.Duration) {
+            InformationKeyValue(stringResource(R.string.Duration)) {
                 LongPressCopyableText(context, DurationUtils.formatMs(song.duration))
             }
             song.encoder?.let {
-                InformationKeyValue(context.symphony.t.Encoder) {
+                InformationKeyValue(stringResource(R.string.Encoder)) {
                     LongPressCopyableText(context, it)
                 }
             }
             song.channels?.let {
-                InformationKeyValue(context.symphony.t.AudioChannels) {
+                InformationKeyValue(stringResource(R.string.AudioChannels)) {
                     LongPressCopyableText(context, it.toString())
                 }
             }
             song.bitrateK?.let {
-                InformationKeyValue(context.symphony.t.Bitrate) {
+                InformationKeyValue(stringResource(R.string.Bitrate)) {
                     val text = buildString {
-                        append(context.symphony.t.XKbps(it.toString()))
+                        append(stringResource(R.string.XKbps, it.toString()))
                     }
                     LongPressCopyableText(context, text)
                 }
             }
             song.samplingRateK?.let {
-                InformationKeyValue(context.symphony.t.SamplingRate) {
-                    LongPressCopyableText(context, context.symphony.t.XKHz(it.toString()))
+                InformationKeyValue(stringResource(R.string.SamplingRate)) {
+                    LongPressCopyableText(context, stringResource(R.string.XKHz, it.toString()))
                 }
             }
-            InformationKeyValue(context.symphony.t.Filename) {
+            InformationKeyValue(stringResource(R.string.Filename)) {
                 LongPressCopyableText(context, song.filename)
             }
-            InformationKeyValue(context.symphony.t.Path) {
+            InformationKeyValue(stringResource(R.string.Path)) {
                 LongPressCopyableText(context, song.path)
             }
-            InformationKeyValue(context.symphony.t.Size) {
+            InformationKeyValue(stringResource(R.string.Size)) {
                 LongPressCopyableText(context, "${round((song.size / 1024 / 1024).toDouble())} MB")
             }
-            InformationKeyValue(context.symphony.t.LastModified) {
+            InformationKeyValue(stringResource(R.string.LastModified)) {
                 LongPressCopyableText(
                     context,
                     SimpleDateFormat.getInstance().format(Date(song.dateModified * 1000)),
                 )
             }
-            InformationKeyValue(context.symphony.t.Id) {
+            InformationKeyValue(stringResource(R.string.Id)) {
                 LongPressCopyableText(context, song.id)
             }
         },

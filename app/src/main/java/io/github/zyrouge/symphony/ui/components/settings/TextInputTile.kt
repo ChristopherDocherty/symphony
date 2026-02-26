@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.components.ScaffoldDialog
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,7 +90,7 @@ fun SettingsTextInputTile(
                             isOpen = false
                         }
                     ) {
-                        Text(context.symphony.t.Reset)
+                        Text(stringResource(R.string.Reset))
                     }
                 }
                 TextButton(
@@ -96,7 +98,7 @@ fun SettingsTextInputTile(
                         isOpen = false
                     }
                 ) {
-                    Text(context.symphony.t.Cancel)
+                    Text(stringResource(R.string.Cancel))
                 }
                 TextButton(
                     enabled = modified,
@@ -105,7 +107,7 @@ fun SettingsTextInputTile(
                         isOpen = false
                     }
                 ) {
-                    Text(context.symphony.t.Done)
+                    Text(stringResource(R.string.Done))
                 }
             },
         )

@@ -70,6 +70,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 data class GrooveSettingsViewRoute(val initialElement: String? = null)
@@ -106,7 +108,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text("${context.symphony.t.Settings} - ${context.symphony.t.Groove}")
+                        Text("${stringResource(R.string.Settings)} - ${stringResource(R.string.Groove)}")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -136,7 +138,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                     val defaultSongsFilterPattern = ".*"
                     val minSongDurationRange = 0f..60f
 
-                    SettingsSideHeading(context.symphony.t.Groove)
+                    SettingsSideHeading(stringResource(R.string.Groove))
                     SpotlightTile(route.initialElement == SettingsViewRoute.ELEMENT_MEDIA_FOLDERS) {
                         SettingsMultiSystemFolderTile(
                             context,
@@ -144,7 +146,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                                 Icon(Icons.Filled.LibraryMusic, null)
                             },
                             title = {
-                                Text(context.symphony.t.MediaFolders)
+                                Text(stringResource(R.string.MediaFolders))
                             },
                             initialValues = mediaFolders,
                             onChange = { values ->
@@ -167,7 +169,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.FilterAlt, null)
                         },
                         title = {
-                            Text(context.symphony.t.SongsFilterPattern)
+                            Text(stringResource(R.string.SongsFilterPattern))
                         },
                         value = songsFilterPattern ?: defaultSongsFilterPattern,
                         onReset = {
@@ -197,10 +199,10 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.FilterAlt, null)
                         },
                         title = {
-                            Text(context.symphony.t.MinSongDurationFilter)
+                            Text(stringResource(R.string.MinSongDurationFilter))
                         },
                         label = { value ->
-                            Text(context.symphony.t.XSecs(value.toString()))
+                            Text(stringResource(R.string.XSecs, value.toString()))
                         },
                         range = minSongDurationRange,
                         initialValue = minSongDuration.toFloat(),
@@ -225,7 +227,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.RuleFolder, null)
                         },
                         title = {
-                            Text(context.symphony.t.BlacklistFolders)
+                            Text(stringResource(R.string.BlacklistFolders))
                         },
                         explorer = context.symphony.groove.exposer.explorer,
                         initialValues = blacklistFolders,
@@ -248,7 +250,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.RuleFolder, null)
                         },
                         title = {
-                            Text(context.symphony.t.WhitelistFolders)
+                            Text(stringResource(R.string.WhitelistFolders))
                         },
                         explorer = context.symphony.groove.exposer.explorer,
                         initialValues = whitelistFolders,
@@ -271,7 +273,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.SpaceBar, null)
                         },
                         title = {
-                            Text(context.symphony.t.ArtistTagValueSeparators)
+                            Text(stringResource(R.string.ArtistTagValueSeparators))
                         },
                         values = artistTagSeparators.toList(),
                         onChange = { newValues ->
@@ -293,7 +295,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.SpaceBar, null)
                         },
                         title = {
-                            Text(context.symphony.t.GenreTagValueSeparators)
+                            Text(stringResource(R.string.GenreTagValueSeparators))
                         },
                         values = genreTagSeparators.toList(),
                         onChange = { newValues ->
@@ -314,7 +316,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.Image, null)
                         },
                         title = {
-                            Text(context.symphony.t.ArtworkQuality)
+                            Text(stringResource(R.string.ArtworkQuality))
                         },
                         value = artworkQuality,
                         values = ArtworkQuality.entries
@@ -332,7 +334,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.TextFields, null)
                         },
                         title = {
-                            Text(context.symphony.t.CaseSensitiveSorting)
+                            Text(stringResource(R.string.CaseSensitiveSorting))
                         },
                         value = caseSensitiveSorting,
                         onChange = { value ->
@@ -347,7 +349,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.FindInPage, null)
                         },
                         title = {
-                            Text(context.symphony.t.UseMetaphonyMetadataDecoder)
+                            Text(stringResource(R.string.UseMetaphonyMetadataDecoder))
                         },
                         value = useMetaphony,
                         onChange = { value ->
@@ -362,13 +364,13 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                             Icon(Icons.Filled.Storage, null)
                         },
                         title = {
-                            Text(context.symphony.t.ClearSongCache)
+                            Text(stringResource(R.string.ClearSongCache))
                         },
                         onClick = {
                             refreshMediaLibrary(context.symphony, true)
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
-                                    context.symphony.t.SongCacheCleared,
+                                    context.activity.getString(R.string.SongCacheCleared),
                                     withDismissAction = true,
                                 )
                             }
@@ -399,10 +401,10 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
 }
 
 fun ArtworkQuality.label(context: ViewContext) = when (this) {
-    ArtworkQuality.ARTWORK_LOW -> context.symphony.t.Low
-    ArtworkQuality.ARTWORK_MEDIUM -> context.symphony.t.Medium
-    ArtworkQuality.ARTWORK_HIGH -> context.symphony.t.High
-    ArtworkQuality.ARTWORK_LOSELESS -> context.symphony.t.Loseless
+    ArtworkQuality.ARTWORK_LOW -> context.activity.getString(R.string.Low)
+    ArtworkQuality.ARTWORK_MEDIUM -> context.activity.getString(R.string.Medium)
+    ArtworkQuality.ARTWORK_HIGH -> context.activity.getString(R.string.High)
+    ArtworkQuality.ARTWORK_LOSELESS -> context.activity.getString(R.string.Loseless)
     ArtworkQuality.UNRECOGNIZED -> "???"
 }
 

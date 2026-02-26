@@ -24,6 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.services.groove.Playlist
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun NewPlaylistDialog(
@@ -45,7 +47,7 @@ fun NewPlaylistDialog(
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(context.symphony.t.NewPlaylist)
+            Text(stringResource(R.string.NewPlaylist))
         },
         content = {
             Box(
@@ -75,7 +77,7 @@ fun NewPlaylistDialog(
                     showSongsPicker = true
                 }
             ) {
-                Text(context.symphony.t.AddSongs + " (${songIds.size})")
+                Text(stringResource(R.string.AddSongs) + " (${songIds.size})")
             }
             Spacer(modifier = Modifier.weight(1f))
             TextButton(
@@ -88,7 +90,7 @@ fun NewPlaylistDialog(
                     onDone(playlist)
                 }
             ) {
-                Text(context.symphony.t.Done)
+                Text(stringResource(R.string.Done))
             }
         },
     )

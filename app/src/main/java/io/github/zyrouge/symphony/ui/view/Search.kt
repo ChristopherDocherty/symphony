@@ -70,6 +70,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 private data class SearchResult(
     val songIds: List<String>,
@@ -207,7 +209,7 @@ fun SearchView(context: ViewContext, route: SearchViewRoute) {
                     value = terms,
                     onValueChange = { setTerms(it) },
                     placeholder = {
-                        Text(context.symphony.t.SearchYourMusic)
+                        Text(stringResource(R.string.SearchYourMusic))
                     },
                     leadingIcon = {
                         IconButton(
@@ -237,7 +239,7 @@ fun SearchView(context: ViewContext, route: SearchViewRoute) {
                     FilterChip(
                         selected = selectedChip == null,
                         label = {
-                            Text(context.symphony.t.All)
+                            Text(stringResource(R.string.All))
                         },
                         onClick = {
                             selectedChip = null
@@ -314,7 +316,7 @@ fun SearchView(context: ViewContext, route: SearchViewRoute) {
                                             )
                                         },
                                         content = {
-                                            Text(context.symphony.t.FilteringResults)
+                                            Text(stringResource(R.string.FilteringResults))
                                         }
                                     )
                                 }
@@ -331,7 +333,7 @@ fun SearchView(context: ViewContext, route: SearchViewRoute) {
                                             )
                                         },
                                         content = {
-                                            Text(context.symphony.t.NoResultsFound)
+                                            Text(stringResource(R.string.NoResultsFound))
                                         }
                                     )
                                 }
@@ -478,7 +480,7 @@ fun SearchView(context: ViewContext, route: SearchViewRoute) {
                                                         title = { Text(genre.name) },
                                                         subtitle = {
                                                             Text(
-                                                                context.symphony.t.XSongs(
+                                                                stringResource(R.string.XSongs, 
                                                                     genre.numberOfTracks.toString()
                                                                 )
                                                             )
@@ -522,10 +524,10 @@ private fun SideHeading(text: String) {
 }
 
 private fun Groove.Kind.label(context: ViewContext) = when (this) {
-    Groove.Kind.SONG -> context.symphony.t.Songs
-    Groove.Kind.ALBUM -> context.symphony.t.Albums
-    Groove.Kind.ARTIST -> context.symphony.t.Artists
-    Groove.Kind.ALBUM_ARTIST -> context.symphony.t.AlbumArtists
-    Groove.Kind.GENRE -> context.symphony.t.Genres
-    Groove.Kind.PLAYLIST -> context.symphony.t.Playlists
+    Groove.Kind.SONG -> context.activity.getString(R.string.Songs)
+    Groove.Kind.ALBUM -> context.activity.getString(R.string.Albums)
+    Groove.Kind.ARTIST -> context.activity.getString(R.string.Artists)
+    Groove.Kind.ALBUM_ARTIST -> context.activity.getString(R.string.AlbumArtists)
+    Groove.Kind.GENRE -> context.activity.getString(R.string.Genres)
+    Groove.Kind.PLAYLIST -> context.activity.getString(R.string.Playlists)
 }

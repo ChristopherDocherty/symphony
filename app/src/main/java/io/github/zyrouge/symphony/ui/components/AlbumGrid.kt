@@ -24,6 +24,8 @@ import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 enum class AlbumGridType {
     Default,
@@ -87,7 +89,7 @@ fun AlbumGrid(
                     }
                 },
                 label = {
-                    Text(context.symphony.t.XAlbums(sortedAlbumIds.size.toString()))
+                    Text(stringResource(R.string.XAlbums, sortedAlbumIds.size.toString()))
                 },
                 onShowModifyLayout = {
                     showModifyLayoutSheet = true
@@ -107,7 +109,7 @@ fun AlbumGrid(
                             modifier = modifier,
                         )
                     },
-                    content = { Text(context.symphony.t.DamnThisIsSoEmpty) }
+                    content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) }
                 )
 
                 else -> ResponsiveGrid(gridColumns) {
@@ -184,10 +186,10 @@ suspend fun AlbumGridType.setLastUsedReverse(context: ViewContext, value: Boolea
     }
 
 fun AlbumSortBy.label(context: ViewContext) = when (this) {
-    AlbumSortBy.ALBUM_CUSTOM -> context.symphony.t.Custom
-    AlbumSortBy.ALBUM_NAME -> context.symphony.t.Album
-    AlbumSortBy.ALBUM_ARTIST_NAME -> context.symphony.t.Artist
-    AlbumSortBy.ALBUM_TRACKS_COUNT -> context.symphony.t.TrackCount
-    AlbumSortBy.ALBUM_YEAR -> context.symphony.t.Year
+    AlbumSortBy.ALBUM_CUSTOM -> context.activity.getString(R.string.Custom)
+    AlbumSortBy.ALBUM_NAME -> context.activity.getString(R.string.Album)
+    AlbumSortBy.ALBUM_ARTIST_NAME -> context.activity.getString(R.string.Artist)
+    AlbumSortBy.ALBUM_TRACKS_COUNT -> context.activity.getString(R.string.TrackCount)
+    AlbumSortBy.ALBUM_YEAR -> context.activity.getString(R.string.Year)
     AlbumSortBy.UNRECOGNIZED -> "???"
 }

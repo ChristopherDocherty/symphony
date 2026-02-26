@@ -36,6 +36,8 @@ import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.components.ScaffoldDialog
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import java.util.Collections
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -170,7 +172,7 @@ fun <T> SettingsMultiOptionTile(
                         isOpen = false
                     }
                 ) {
-                    Text(context.symphony.t.Cancel)
+                    Text(stringResource(R.string.Cancel))
                 }
                 TextButton(
                     enabled = modified && satisfied,
@@ -179,7 +181,7 @@ fun <T> SettingsMultiOptionTile(
                         isOpen = false
                     }
                 ) {
-                    Text(context.symphony.t.Done)
+                    Text(stringResource(R.string.Done))
                 }
             },
         )

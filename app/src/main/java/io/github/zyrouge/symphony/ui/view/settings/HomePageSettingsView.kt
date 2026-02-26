@@ -37,6 +37,8 @@ import io.github.zyrouge.symphony.ui.view.HomePage
 import io.github.zyrouge.symphony.ui.view.home.ForYou
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 object HomePageSettingsViewRoute
@@ -62,7 +64,7 @@ fun HomePageSettingsView(context: ViewContext) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text("${context.symphony.t.Settings} - ${context.symphony.t.Home}")
+                        Text("${stringResource(R.string.Settings)} - ${stringResource(R.string.Home)}")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -89,17 +91,17 @@ fun HomePageSettingsView(context: ViewContext) {
                     .fillMaxSize()
             ) {
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
-                    SettingsSideHeading(context.symphony.t.Home)
+                    SettingsSideHeading(stringResource(R.string.Home))
                     SettingsMultiOptionTile(
                         context,
                         icon = {
                             Icon(Icons.Filled.Home, null)
                         },
                         title = {
-                            Text(context.symphony.t.HomeTabs)
+                            Text(stringResource(R.string.HomeTabs))
                         },
                         note = {
-                            Text(context.symphony.t.SelectAtleast2orAtmost5Tabs)
+                            Text(stringResource(R.string.SelectAtleast2orAtmost5Tabs))
                         },
                         value = homeTabs,
                         values = HomePage.entries.associateWith { it.label(context) },
@@ -122,7 +124,7 @@ fun HomePageSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Recommend, null)
                         },
                         title = {
-                            Text(context.symphony.t.ForYou)
+                            Text(stringResource(R.string.ForYou))
                         },
                         value = forYouContents,
                         values = ForYou.entries.associateWith { it.label(context) },
@@ -143,7 +145,7 @@ fun HomePageSettingsView(context: ViewContext) {
                             Icon(Icons.AutoMirrored.Filled.Label, null)
                         },
                         title = {
-                            Text(context.symphony.t.BottomBarLabelVisibility)
+                            Text(stringResource(R.string.BottomBarLabelVisibility))
                         },
                         value = homePageBottomBarLabelVisibility,
                         values = HomePageBottomBarLabelVisibility.entries
@@ -164,8 +166,8 @@ fun HomePageSettingsView(context: ViewContext) {
 }
 
 fun HomePageBottomBarLabelVisibility.label(context: ViewContext) = when (this) {
-    HomePageBottomBarLabelVisibility.BOTTOM_BAR_ALWAYS_VISIBLE -> context.symphony.t.AlwaysVisible
-    HomePageBottomBarLabelVisibility.BOTTOM_BAR_VISIBLE_WHEN_ACTIVE -> context.symphony.t.VisibleWhenActive
-    HomePageBottomBarLabelVisibility.BOTTOM_BAR_INVISIBLE -> context.symphony.t.Invisible
+    HomePageBottomBarLabelVisibility.BOTTOM_BAR_ALWAYS_VISIBLE -> context.activity.getString(R.string.AlwaysVisible)
+    HomePageBottomBarLabelVisibility.BOTTOM_BAR_VISIBLE_WHEN_ACTIVE -> context.activity.getString(R.string.VisibleWhenActive)
+    HomePageBottomBarLabelVisibility.BOTTOM_BAR_INVISIBLE -> context.activity.getString(R.string.Invisible)
     HomePageBottomBarLabelVisibility.UNRECOGNIZED -> "???"
 }

@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.services.groove.Playlist
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Composable
 fun RenamePlaylistDialog(
@@ -34,7 +36,7 @@ fun RenamePlaylistDialog(
     ScaffoldDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text(context.symphony.t.RenamePlaylist)
+            Text(stringResource(R.string.RenamePlaylist))
         },
         content = {
             Box(
@@ -60,7 +62,7 @@ fun RenamePlaylistDialog(
         },
         actions = {
             TextButton(onClick = onDismissRequest) {
-                Text(context.symphony.t.Cancel)
+                Text(stringResource(R.string.Cancel))
             }
             TextButton(
                 enabled = input.isNotBlank() && input != playlist.title,
@@ -70,7 +72,7 @@ fun RenamePlaylistDialog(
                     context.symphony.groove.playlist.renamePlaylist(playlist, input)
                 }
             ) {
-                Text(context.symphony.t.Done)
+                Text(stringResource(R.string.Done))
             }
         },
     )

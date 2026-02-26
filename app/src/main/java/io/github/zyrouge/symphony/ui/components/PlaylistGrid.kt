@@ -20,6 +20,8 @@ import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +76,7 @@ fun PlaylistGrid(
                     },
                     label = {
                         Text(
-                            context.symphony.t.XPlaylists(
+                            stringResource(R.string.XPlaylists, 
                                 (playlistsCount ?: playlistIds.size).toString()
                             )
                         )
@@ -96,7 +98,7 @@ fun PlaylistGrid(
                         )
                     },
                     content = {
-                        Text(context.symphony.t.DamnThisIsSoEmpty)
+                        Text(stringResource(R.string.DamnThisIsSoEmpty))
                     }
                 )
 
@@ -137,8 +139,8 @@ fun PlaylistGrid(
 }
 
 private fun PlaylistSortBy.label(context: ViewContext) = when (this) {
-    PlaylistSortBy.PLAYLIST_SORT_CUSTOM -> context.symphony.t.Custom
-    PlaylistSortBy.PLAYLIST_SORT_TITLE -> context.symphony.t.Title
-    PlaylistSortBy.PLAYLIST_SORT_TRACKS_COUNT -> context.symphony.t.TrackCount
+    PlaylistSortBy.PLAYLIST_SORT_CUSTOM -> context.activity.getString(R.string.Custom)
+    PlaylistSortBy.PLAYLIST_SORT_TITLE -> context.activity.getString(R.string.Title)
+    PlaylistSortBy.PLAYLIST_SORT_TRACKS_COUNT -> context.activity.getString(R.string.TrackCount)
     else -> "???"
 }

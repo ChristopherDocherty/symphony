@@ -39,6 +39,8 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @Serializable
 object PlayerSettingsViewRoute
@@ -56,7 +58,7 @@ fun PlayerSettingsView(context: ViewContext) {
             CenterAlignedTopAppBar(
                 title = {
                     TopAppBarMinimalTitle {
-                        Text("${context.symphony.t.Settings} - ${context.symphony.t.Player}")
+                        Text("${stringResource(R.string.Settings)} - ${stringResource(R.string.Player)}")
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -85,13 +87,13 @@ fun PlayerSettingsView(context: ViewContext) {
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
                     val seekDurationRange = 3f..60f
 
-                    SettingsSideHeading(context.symphony.t.Player)
+                    SettingsSideHeading(stringResource(R.string.Player))
                     SettingsSwitchTile(
                         icon = {
                             Icon(Icons.Filled.GraphicEq, null)
                         },
                         title = {
-                            Text(context.symphony.t.FadePlaybackInOut)
+                            Text(stringResource(R.string.FadePlaybackInOut))
                         },
                         value = settings.fadePlayback,
                         onChange = { value ->
@@ -107,10 +109,10 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.GraphicEq, null)
                         },
                         title = {
-                            Text(context.symphony.t.FadePlaybackInOut)
+                            Text(stringResource(R.string.FadePlaybackInOut))
                         },
                         label = { value ->
-                            Text(context.symphony.t.XSecs(value.toString()))
+                            Text(stringResource(R.string.XSecs, value.toString()))
                         },
                         range = 0.5f..6f,
                         initialValue = settings.fadePlaybackDuration.let { if (it == 0f) 1f else it },
@@ -134,7 +136,7 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.CenterFocusWeak, null)
                         },
                         title = {
-                            Text(context.symphony.t.RequireAudioFocus)
+                            Text(stringResource(R.string.RequireAudioFocus))
                         },
                         value = settings.requireAudioFocus,
                         onChange = { value ->
@@ -149,7 +151,7 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.CenterFocusWeak, null)
                         },
                         title = {
-                            Text(context.symphony.t.IgnoreAudioFocusLoss)
+                            Text(stringResource(R.string.IgnoreAudioFocusLoss))
                         },
                         value = settings.ignoreAudioFocusLoss,
                         onChange = { value ->
@@ -164,7 +166,7 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.Headset, null)
                         },
                         title = {
-                            Text(context.symphony.t.PlayOnHeadphonesConnect)
+                            Text(stringResource(R.string.PlayOnHeadphonesConnect))
                         },
                         value = settings.playOnHeadphonesConnect,
                         onChange = { value ->
@@ -179,7 +181,7 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.HeadsetOff, null)
                         },
                         title = {
-                            Text(context.symphony.t.PauseOnHeadphonesDisconnect)
+                            Text(stringResource(R.string.PauseOnHeadphonesDisconnect))
                         },
                         value = settings.pauseOnHeadphonesDisconnect,
                         onChange = { value ->
@@ -195,10 +197,10 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.FastRewind, null)
                         },
                         title = {
-                            Text(context.symphony.t.FastRewindDuration)
+                            Text(stringResource(R.string.FastRewindDuration))
                         },
                         label = { value ->
-                            Text(context.symphony.t.XSecs(value.toString()))
+                            Text(stringResource(R.string.XSecs, value.toString()))
                         },
                         range = seekDurationRange,
                         initialValue = settings.seekBackDuration.let { if (it == 0) 15 else it }.toFloat(),
@@ -223,10 +225,10 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.FastForward, null)
                         },
                         title = {
-                            Text(context.symphony.t.FastForwardDuration)
+                            Text(stringResource(R.string.FastForwardDuration))
                         },
                         label = { value ->
-                            Text(context.symphony.t.XSecs(value.toString()))
+                            Text(stringResource(R.string.XSecs, value.toString()))
                         },
                         range = seekDurationRange,
                         initialValue = settings.seekForwardDuration.let { if (it == 0) 30 else it }.toFloat(),
@@ -250,7 +252,7 @@ fun PlayerSettingsView(context: ViewContext) {
                             Icon(Icons.Filled.PlayArrow, null)
                         },
                         title = {
-                            Text(context.symphony.t.GaplessPlayback)
+                            Text(stringResource(R.string.GaplessPlayback))
                         },
                         value = settings.gaplessPlayback,
                         onChange = { value ->

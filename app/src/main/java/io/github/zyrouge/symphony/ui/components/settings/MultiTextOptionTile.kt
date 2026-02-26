@@ -40,6 +40,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.components.ScaffoldDialog
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -63,7 +65,7 @@ fun SettingsMultiTextOptionTile(
             leadingContent = { icon() },
             headlineContent = { title() },
             supportingContent = {
-                Text(context.symphony.t.XItems(values.size.toString()))
+                Text(stringResource(R.string.XItems, values.size.toString()))
             },
         )
     }
@@ -138,7 +140,7 @@ fun SettingsMultiTextOptionTile(
                             showAddDialog = true
                         }
                     ) {
-                        Text(context.symphony.t.AddItem)
+                        Text(stringResource(R.string.AddItem))
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     onReset?.let {
@@ -148,7 +150,7 @@ fun SettingsMultiTextOptionTile(
                                 isOpen = false
                             }
                         ) {
-                            Text(context.symphony.t.Reset)
+                            Text(stringResource(R.string.Reset))
                         }
                     }
                     TextButton(
@@ -156,7 +158,7 @@ fun SettingsMultiTextOptionTile(
                             isOpen = false
                         }
                     ) {
-                        Text(context.symphony.t.Cancel)
+                        Text(stringResource(R.string.Cancel))
                     }
                     TextButton(
                         enabled = modified,
@@ -165,7 +167,7 @@ fun SettingsMultiTextOptionTile(
                             isOpen = false
                         }
                     ) {
-                        Text(context.symphony.t.Done)
+                        Text(stringResource(R.string.Done))
                     }
                 },
             )
@@ -204,7 +206,7 @@ fun SettingsMultiTextOptionTile(
                                 showAddDialog = false
                             }
                         ) {
-                            Text(context.symphony.t.Cancel)
+                            Text(stringResource(R.string.Cancel))
                         }
                         TextButton(
                             enabled = input.isNotEmpty(),
@@ -218,7 +220,7 @@ fun SettingsMultiTextOptionTile(
                                 showAddDialog = false
                             }
                         ) {
-                            Text(context.symphony.t.Done)
+                            Text(stringResource(R.string.Done))
                         }
                     },
                 )

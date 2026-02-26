@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +28,7 @@ fun NowPlayingAppBar(context: ViewContext) {
     CenterAlignedTopAppBar(
         title = {
             TopAppBarMinimalTitle {
-                Text(context.symphony.t.NowPlaying)
+                Text(stringResource(R.string.NowPlaying))
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -61,7 +63,7 @@ fun NowPlayingLandscapeAppBar(context: ViewContext) {
             modifier = Modifier.weight(1f),
             fillMaxWidth = false,
         ) {
-            Text(context.symphony.t.NowPlaying)
+            Text(stringResource(R.string.NowPlaying))
         }
         IconButton(
             onClick = {

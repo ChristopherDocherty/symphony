@@ -37,6 +37,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.components.ScaffoldDialog
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
 
 private val floatInputRegex = Regex("""^\d+\.?\d{0,2}$""")
 
@@ -170,7 +172,7 @@ fun SettingsFloatInputTile(
                             isOpen = false
                         }
                     ) {
-                        Text(context.symphony.t.Reset)
+                        Text(stringResource(R.string.Reset))
                     }
                 }
                 TextButton(
@@ -178,7 +180,7 @@ fun SettingsFloatInputTile(
                         isOpen = false
                     }
                 ) {
-                    Text(context.symphony.t.Cancel)
+                    Text(stringResource(R.string.Cancel))
                 }
                 TextButton(
                     enabled = modified,
@@ -187,7 +189,7 @@ fun SettingsFloatInputTile(
                         isOpen = false
                     }
                 ) {
-                    Text(context.symphony.t.Done)
+                    Text(stringResource(R.string.Done))
                 }
             },
         )

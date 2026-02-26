@@ -33,6 +33,7 @@ import io.github.zyrouge.symphony.ui.components.SelectAlbumDiscDialog // Added i
 import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = null) {
@@ -125,7 +126,7 @@ fun AlbumDropdownMenu(
                 leadingIcon = {
                     Icon(Icons.Filled.Shuffle, null)
                 },
-                text = { Text(context.symphony.t.ShufflePlay) },
+                text = { Text(stringResource(R.string.ShufflePlay)) },
                 onClick = {
                     onDismissRequest()
                     scope.launch {
@@ -140,7 +141,7 @@ fun AlbumDropdownMenu(
                 leadingIcon = {
                     Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
                 },
-                text = { Text(context.symphony.t.PlayNext) },
+                text = { Text(stringResource(R.string.PlayNext)) },
                 onClick = {
                     onDismissRequest()
                     scope.launch {
@@ -155,7 +156,7 @@ fun AlbumDropdownMenu(
                 leadingIcon = {
                     Icon(Icons.AutoMirrored.Filled.PlaylistPlay, null)
                 },
-                text = { Text(context.symphony.t.AddToQueue) },
+                text = { Text(stringResource(R.string.AddToQueue)) },
                 onClick = {
                     onDismissRequest()
                     scope.launch {
@@ -167,7 +168,7 @@ fun AlbumDropdownMenu(
                 leadingIcon = {
                     Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null)
                 },
-                text = { Text(context.symphony.t.AddToPlaylist) },
+                text = { Text(stringResource(R.string.AddToPlaylist)) },
                 onClick = {
                     onDismissRequest()
                     showAddToPlaylistDialog = true
@@ -233,7 +234,7 @@ fun AlbumDropdownMenu(
                         Icon(Icons.Filled.Person, null)
                     },
                     text = {
-                        Text("${context.symphony.t.ViewArtist}: $artistName")
+                        Text("${stringResource(R.string.ViewArtist)}: $artistName")
                     },
                     onClick = {
                         onDismissRequest()
