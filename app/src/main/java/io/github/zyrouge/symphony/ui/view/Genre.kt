@@ -29,6 +29,7 @@ import io.github.zyrouge.symphony.ui.components.IconTextBody
 import io.github.zyrouge.symphony.ui.components.SongList
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -39,11 +40,23 @@ data class GenreViewRoute(val genreName: String)
 fun GenreView(context: ViewContext, route: GenreViewRoute) {
     val allGenreNames by context.symphony.groove.genre.all.collectAsState()
     val allSongIds by context.symphony.groove.song.all.collectAsState()
+    val hiddenAlbumIds by context.symphony.settings.data
+        .map { it.hiddenAlbumIdsList.toSet() }
+        .collectAsState(emptySet())
     val genre by remember(allGenreNames) {
         derivedStateOf { context.symphony.groove.genre.get(route.genreName) }
     }
-    val songIds by remember(genre, allSongIds) {
+    val rawSongIds by remember(genre, allSongIds) {
         derivedStateOf { genre?.getSongIds(context.symphony) ?: listOf() }
+    }
+    val songIds by remember(rawSongIds, hiddenAlbumIds) {
+        derivedStateOf {
+            if (hiddenAlbumIds.isEmpty()) rawSongIds
+            else {
+                val hiddenSongIds = context.symphony.groove.album.getHiddenSongIds(hiddenAlbumIds)
+                rawSongIds.filterNot { it in hiddenSongIds }
+            }
+        }
     }
     val isViable by remember(allGenreNames) {
         derivedStateOf { allGenreNames.contains(route.genreName) }

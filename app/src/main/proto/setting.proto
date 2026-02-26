@@ -228,6 +228,8 @@ message Settings {
   uint32 min_song_duration = 81;
   repeated string artist_tag_separators = 82;
   repeated string genre_tag_separators = 83;
+  repeated string hidden_album_ids = 84;                   // albums hidden from all browse views
+  bool show_hidden_albums = 85;                            // when true, show hidden albums in Albums grid
 
   // --- Existing album filters (field numbers preserved) ---
   AlbumFilter ui_album_grid_album_filter = 801;

@@ -189,10 +189,23 @@ class AlbumRepository(private val symphony: Symphony) {
     fun search(albumIds: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, albumIds, maxLength = limit)
 
-    fun getAlbums(albumIds: List<String>, by: AlbumSortBy, reverse: Boolean, filter: AlbumFilter = AlbumFilter.getDefaultInstance()): List<String> {
+    fun getHiddenSongIds(hiddenAlbumIds: Set<String>): Set<String> =
+        hiddenAlbumIds.flatMapTo(mutableSetOf()) { songIdsCache[it]?.toList() ?: emptyList() }
+
+    fun getAlbums(
+        albumIds: List<String>,
+        by: AlbumSortBy,
+        reverse: Boolean,
+        filter: AlbumFilter = AlbumFilter.getDefaultInstance(),
+        hiddenAlbumIds: Set<String> = emptySet(),
+        showHidden: Boolean = false,
+    ): List<String> {
         val sensitive = symphony.settingsState.value.caseSensitiveSorting
 
-        val filteredAlbumIds = albumIds.filter { albumId ->
+        val visibleIds = if (showHidden || hiddenAlbumIds.isEmpty()) albumIds
+                         else albumIds.filterNot { it in hiddenAlbumIds }
+
+        val filteredAlbumIds = visibleIds.filter { albumId ->
             ALBUM_STRING_FILTER_FIELDS.all { field ->
                 val selected = field.getSelected(filter)
                 if (selected.isEmpty()) return@all true

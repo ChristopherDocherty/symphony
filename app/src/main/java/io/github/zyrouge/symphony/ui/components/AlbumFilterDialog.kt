@@ -30,6 +30,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
@@ -67,6 +68,7 @@ fun AlbumFilterDialog(
 ) {
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(true) }
+    var showHiddenAlbums by remember { mutableStateOf(false) }
 
     val fieldStates = remember {
         ALBUM_STRING_FILTER_FIELDS.map { it to mutableStateListOf<String>() }
@@ -90,6 +92,7 @@ fun AlbumFilterDialog(
             avail.addAll(context.symphony.groove.album.getAvailableTagValues(field.tagName))
         }
         presets.addAll(settings.uiAlbumFilterPresetsList)
+        showHiddenAlbums = settings.showHiddenAlbums
         isLoading = false
     }
 
@@ -149,6 +152,30 @@ fun AlbumFilterDialog(
                                 field = field,
                                 state = state,
                                 available = avail,
+                            )
+                        }
+                    }
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Show hidden albums",
+                                modifier = Modifier.weight(1f),
+                            )
+                            Switch(
+                                checked = showHiddenAlbums,
+                                onCheckedChange = { checked ->
+                                    showHiddenAlbums = checked
+                                    coroutineScope.launch {
+                                        context.symphony.settings.updateData { s ->
+                                            s.copy { this.showHiddenAlbums = checked }
+                                        }
+                                    }
+                                },
                             )
                         }
                     }

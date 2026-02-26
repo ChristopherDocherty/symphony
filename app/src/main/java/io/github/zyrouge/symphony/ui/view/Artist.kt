@@ -35,6 +35,7 @@ import io.github.zyrouge.symphony.ui.components.IconTextBody
 import io.github.zyrouge.symphony.ui.components.SongList
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -46,14 +47,32 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
     val allArtistNames by context.symphony.groove.artist.all.collectAsState()
     val allSongIds by context.symphony.groove.song.all.collectAsState()
     val allAlbumIds by context.symphony.groove.album.all.collectAsState()
+    val hiddenAlbumIds by context.symphony.settings.data
+        .map { it.hiddenAlbumIdsList.toSet() }
+        .collectAsState(emptySet())
     val artist by remember(allArtistNames) {
         derivedStateOf { context.symphony.groove.artist.get(route.artistName) }
     }
-    val songIds by remember(artist, allSongIds) {
+    val rawSongIds by remember(artist, allSongIds) {
         derivedStateOf { artist?.getSongIds(context.symphony) ?: listOf() }
     }
-    val albumIds by remember(artist, allAlbumIds) {
+    val rawAlbumIds by remember(artist, allAlbumIds) {
         derivedStateOf { artist?.getAlbumIds(context.symphony) ?: listOf() }
+    }
+    val hiddenSongIds by remember(hiddenAlbumIds) {
+        derivedStateOf { context.symphony.groove.album.getHiddenSongIds(hiddenAlbumIds) }
+    }
+    val songIds by remember(rawSongIds, hiddenSongIds) {
+        derivedStateOf {
+            if (hiddenSongIds.isEmpty()) rawSongIds
+            else rawSongIds.filterNot { it in hiddenSongIds }
+        }
+    }
+    val albumIds by remember(rawAlbumIds, hiddenAlbumIds) {
+        derivedStateOf {
+            if (hiddenAlbumIds.isEmpty()) rawAlbumIds
+            else rawAlbumIds.filterNot { it in hiddenAlbumIds }
+        }
     }
     val isViable by remember(allArtistNames) {
         derivedStateOf { allArtistNames.contains(route.artistName) }

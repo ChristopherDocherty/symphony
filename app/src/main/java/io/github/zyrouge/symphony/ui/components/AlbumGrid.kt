@@ -40,9 +40,15 @@ fun AlbumGrid(
     val sortBy by type.getLastUsedSortBy(context).collectAsState(AlbumSortBy.ALBUM_NAME)
     val sortReverse by type.getLastUsedReverse(context).collectAsState(false)
     val albumFilter by context.symphony.settings.data.map { it.uiAlbumGridAlbumFilter }.collectAsState(AlbumFilter.getDefaultInstance())
-    val sortedAlbumIds by remember(albumIds, sortBy, sortReverse, albumFilter) {
+    val hiddenAlbumIds by context.symphony.settings.data
+        .map { it.hiddenAlbumIdsList.toSet() }
+        .collectAsState(emptySet())
+    val showHiddenAlbums by context.symphony.settings.data
+        .map { it.showHiddenAlbums }
+        .collectAsState(false)
+    val sortedAlbumIds by remember(albumIds, sortBy, sortReverse, albumFilter, hiddenAlbumIds, showHiddenAlbums) {
         derivedStateOf {
-            context.symphony.groove.album.getAlbums(albumIds, sortBy, sortReverse, albumFilter)
+            context.symphony.groove.album.getAlbums(albumIds, sortBy, sortReverse, albumFilter, hiddenAlbumIds, showHiddenAlbums)
         }
     }
     val settings by context.symphony.settingsState.collectAsState()
