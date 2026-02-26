@@ -27,15 +27,12 @@ class RadioShorty(private val symphony: Symphony) {
     fun previous(): Boolean {
         return when {
             !symphony.radio.hasPlayer -> false
-            symphony.radio.currentPlaybackPosition!!.played <= 3000 && symphony.radio.canJumpToPrevious() -> {
+            symphony.radio.canJumpToPrevious() -> {
                 symphony.radio.jumpToPrevious()
                 true
             }
 
-            else -> {
-                symphony.radio.seek(0)
-                false
-            }
+            else -> false
         }
     }
 
