@@ -10,6 +10,7 @@ data class Artist(
     val name: String,
     var numberOfAlbums: Int,
     var numberOfTracks: Int,
+    var numberOfUniqueTracks: Int,
 ) {
     fun createArtworkImageRequest(symphony: Symphony) =
         symphony.groove.artist.createArtworkImageRequest(name)

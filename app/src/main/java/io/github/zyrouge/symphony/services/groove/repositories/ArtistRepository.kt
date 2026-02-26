@@ -32,6 +32,7 @@ class ArtistRepository(private val symphony: Symphony) {
     private val cache = ConcurrentHashMap<String, Artist>()
     private val songIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
     private val albumIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
+    private val uniqueTrackTitlesCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
     private val searcher = FuzzySearcher<String>(
         options = listOf(FuzzySearchOption({ v -> get(v)?.name?.let { compareString(it) } }))
     )
@@ -58,10 +59,17 @@ class ArtistRepository(private val symphony: Symphony) {
                     value?.apply { add(album) } ?: concurrentSetOf(album)
                 }
             }
+            var nNumberOfUniqueTracks = 0
+            uniqueTrackTitlesCache.compute(artist) { _, value ->
+                val set = value?.apply { add(song.title) } ?: concurrentSetOf(song.title)
+                nNumberOfUniqueTracks = set.size
+                set
+            }
             cache.compute(artist) { _, value ->
                 value?.apply {
                     numberOfAlbums = nNumberOfAlbums
                     numberOfTracks++
+                    numberOfUniqueTracks = nNumberOfUniqueTracks
                 } ?: run {
                     _all.update {
                         it + artist
@@ -71,6 +79,7 @@ class ArtistRepository(private val symphony: Symphony) {
                         name = artist,
                         numberOfAlbums = 1,
                         numberOfTracks = 1,
+                        numberOfUniqueTracks = 1,
                     )
                 }
             }
@@ -88,14 +97,19 @@ class ArtistRepository(private val symphony: Symphony) {
                         value?.apply { add(album) } ?: concurrentSetOf(album)
                     }
                 }
+                uniqueTrackTitlesCache.compute(artist) { _, value ->
+                    value?.apply { add(song.title) } ?: concurrentSetOf(song.title)
+                }
                 cache.compute(artist) { _, value ->
                     value?.apply {
                         numberOfAlbums = albumIdsCache[artist]?.size ?: 0
                         numberOfTracks++
+                        numberOfUniqueTracks = uniqueTrackTitlesCache[artist]?.size ?: 0
                     } ?: Artist(
                         name = artist,
                         numberOfAlbums = albumIdsCache[artist]?.size ?: 0,
                         numberOfTracks = 1,
+                        numberOfUniqueTracks = 1,
                     )
                 }
             }
@@ -155,6 +169,7 @@ class ArtistRepository(private val symphony: Symphony) {
             }
             ArtistSortBy.ARTIST_TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
             ArtistSortBy.ARTIST_ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfAlbums }
+            ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfUniqueTracks }
             ArtistSortBy.UNRECOGNIZED -> artistNames
         }
         return if (reverse) sorted.reversed() else sorted

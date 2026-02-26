@@ -46,6 +46,7 @@ enum ArtistSortBy {
   ARTIST_NAME = 1;
   ARTIST_TRACKS_COUNT = 2;
   ARTIST_ALBUMS_COUNT = 3;
+  ARTIST_UNIQUE_TRACKS_COUNT = 4;
 }
 
 message ArtistSortPreference {

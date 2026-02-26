@@ -149,5 +149,6 @@ private fun ArtistSortBy.label(context: ViewContext) = when (this) {
     ArtistSortBy.ARTIST_NAME -> context.symphony.t.Artist
     ArtistSortBy.ARTIST_ALBUMS_COUNT -> context.symphony.t.AlbumCount
     ArtistSortBy.ARTIST_TRACKS_COUNT -> context.symphony.t.TrackCount
+    ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> "Unique Tracks"
     ArtistSortBy.UNRECOGNIZED -> "???"
 }
