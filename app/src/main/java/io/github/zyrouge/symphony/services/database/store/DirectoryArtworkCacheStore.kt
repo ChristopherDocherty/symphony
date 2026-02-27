@@ -31,14 +31,12 @@ class DirectoryArtworkCacheStore(symphony: Symphony) {
         val hashedFilename = directoryPathKey.toMd5()
         val keyFile = adapter.get(hashedFilename)
 
-        if (!keyFile.exists()) {
-            try {
-                // Store original path on the first line, URI on the second
-                val content = "$directoryPathKey\n${imageUri.toString()}"
-                keyFile.writeText(content)
-            } catch (e: Exception) {
-                Log.e(logTag, "Error writing to cache. Original key: '$directoryPathKey', Hashed key: '$hashedFilename'", e)
-            }
+        try {
+            // Store original path on the first line, URI on the second
+            val content = "$directoryPathKey\n${imageUri}"
+            keyFile.writeText(content)
+        } catch (e: Exception) {
+            Log.e(logTag, "Error writing to cache. Original key: '$directoryPathKey', Hashed key: '$hashedFilename'", e)
         }
     }
 

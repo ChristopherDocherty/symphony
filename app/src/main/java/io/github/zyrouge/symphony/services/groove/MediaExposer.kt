@@ -51,6 +51,7 @@ class MediaExposer(private val symphony: Symphony) {
         val artworkCacheUnused: ConcurrentSet<String>,
         val lyricsCacheUnused: ConcurrentSet<String>,
         val directoryArtworkCacheUnused: ConcurrentSet<String>,
+        val directoryArtworkProcessed: ConcurrentSet<String>,
         val filter: MediaFilter,
         val songParseOptions: Song.ParseOptions,
     ) {
@@ -73,6 +74,7 @@ class MediaExposer(private val symphony: Symphony) {
                     artworkCacheUnused = artworkCacheUnused,
                     lyricsCacheUnused = lyricsCacheUnused,
                     directoryArtworkCacheUnused = directoryArtworkCacheUnused,
+                    directoryArtworkProcessed = concurrentSetOf(),
                     filter = filter,
                     songParseOptions = Song.ParseOptions.create(symphony),
                 )
@@ -327,7 +329,7 @@ class MediaExposer(private val symphony: Symphony) {
         explorer.addChildFile(path)
 
         val parentPath = path.parent?.pathString ?: return
-        if (symphony.database.directoryArtworkCache.get(parentPath) == null) {
+        if (cycle.directoryArtworkProcessed.add(parentPath)) {
             symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
         }
         cycle.directoryArtworkCacheUnused.remove(parentPath)
