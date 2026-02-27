@@ -15,6 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +41,8 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
     val scope = rememberCoroutineScope()
     val isMultiSelectMode = pageState?.isMultiSelectMode == true
     val isSelected = pageState?.selectedAlbumIds?.contains(album.id) == true
+    val settings by context.symphony.settingsState.collectAsState()
+    val scrobbles = if (settings.showScrobbleCounts) context.symphony.lastFm.getAlbumScrobbleCount(album.id) else 0L
 
     SquareGrooveTile(
         image = album.createArtworkImageRequest(context.symphony).build(),
@@ -65,6 +68,15 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (scrobbles > 0) {
+                Text(
+                    stringResource(R.string.LastFmScrobbles, scrobbles.toString()),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

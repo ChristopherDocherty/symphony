@@ -222,6 +222,9 @@ class AlbumRepository(private val symphony: Symphony) {
 
             AlbumSortBy.ALBUM_TRACKS_COUNT -> filteredAlbumIds.sortedBy { get(it)?.numberOfTracks }
             AlbumSortBy.ALBUM_YEAR -> filteredAlbumIds.sortedBy { get(it)?.date }
+            AlbumSortBy.ALBUM_SCROBBLE_COUNT -> filteredAlbumIds.sortedBy {
+                symphony.lastFm.getAlbumScrobbleCount(it)
+            }
             AlbumSortBy.UNRECOGNIZED -> filteredAlbumIds
         }
         return if (reverse) sorted.reversed() else sorted

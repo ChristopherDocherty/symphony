@@ -44,59 +44,103 @@ fun LoaderScaffold(
     val density = LocalDensity.current
     var height by remember { mutableIntStateOf(0) }
     val scanProgress by context.symphony.groove.exposer.scanProgress.collectAsState()
+    val lastFmProgress by context.symphony.lastFm.refreshProgress.collectAsState()
+    val isLastFmRefreshing by context.symphony.lastFm.isRefreshing.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .padding(
                     bottom = with(density) {
-                        if (isLoading) height.toDp() else 0.dp
+                        if (isLoading || isLastFmRefreshing) height.toDp() else 0.dp
                     }
                 )
         ) {
             content()
         }
-        AnimatedVisibility(
-            visible = isLoading,
-            enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onGloballyPositioned {
                     height = it.size.height
                 },
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
-                        RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                    )
+            AnimatedVisibility(
+                visible = isLastFmRefreshing,
+                enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
             ) {
-                scanProgress?.let { progress ->
-                    LinearProgressIndicator(
-                        progress = {
-                            progress.completed.toFloat() /
-                                    progress.total.coerceAtLeast(1)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(16.dp, 12.dp),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                            RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+                        )
                 ) {
-                    CircularProgressIndicator(
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Text(
-                        text = scanProgress?.let { "Scanning ${it.completed} / ${it.total} files" }
-                            ?: stringResource(R.string.Loading),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
+                    lastFmProgress?.let { progress ->
+                        LinearProgressIndicator(
+                            progress = {
+                                progress.completed.toFloat() /
+                                        progress.total.coerceAtLeast(1)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(16.dp, 12.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Text(
+                            text = lastFmProgress?.let { "Last.fm: ${it.completed} / ${it.total}" }
+                                ?: "Last.fm: refreshing...",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+            AnimatedVisibility(
+                visible = isLoading,
+                enter = expandVertically(expandFrom = Alignment.Bottom) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Bottom) + fadeOut(),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                            RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+                        )
+                ) {
+                    scanProgress?.let { progress ->
+                        LinearProgressIndicator(
+                            progress = {
+                                progress.completed.toFloat() /
+                                        progress.total.coerceAtLeast(1)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(16.dp, 12.dp),
+                    ) {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Text(
+                            text = scanProgress?.let { "Scanning ${it.completed} / ${it.total} files" }
+                                ?: stringResource(R.string.Loading),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
                 }
             }
         }

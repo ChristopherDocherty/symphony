@@ -170,6 +170,9 @@ class ArtistRepository(private val symphony: Symphony) {
             ArtistSortBy.ARTIST_TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
             ArtistSortBy.ARTIST_ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfAlbums }
             ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfUniqueTracks }
+            ArtistSortBy.ARTIST_SCROBBLE_COUNT -> artistNames.sortedBy {
+                symphony.lastFm.getArtistScrobbleCount(it)
+            }
             ArtistSortBy.UNRECOGNIZED -> artistNames
         }
         return if (reverse) sorted.reversed() else sorted

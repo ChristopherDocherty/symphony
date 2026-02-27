@@ -34,6 +34,7 @@ enum AlbumSortBy {
   ALBUM_ARTIST_NAME = 2;
   ALBUM_TRACKS_COUNT = 3;
   ALBUM_YEAR = 4;
+  ALBUM_SCROBBLE_COUNT = 5;
 }
 
 message AlbumSortPreference {
@@ -47,6 +48,7 @@ enum ArtistSortBy {
   ARTIST_TRACKS_COUNT = 2;
   ARTIST_ALBUMS_COUNT = 3;
   ARTIST_UNIQUE_TRACKS_COUNT = 4;
+  ARTIST_SCROBBLE_COUNT = 5;
 }
 
 message ArtistSortPreference {
@@ -266,4 +268,9 @@ message Settings {
   bool mini_player_track_controls = 500;
   bool mini_player_seek_controls = 501;
   bool mini_player_text_marquee = 502;                     // default true — written by migration
+
+  // --- Last.fm (600–699) ---
+  string last_fm_api_key = 600;
+  string last_fm_username = 601;
+  bool show_scrobble_counts = 602;
 }

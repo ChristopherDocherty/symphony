@@ -152,5 +152,6 @@ private fun ArtistSortBy.label(context: ViewContext) = when (this) {
     ArtistSortBy.ARTIST_ALBUMS_COUNT -> context.activity.getString(R.string.AlbumCount)
     ArtistSortBy.ARTIST_TRACKS_COUNT -> context.activity.getString(R.string.TrackCount)
     ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> "Unique Tracks"
+    ArtistSortBy.ARTIST_SCROBBLE_COUNT -> context.activity.getString(R.string.ScrobbleCount)
     ArtistSortBy.UNRECOGNIZED -> "???"
 }

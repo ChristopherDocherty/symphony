@@ -9,10 +9,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -22,11 +25,13 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
 import kotlinx.coroutines.launch
-import androidx.compose.ui.res.stringResource
 
 @Composable
 fun ArtistTile(context: ViewContext, artist: Artist) {
     val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
+    val scrobbles = if (settings.showScrobbleCounts) context.symphony.lastFm.getArtistScrobbleCount(artist.name) else 0L
+
     SquareGrooveTile(
         image = artist.createArtworkImageRequest(context.symphony).build(),
         options = { expanded, onDismissRequest ->
@@ -45,6 +50,15 @@ fun ArtistTile(context: ViewContext, artist: Artist) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (scrobbles > 0) {
+                Text(
+                    stringResource(R.string.LastFmScrobbles, scrobbles.toString()),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         },
         onPlay = {
             scope.launch {

@@ -219,6 +219,10 @@
     <string name="MediaFolders">Media folders</string>
     <string name="Id">ID</string>
     <string name="DiscTotal">Disc total</string>
+    <string name="SelectDiscs">Select discs</string>
+    <string name="DiscX">Disc %1$d</string>
+    <string name="LoadingDiscs">Loading discs…</string>
+    <string name="NoDiscInformation">No disc information available</string>
     <string name="Encoder">Encoder</string>
     <string name="HintAddMediaFolders">Hint: You can add media folders through settings!</string>
     <string name="XChannels">%1$s channels</string>
@@ -242,4 +246,11 @@
     <string name="CaseSensitiveSorting">Case sensitive sorting</string>
     <string name="KeepScreenAwakeOnLyrics">Keep screen awake on lyrics content</string>
     <string name="MinSongDurationFilter">Minimum song duration filter</string>
+    <string name="RefreshLastFm">Refresh Last.fm</string>
+    <string name="ScrobbleCount">Scrobble Count</string>
+    <string name="LastFm">Last.fm</string>
+    <string name="LastFmApiKey">API Key</string>
+    <string name="LastFmUsername">Username</string>
+    <string name="LastFmScrobbles">%1$s scrobbles</string>
+    <string name="ShowScrobbleCounts">Show scrobble counts</string>
 </resources>

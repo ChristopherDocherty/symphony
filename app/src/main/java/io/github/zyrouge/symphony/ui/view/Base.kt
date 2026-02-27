@@ -31,6 +31,8 @@ import io.github.zyrouge.symphony.ui.view.settings.NowPlayingSettingsView
 import io.github.zyrouge.symphony.ui.view.settings.NowPlayingSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.PlayerSettingsView
 import io.github.zyrouge.symphony.ui.view.settings.PlayerSettingsViewRoute
+import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsView
+import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.UpdateSettingsView
 import io.github.zyrouge.symphony.ui.view.settings.UpdateSettingsViewRoute
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -106,6 +108,9 @@ fun BaseView(symphony: Symphony, activity: MainActivity) {
                 }
                 baseComposable<UpdateSettingsViewRoute> {
                     UpdateSettingsView(context)
+                }
+                baseComposable<LastFmSettingsViewRoute> {
+                    LastFmSettingsView(context)
                 }
             }
         }

@@ -57,6 +57,7 @@ import io.github.zyrouge.symphony.ui.view.settings.HomePageSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.MiniPlayerSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.NowPlayingSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.PlayerSettingsViewRoute
+import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.UpdateSettingsViewRoute
 import io.github.zyrouge.symphony.utils.ActivityUtils
 import kotlinx.serialization.Serializable
@@ -211,6 +212,18 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                         },
                         onClick = {
                             context.navController.navigate(UpdateSettingsViewRoute)
+                        },
+                    )
+                    HorizontalDivider()
+                    SettingsSimpleTile(
+                        icon = {
+                            Icon(Icons.Filled.Radio, null)
+                        },
+                        title = {
+                            Text(stringResource(R.string.LastFm))
+                        },
+                        onClick = {
+                            context.navController.navigate(LastFmSettingsViewRoute)
                         },
                     )
                 }

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SupervisorAccount
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.AccountTree
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.SupervisorAccount
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -97,6 +99,7 @@ import kotlinx.coroutines.launch
 import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import io.github.zyrouge.symphony.ui.view.home.ArtistsPageState
 import io.github.zyrouge.symphony.ui.view.home.HomePageState
+import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsViewRoute
 import kotlinx.serialization.Serializable
 import androidx.compose.ui.res.stringResource
 import io.github.zyrouge.symphony.R
@@ -217,6 +220,16 @@ private fun HomeTopAppBar(
                             context.symphony.radio.stop()
                             context.symphony.groove.fetch(Groove.FetchOptions())
                         },
+                        onLastFmRefreshClick = {
+                            showOptionsDropdown = false
+                            val apiKey = context.symphony.settingsState.value.lastFmApiKey
+                            val username = context.symphony.settingsState.value.lastFmUsername
+                            if (apiKey.isBlank() || username.isBlank()) {
+                                context.navController.navigate(LastFmSettingsViewRoute)
+                            } else {
+                                context.symphony.lastFm.refresh()
+                            }
+                        },
                         onSettingsClick = {
                             showOptionsDropdown = false
                             context.navController.navigate(SettingsViewRoute())
@@ -266,8 +279,13 @@ private fun HomeTopAppBarDropdownMenu(
     extraItems: @Composable () -> Unit,
     onDismissRequest: () -> Unit,
     onRescanClick: () -> Unit,
+    onLastFmRefreshClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
+    val showScrobbleCounts = settings.showScrobbleCounts
+
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
@@ -278,6 +296,32 @@ private fun HomeTopAppBarDropdownMenu(
             },
             text = { Text(stringResource(R.string.Rescan)) },
             onClick = onRescanClick
+        )
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(Icons.Filled.Sync, null)
+            },
+            text = { Text(stringResource(R.string.RefreshLastFm)) },
+            onClick = onLastFmRefreshClick
+        )
+        DropdownMenuItem(
+            leadingIcon = {
+                Icon(Icons.Filled.Settings, stringResource(R.string.Settings))
+            },
+            text = { Text(stringResource(R.string.ShowScrobbleCounts)) },
+            trailingIcon = {
+                Checkbox(
+                    checked = showScrobbleCounts,
+                    onCheckedChange = null,
+                )
+            },
+            onClick = {
+                scope.launch {
+                    context.symphony.settings.updateData {
+                        it.copy { this.showScrobbleCounts = !showScrobbleCounts }
+                    }
+                }
+            },
         )
         DropdownMenuItem(
             leadingIcon = {
