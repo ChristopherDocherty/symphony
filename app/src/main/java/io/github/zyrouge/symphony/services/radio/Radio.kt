@@ -163,6 +163,9 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
 
     private fun prepareNextPlayer() {
         if (!symphony.settingsState.value.gaplessPlayback) {
+            player?.setNextMediaPlayer(null)
+            nextPlayer?.destroy()
+            nextPlayer = null
             return
         }
         val (nextSongIndex) = getNextSong(SongFinishSource.Finish)
@@ -171,9 +174,13 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
             return
         }
         try {
+            player?.setNextMediaPlayer(null)
             nextPlayer?.destroy()
-            nextPlayer = RadioPlayer(symphony, song.id, song.uri).also {
-                it.prepare()
+            nextPlayer = RadioPlayer(symphony, song.id, song.uri).also { np ->
+                np.setOnPreparedListener {
+                    player?.setNextMediaPlayer(np)
+                }
+                np.prepare()
             }
         } catch (err: Exception) {
             Logger.warn(
@@ -329,6 +336,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     private fun stopCurrentSong() {
         player?.let {
             player = null
+            it.setNextMediaPlayer(null)
             it.setOnPlaybackPositionListener {}
             it.changeVolume(RadioPlayer.MIN_VOLUME) { _ ->
                 it.stop()
@@ -343,6 +351,52 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     }
 
     private fun onSongFinish(source: SongFinishSource) {
+        // Gapless path: setNextMediaPlayer() already started the next player at the hardware
+        // level, so we just need to swap references and set up listeners — no start() needed.
+        val gaplessPlayer = nextPlayer?.takeIf {
+            source == SongFinishSource.Finish &&
+                    symphony.settingsState.value.gaplessPlayback &&
+                    it.isPlaying
+        }
+        if (gaplessPlayer != null) {
+            val oldPlayer = player
+            player = gaplessPlayer
+            nextPlayer = null
+            oldPlayer?.let {
+                it.setNextMediaPlayer(null)
+                it.setOnPlaybackPositionListener {}
+                it.destroy()
+            }
+            val (nextSongIndex) = getNextSong(source)
+            queue.currentSongIndex = nextSongIndex
+            player!!.setOnPreparedListener(null)
+            player!!.setOnPlaybackPositionListener { onPlaybackPositionUpdate.dispatch(it) }
+            player!!.setOnFinishListener { onSongFinish(SongFinishSource.Finish) }
+            player!!.setOnErrorListener { what, extra ->
+                Logger.warn(
+                    "Radio",
+                    "skipping song ${queue.currentSongId} (${queue.currentSongIndex}) due to $what + $extra"
+                )
+                when {
+                    what == 1 && extra == -22 -> onSongFinish(SongFinishSource.Finish)
+                    else -> {
+                        queue.remove(queue.currentSongIndex)
+                        onSongFinish(SongFinishSource.Exception)
+                    }
+                }
+            }
+            player!!.activate()
+            setSpeed(persistedSpeed, false)
+            setPitch(persistedPitch, false)
+            if (pauseOnCurrentSongEnd) {
+                pauseInstant()
+                setPauseOnCurrentSongEnd(false)
+            }
+            prepareNextPlayer()
+            onUpdate.dispatch(Events.Player.Started)
+            return
+        }
+
         stopCurrentSong()
         if (queue.isEmpty()) {
             queue.currentSongIndex = -1

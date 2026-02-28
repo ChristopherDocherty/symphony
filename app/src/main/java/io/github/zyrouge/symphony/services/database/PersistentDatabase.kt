@@ -1,5 +1,6 @@
 package io.github.zyrouge.symphony.services.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -9,7 +10,11 @@ import io.github.zyrouge.symphony.services.database.store.PlaylistStore
 import io.github.zyrouge.symphony.services.groove.Playlist
 import io.github.zyrouge.symphony.utils.RoomConvertors
 
-@Database(entities = [Playlist::class], version = 1)
+@Database(
+    entities = [Playlist::class],
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 @TypeConverters(RoomConvertors::class)
 abstract class PersistentDatabase : RoomDatabase() {
     abstract fun playlists(): PlaylistStore

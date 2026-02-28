@@ -64,7 +64,14 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
         get() = getSongIdAt(currentSongIndex)
 
     fun hasSongAt(index: Int) = index > -1 && index < currentQueue.size
-    fun getSongIdAt(index: Int) = if (hasSongAt(index)) currentQueue[index] else null
+    fun getSongIdAt(index: Int): String? {
+        if (index < 0) return null
+        return try {
+            currentQueue[index]
+        } catch (_: IndexOutOfBoundsException) {
+            null
+        }
+    }
 
     fun reset() {
         originalQueue.clear()

@@ -6,7 +6,6 @@ import io.github.zyrouge.symphony.PlaylistSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.MediaExposer
 import io.github.zyrouge.symphony.services.groove.Playlist
-import io.github.zyrouge.symphony.utils.ActivityUtils
 import io.github.zyrouge.symphony.utils.DocumentFileX
 import io.github.zyrouge.symphony.utils.FuzzySearchOption
 import io.github.zyrouge.symphony.utils.FuzzySearcher
@@ -24,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 class PlaylistRepository(private val symphony: Symphony) {
     private val cache = ConcurrentHashMap<String, Playlist>()
+    private val ignoredIds = ConcurrentHashMap.newKeySet<String>()
     internal val idGenerator = KeyGenerator.TimeIncremental()
     private val searcher = FuzzySearcher<String>(
         options = listOf(FuzzySearchOption({ v -> get(v)?.title?.let { compareString(it) } }))
@@ -61,6 +61,11 @@ class PlaylistRepository(private val symphony: Symphony) {
             emitUpdate(false)
             return
         }
+        try {
+            ignoredIds.addAll(symphony.database.playlists.ignoredIds())
+        } catch (err: Exception) {
+            Logger.error("PlaylistRepository", "fetch ignored ids failed", err)
+        }
         playlists.values.forEach { x ->
             try {
                 val playlist = if (x.isLocal) Playlist.parse(symphony, x.id, x.uri!!) else x
@@ -85,6 +90,7 @@ class PlaylistRepository(private val symphony: Symphony) {
     fun reset() {
         emitUpdate(true)
         cache.clear()
+        ignoredIds.clear()
         _all.update {
             emptySet()
         }
@@ -136,6 +142,7 @@ class PlaylistRepository(private val symphony: Symphony) {
     )
 
     fun add(playlist: Playlist) {
+        if (playlist.id in ignoredIds) return
         cache[playlist.id] = playlist
         _all.update { it + playlist.id }
         emitUpdateId()
@@ -190,22 +197,15 @@ class PlaylistRepository(private val symphony: Symphony) {
     }
 
     fun delete(id: String) {
-        Logger.error(
-            "PlaylistRepository",
-            "cache ${cache.containsKey(id)}"
-        )
-        cache.remove(id)?.uri?.let {
-            runCatching {
-                ActivityUtils.makePersistableReadableUri(symphony.applicationContext, it)
-            }
-        }
+        cache.remove(id)
+        ignoredIds.add(id)
         _all.update {
             it - id
         }
         emitUpdateId()
         emitCount()
         symphony.groove.coroutineScope.launch {
-            symphony.database.playlists.delete(id)
+            symphony.database.playlists.softDelete(id)
         }
     }
 

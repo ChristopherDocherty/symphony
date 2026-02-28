@@ -26,6 +26,12 @@ interface PlaylistStore {
     @Query("DELETE FROM playlists")
     suspend fun deleteAll(): Int
 
-    @Query("SELECT * FROM playlists")
+    @Query("UPDATE playlists SET ignored = 1 WHERE id = :playlistId")
+    suspend fun softDelete(playlistId: String): Int
+
+    @Query("SELECT id FROM playlists WHERE ignored = 1")
+    suspend fun ignoredIds(): List<String>
+
+    @Query("SELECT * FROM playlists WHERE ignored = 0")
     suspend fun entries(): Map<@MapColumn("id") String, Playlist>
 }

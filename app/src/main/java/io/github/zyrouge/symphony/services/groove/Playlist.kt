@@ -2,6 +2,7 @@ package io.github.zyrouge.symphony.services.groove
 
 import android.net.Uri
 import androidx.compose.runtime.Immutable
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import io.github.zyrouge.symphony.Symphony
@@ -21,6 +22,8 @@ data class Playlist(
     val songPaths: List<String>,
     val uri: Uri?,
     val path: String?,
+    @ColumnInfo(defaultValue = "0")
+    val ignored: Boolean = false,
 ) {
     val numberOfTracks: Int get() = songPaths.size
     val isLocal get() = uri != null

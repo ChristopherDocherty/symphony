@@ -101,6 +101,20 @@ class RadioPlayer(val symphony: Symphony, val id: String, val uri: Uri) {
         }
     }
 
+    fun setNextMediaPlayer(next: RadioPlayer?) {
+        if (state == State.Destroyed) return
+        try {
+            unsafeMediaPlayer.setNextMediaPlayer(next?.unsafeMediaPlayer)
+        } catch (_: Exception) {
+        }
+    }
+
+    // Called when this player was started via setNextMediaPlayer (gapless handoff).
+    // Marks the player as having played so speed/pitch params can be applied.
+    fun activate() {
+        hasPlayedOnce = true
+    }
+
     fun stop() = destroy()
 
     fun destroy() {

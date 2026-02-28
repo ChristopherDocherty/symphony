@@ -54,8 +54,8 @@ class RadioNotificationManager(val symphony: Symphony) {
 
     fun notify(notification: Notification) {
         if (!hasService) {
-            createService()
             lastNotification = notification
+            createService()
             return
         }
         try {
