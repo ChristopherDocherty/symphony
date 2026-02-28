@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.IndeterminateCheckBox
 import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DropdownMenuItem
@@ -165,6 +166,11 @@ fun AlbumsView(context: ViewContext, pageState: AlbumsPageState? = null) {
     val isAnySelectedHidden by remember(pageState?.selectedAlbumIds, hiddenAlbumIds) {
         derivedStateOf { pageState?.selectedAlbumIds?.any { it in hiddenAlbumIds } == true }
     }
+    val settings by context.symphony.settingsState.collectAsState()
+    val isLastFmConfigured by remember(settings) {
+        derivedStateOf { settings.lastFmApiKey.isNotBlank() && settings.lastFmUsername.isNotBlank() }
+    }
+    val isLastFmRefreshing by context.symphony.lastFm.isRefreshing.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
         LoaderScaffold(context, isLoading = isUpdating) {
@@ -179,9 +185,14 @@ fun AlbumsView(context: ViewContext, pageState: AlbumsPageState? = null) {
                 modifier = Modifier.align(Alignment.BottomCenter),
                 selectedCount = pageState.selectedAlbumIds.size,
                 isAnyHidden = isAnySelectedHidden,
+                isLastFmConfigured = isLastFmConfigured,
+                isLastFmRefreshing = isLastFmRefreshing,
                 onSelectAll = { pageState.selectedAlbumIds = pageState.sortedAlbumIds.toSet() },
                 onEdit = { pageState.showBulkEditDialog = true },
                 onHide = { pageState.showHideConfirmDialog = true },
+                onRefreshLastFm = {
+                    context.symphony.lastFm.refreshForAlbums(pageState.selectedAlbumIds.toList())
+                },
                 onExit = { pageState.exitMultiSelect() },
             )
         }
@@ -193,9 +204,12 @@ private fun MultiSelectBottomBar(
     modifier: Modifier = Modifier,
     selectedCount: Int,
     isAnyHidden: Boolean,
+    isLastFmConfigured: Boolean,
+    isLastFmRefreshing: Boolean,
     onSelectAll: () -> Unit,
     onEdit: () -> Unit,
     onHide: () -> Unit,
+    onRefreshLastFm: () -> Unit,
     onExit: () -> Unit,
 ) {
     Surface(
@@ -224,6 +238,14 @@ private fun MultiSelectBottomBar(
                     Icon(Icons.Filled.Visibility, contentDescription = "Unhide selected")
                 } else {
                     Icon(Icons.Filled.VisibilityOff, contentDescription = "Hide selected")
+                }
+            }
+            if (isLastFmConfigured) {
+                IconButton(
+                    onClick = onRefreshLastFm,
+                    enabled = selectedCount > 0 && !isLastFmRefreshing,
+                ) {
+                    Icon(Icons.Filled.Sync, contentDescription = "Refresh Last.fm scrobbles")
                 }
             }
             IconButton(onClick = onExit) {

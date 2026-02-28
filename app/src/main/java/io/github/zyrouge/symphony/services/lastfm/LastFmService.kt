@@ -107,6 +107,55 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
         }
     }
 
+    fun refreshForAlbums(albumIds: List<String>) {
+        if (_isRefreshing.value) return
+        symphony.viewModelScope.launch(Dispatchers.IO) {
+            val apiKey = symphony.settingsState.value.lastFmApiKey
+            val username = symphony.settingsState.value.lastFmUsername
+            if (apiKey.isBlank() || username.isBlank()) return@launch
+
+            _isRefreshing.value = true
+
+            val artistNames = albumIds
+                .flatMap { symphony.groove.album.get(it)?.artists ?: emptyList() }
+                .toSet()
+            val total = albumIds.size + artistNames.size
+            var completed = 0
+            _refreshProgress.value = RefreshProgress(0, total)
+
+            for (albumId in albumIds) {
+                val album = symphony.groove.album.get(albumId) ?: continue
+                val artist = album.artists.firstOrNull() ?: continue
+                val count = fetchAlbumScrobbles(artist, album.name, username, apiKey)
+                if (count != null) {
+                    albumScrobbles[albumId] = count
+                    symphony.database.lastFmCache.upsert(
+                        LastFmCacheEntry("album:$albumId", count, System.currentTimeMillis())
+                    )
+                }
+                completed++
+                _refreshProgress.value = RefreshProgress(completed, total)
+                delay(100)
+            }
+
+            for (artistName in artistNames) {
+                val count = fetchArtistScrobbles(artistName, username, apiKey)
+                if (count != null) {
+                    artistScrobbles[artistName] = count
+                    symphony.database.lastFmCache.upsert(
+                        LastFmCacheEntry("artist:$artistName", count, System.currentTimeMillis())
+                    )
+                }
+                completed++
+                _refreshProgress.value = RefreshProgress(completed, total)
+                delay(100)
+            }
+
+            _refreshProgress.value = null
+            _isRefreshing.value = false
+        }
+    }
+
     private fun fetchAlbumScrobbles(artist: String, album: String, username: String, apiKey: String): Long? {
         return try {
             val url = buildString {

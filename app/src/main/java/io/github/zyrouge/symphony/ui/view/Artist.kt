@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.AlbumFilter
+import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.services.groove.Artist
 import io.github.zyrouge.symphony.ui.components.AlbumRow
 import io.github.zyrouge.symphony.ui.components.AnimatedNowPlayingBottomBar
@@ -77,6 +79,29 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
             else rawAlbumIds.filterNot { it in hiddenAlbumIds }
         }
     }
+    val albumFilter by context.symphony.settings.data
+        .map { it.uiArtistViewAlbumFilter }
+        .collectAsState(AlbumFilter.getDefaultInstance())
+    val filteredAlbumIds by remember(albumIds, albumFilter) {
+        derivedStateOf {
+            context.symphony.groove.album.getAlbums(
+                albumIds = albumIds,
+                by = AlbumSortBy.ALBUM_CUSTOM,
+                reverse = false,
+                filter = albumFilter,
+            )
+        }
+    }
+    val filteredSongIds by remember(songIds, filteredAlbumIds) {
+        derivedStateOf {
+            val filteredAlbumSet = filteredAlbumIds.toHashSet()
+            songIds.filter { songId ->
+                val song = context.symphony.groove.song.get(songId) ?: return@filter true
+                val albumId = context.symphony.groove.album.getIdFromSong(song) ?: return@filter true
+                albumId in filteredAlbumSet
+            }
+        }
+    }
     val isViable by remember(allArtistNames) {
         derivedStateOf { allArtistNames.contains(route.artistName) }
     }
@@ -119,7 +144,7 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
                 if (isViable) {
                     SongList(
                         context,
-                        songIds = songIds,
+                        songIds = filteredSongIds,
                         leadingContent = {
                             item {
                                 ArtistHero(context, artist!!)
