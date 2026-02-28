@@ -164,13 +164,23 @@ class MediaExposer(private val symphony: Symphony) {
         emitScanProgress()
         try {
             val context = symphony.applicationContext
-            val cycle = ScanCycle.create(symphony)
-
             val existingSongs = symphony.groove.song.values()
+            val existingSongsByPath = existingSongs.associateBy { it.path }
+
+            // Invalidate DB cache entries for paths being rescanned before ScanCycle loads the
+            // cache, so scanAudioFile is forced to re-parse instead of returning stale metadata.
+            val idsToInvalidate = paths.mapNotNull { existingSongsByPath[it]?.id }
+            if (idsToInvalidate.isNotEmpty()) {
+                symphony.database.songCache.delete(idsToInvalidate)
+            }
+
+            val cycle = ScanCycle.create(symphony)
 
             val updatedSongs = coroutineScope {
                 paths.mapNotNull { path ->
-                    val uri = uris[path] ?: return@mapNotNull null
+                    // uris is only populated during a full scan; fall back to the URI stored in
+                    // the song (persisted in Room) so fetchPaths works after loading from cache.
+                    val uri = uris[path] ?: existingSongsByPath[path]?.uri ?: return@mapNotNull null
                     val docFile = DocumentFileX.fromSingleUri(context, uri) ?: return@mapNotNull null
                     async(Dispatchers.IO) {
                         scanMediaFile(cycle, SimplePath(path), docFile).firstOrNull()
