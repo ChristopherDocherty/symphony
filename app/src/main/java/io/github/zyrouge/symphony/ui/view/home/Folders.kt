@@ -116,6 +116,7 @@ fun FoldersView(context: ViewContext) {
                         }
                     }
                 }
+                val songPageState = remember { SongsPageState() }
 
                 Column {
                     Column(
@@ -137,7 +138,7 @@ fun FoldersView(context: ViewContext) {
                         Text(folder.name, style = MaterialTheme.typography.bodyLarge)
                     }
                     HorizontalDivider()
-                    SongList(context, songIds = songIds, songsCount = songIds.size)
+                    SongList(context, songIds = songIds, songsCount = songIds.size, pageState = songPageState)
                 }
             } else {
                 FoldersGrid(

@@ -35,6 +35,7 @@ import io.github.zyrouge.symphony.ui.components.IconTextBody
 import io.github.zyrouge.symphony.ui.components.SongList
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import kotlinx.serialization.Serializable
 import androidx.compose.ui.res.stringResource
 import io.github.zyrouge.symphony.R
@@ -60,6 +61,7 @@ fun AlbumArtistView(context: ViewContext, route: AlbumArtistViewRoute) {
     val isViable by remember(albumArtist) {
         derivedStateOf { albumArtist != null }
     }
+    val songPageState = remember { SongsPageState() }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -112,7 +114,8 @@ fun AlbumArtistView(context: ViewContext, route: AlbumArtistViewRoute) {
                                     HorizontalDivider()
                                 }
                             }
-                        }
+                        },
+                        pageState = songPageState,
                     )
                 } else UnknownAlbumArtist(context, route.albumArtistName)
             }

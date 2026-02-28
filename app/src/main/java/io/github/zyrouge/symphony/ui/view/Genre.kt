@@ -29,6 +29,7 @@ import io.github.zyrouge.symphony.ui.components.IconTextBody
 import io.github.zyrouge.symphony.ui.components.SongList
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import androidx.compose.ui.res.stringResource
@@ -63,6 +64,7 @@ fun GenreView(context: ViewContext, route: GenreViewRoute) {
     val isViable by remember(allGenreNames) {
         derivedStateOf { allGenreNames.contains(route.genreName) }
     }
+    val songPageState = remember { SongsPageState() }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -112,7 +114,7 @@ fun GenreView(context: ViewContext, route: GenreViewRoute) {
                     .fillMaxSize()
             ) {
                 when {
-                    isViable -> SongList(context, songIds = songIds)
+                    isViable -> SongList(context, songIds = songIds, pageState = songPageState)
                     else -> UnknownGenre(context, route.genreName)
                 }
             }

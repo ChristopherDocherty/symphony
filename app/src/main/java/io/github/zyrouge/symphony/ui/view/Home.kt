@@ -97,6 +97,7 @@ import io.github.zyrouge.symphony.HomePageBottomBarLabelVisibility
 import io.github.zyrouge.symphony.copy
 import kotlinx.coroutines.launch
 import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
+import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import io.github.zyrouge.symphony.ui.view.home.ArtistsPageState
 import io.github.zyrouge.symphony.ui.view.home.HomePageState
 import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsViewRoute
@@ -259,7 +260,7 @@ private fun HomePageContent(
     ) { page ->
         when (page) {
             HomePage.ForYou -> ForYouView(context)
-            HomePage.Songs -> SongsView(context)
+            HomePage.Songs -> SongsView(context, pageStates[page] as? SongsPageState)
             HomePage.Albums -> AlbumsView(context, pageStates[page] as? AlbumsPageState)
             HomePage.Artists -> ArtistsView(context)
             HomePage.AlbumArtists -> AlbumArtistsView(context)
@@ -405,6 +406,7 @@ fun HomeView(context: ViewContext) {
     var showOptionsDropdown by remember { mutableStateOf(false) }
     var showTabsSheet by remember { mutableStateOf(false) }
     val pageStates = remember { mapOf(
+        HomePage.Songs to SongsPageState(),
         HomePage.Albums to AlbumsPageState(),
         HomePage.Artists to ArtistsPageState(),
     ) }

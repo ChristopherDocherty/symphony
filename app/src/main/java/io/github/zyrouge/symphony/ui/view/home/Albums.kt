@@ -131,9 +131,10 @@ class AlbumsPageState : HomePageState {
                 isHide = !isAnySelectedHidden,
                 onConfirm = {
                     val ids = selectedAlbumIds
+                    val shouldUnhide = isAnySelectedHidden
                     coroutineScope.launch {
                         context.symphony.settings.updateData { s ->
-                            if (isAnySelectedHidden) {
+                            if (shouldUnhide) {
                                 s.copy {
                                     val remaining = currentHiddenAlbumIds.filter { it !in ids }
                                     hiddenAlbumIds.clear()

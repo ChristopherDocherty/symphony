@@ -2,7 +2,9 @@ package io.github.zyrouge.symphony.ui.components
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -61,9 +64,11 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumArtistViewRoute
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
+import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import io.github.zyrouge.symphony.utils.Logger
 import androidx.compose.ui.res.stringResource
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SongCard(
     context: ViewContext,
@@ -76,8 +81,12 @@ fun SongCard(
     thumbnailLabel: (@Composable () -> Unit)? = null,
     thumbnailLabelStyle: SongCardThumbnailLabelStyle = SongCardThumbnailLabelStyle.Default,
     trailingOptionsContent: (@Composable ColumnScope.(() -> Unit) -> Unit)? = null,
+    pageState: SongsPageState? = null,
     onClick: () -> Unit,
 ) {
+    val isMultiSelectMode = pageState?.isMultiSelectMode == true
+    val isSelected = pageState?.selectedSongIds?.contains(song.id) == true
+
     val queue by context.symphony.radio.observatory.queue.collectAsState()
     val queueIndex by context.symphony.radio.observatory.queueIndex.collectAsState()
     val isCurrentPlaying by remember(autoHighlight, song, queue) {
@@ -89,13 +98,34 @@ fun SongCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        onClick = onClick
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = {
+                    if (isMultiSelectMode) pageState!!.toggleSelection(song.id)
+                    else onClick()
+                },
+                onLongClick = {
+                    if (!isMultiSelectMode) pageState?.enterMultiSelect(song.id)
+                },
+            ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            else Color.Transparent
+        ),
     ) {
         Box(modifier = Modifier.padding(12.dp, 12.dp, 4.dp, 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                leading()
+                if (isMultiSelectMode) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = null,
+                        modifier = Modifier.padding(end = 4.dp),
+                    )
+                } else {
+                    leading()
+                }
                 Box {
                     AsyncImage(
                         song.createArtworkImageRequest(context.symphony).build(),
@@ -156,43 +186,45 @@ fun SongCard(
                 }
                 Spacer(modifier = Modifier.width(15.dp))
 
-                Row {
-                    if (!disableHeartIcon && isFavorite) {
-                        IconButton(
-                            modifier = Modifier.offset(4.dp, 0.dp),
-                            onClick = {
-                                context.symphony.groove.playlist.unfavorite(song.id)
-                            }
-                        ) {
-                            Icon(
-                                Icons.Filled.Favorite,
-                                null,
-                                modifier = Modifier.size(24.dp),
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
-
-                    if (!disableOptions) {
-                        var showOptionsMenu by remember { mutableStateOf(false) }
-                        IconButton(
-                            onClick = { showOptionsMenu = !showOptionsMenu }
-                        ) {
-                            Icon(
-                                Icons.Filled.MoreVert,
-                                null,
-                                modifier = Modifier.size(24.dp),
-                            )
-                            SongDropdownMenu(
-                                context,
-                                song,
-                                isFavorite = isFavorite,
-                                trailingContent = trailingOptionsContent,
-                                expanded = showOptionsMenu,
-                                onDismissRequest = {
-                                    showOptionsMenu = false
+                if (!isMultiSelectMode) {
+                    Row {
+                        if (!disableHeartIcon && isFavorite) {
+                            IconButton(
+                                modifier = Modifier.offset(4.dp, 0.dp),
+                                onClick = {
+                                    context.symphony.groove.playlist.unfavorite(song.id)
                                 }
-                            )
+                            ) {
+                                Icon(
+                                    Icons.Filled.Favorite,
+                                    null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+
+                        if (!disableOptions) {
+                            var showOptionsMenu by remember { mutableStateOf(false) }
+                            IconButton(
+                                onClick = { showOptionsMenu = !showOptionsMenu }
+                            ) {
+                                Icon(
+                                    Icons.Filled.MoreVert,
+                                    null,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                                SongDropdownMenu(
+                                    context,
+                                    song,
+                                    isFavorite = isFavorite,
+                                    trailingContent = trailingOptionsContent,
+                                    expanded = showOptionsMenu,
+                                    onDismissRequest = {
+                                        showOptionsMenu = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }

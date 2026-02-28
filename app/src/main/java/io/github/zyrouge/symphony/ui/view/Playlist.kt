@@ -47,6 +47,7 @@ import io.github.zyrouge.symphony.ui.components.SongList
 import io.github.zyrouge.symphony.ui.components.SongListType
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import io.github.zyrouge.symphony.ui.theme.ThemeColors
 import io.github.zyrouge.symphony.utils.mutate
 import kotlinx.serialization.Serializable
@@ -99,6 +100,7 @@ fun PlaylistView(context: ViewContext, route: PlaylistViewRoute) {
     val incrementUpdateCounter = {
         updateCounter = if (updateCounter > 25) 0 else updateCounter + 1
     }
+    val songPageState = remember { SongsPageState() }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -211,6 +213,7 @@ fun PlaylistView(context: ViewContext, route: PlaylistViewRoute) {
                         songIds = songIds,
                         type = SongListType.Playlist,
                         disableHeartIcon = isFavoritesPlaylist,
+                        pageState = songPageState,
                         trailingOptionsContent = { _, song, onDismissRequest ->
                             playlist?.takeIf {
                                 !context.symphony.groove.playlist.isBuiltInPlaylist(it)

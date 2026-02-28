@@ -46,6 +46,7 @@ import io.github.zyrouge.symphony.ui.components.IconTextBody
 import io.github.zyrouge.symphony.ui.components.SongCardThumbnailLabelStyle
 import io.github.zyrouge.symphony.ui.components.SongList
 import io.github.zyrouge.symphony.ui.components.SongListType
+import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.serialization.Serializable
@@ -69,6 +70,7 @@ fun AlbumView(context: ViewContext, route: AlbumViewRoute) {
     val isViable by remember(allAlbumIds) {
         derivedStateOf { allAlbumIds.contains(route.albumId) }
     }
+    val songPageState = remember { SongsPageState() }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -116,6 +118,7 @@ fun AlbumView(context: ViewContext, route: AlbumViewRoute) {
                             Text(song.trackNumber?.toString() ?: stringResource(R.string.UnknownSymbol))
                         },
                         cardThumbnailLabelStyle = SongCardThumbnailLabelStyle.Subtle,
+                        pageState = songPageState,
                     )
                 } else UnknownAlbum(context, route.albumId)
             }
