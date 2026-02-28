@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -189,6 +190,7 @@ fun SongList(
                 selectedCount = pageState.selectedSongIds.size,
                 onSelectAll = { pageState.selectedSongIds = pageState.sortedSongIds.toSet() },
                 onEdit = { pageState.showBulkEditDialog = true },
+                onAutoNumber = { pageState.showAutoNumberDialog = true },
                 onExit = { pageState.exitMultiSelect() },
             )
         }
@@ -200,6 +202,17 @@ fun SongList(
                 onDismissRequest = { pageState.showBulkEditDialog = false },
             )
         }
+
+        if (pageState?.showAutoNumberDialog == true && pageState.selectedSongIds.isNotEmpty()) {
+            AutoNumberWizardDialog(
+                context = context,
+                songIds = pageState.selectedSongIds.toList(),
+                onDismissRequest = {
+                    pageState.showAutoNumberDialog = false
+                    pageState.exitMultiSelect()
+                },
+            )
+        }
     }
 }
 
@@ -209,6 +222,7 @@ private fun SongMultiSelectBottomBar(
     selectedCount: Int,
     onSelectAll: () -> Unit,
     onEdit: () -> Unit,
+    onAutoNumber: () -> Unit,
     onExit: () -> Unit,
 ) {
     Surface(
@@ -231,6 +245,9 @@ private fun SongMultiSelectBottomBar(
             }
             IconButton(onClick = onEdit, enabled = selectedCount > 0) {
                 Icon(Icons.Filled.Edit, contentDescription = "Edit selected")
+            }
+            IconButton(onClick = onAutoNumber, enabled = selectedCount > 0) {
+                Icon(Icons.Filled.FormatListNumbered, contentDescription = "Autonumber")
             }
             IconButton(onClick = onExit) {
                 Icon(Icons.Filled.Close, contentDescription = "Exit select mode")

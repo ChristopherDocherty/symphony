@@ -254,7 +254,7 @@ fun NowPlayingBottomBar(context: ViewContext, insetPadding: Boolean = true) {
                     Spacer(modifier = Modifier.navigationBarsPadding())
                 }
             }
-        } ?: Box {}
+        } ?: Spacer(modifier = Modifier.navigationBarsPadding())
     }
 }
 
