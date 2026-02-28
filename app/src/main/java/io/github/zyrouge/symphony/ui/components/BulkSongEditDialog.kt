@@ -10,10 +10,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.zyrouge.symphony.metaphony.AudioMetadataParser
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BulkSongEditDialog(
     context: ViewContext,
@@ -44,19 +50,23 @@ fun BulkSongEditDialog(
         songIds.mapNotNull { context.symphony.groove.song.get(it) }
     }
 
+    val fieldDistincts: List<List<String>> = remember(songs) {
+        SONG_TAG_FIELDS.map { field -> songs.map { field.getValue(it) }.distinct() }
+    }
+
     val fieldValues: SnapshotStateList<String> = remember(songs) {
-        SONG_TAG_FIELDS.map { field ->
-            val distinct = songs.map { field.getValue(it) }.toSet()
+        fieldDistincts.map { distinct ->
             if (distinct.size == 1) distinct.first() else ""
         }.toMutableStateList()
     }
 
     val fieldPlaceholders: List<String> = remember(songs) {
-        SONG_TAG_FIELDS.map { field ->
-            val distinct = songs.map { field.getValue(it) }.toSet()
+        fieldDistincts.map { distinct ->
             if (distinct.size == 1) "" else "(multiple values)"
         }
     }
+
+    var expandedFieldIndex by remember { mutableStateOf(-1) }
 
     var isSaving by remember { mutableStateOf(false) }
     var saveProgress by remember { mutableIntStateOf(0) }
@@ -126,16 +136,57 @@ fun BulkSongEditDialog(
                     .verticalScroll(rememberScrollState()),
             ) {
                 SONG_TAG_FIELDS.forEachIndexed { i, field ->
-                    OutlinedTextField(
-                        value = fieldValues[i],
-                        onValueChange = { if (!isSaving) fieldValues[i] = it },
-                        label = { Text(field.label) },
-                        placeholder = if (fieldPlaceholders[i].isNotEmpty()) {
-                            { Text(fieldPlaceholders[i]) }
-                        } else null,
-                        enabled = !isSaving,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
+                    val distinctValues = fieldDistincts[i]
+                    val hasDropdown = distinctValues.size in 2..5
+                    if (hasDropdown) {
+                        ExposedDropdownMenuBox(
+                            expanded = expandedFieldIndex == i,
+                            onExpandedChange = {
+                                if (!isSaving) expandedFieldIndex = if (it) i else -1
+                            },
+                        ) {
+                            OutlinedTextField(
+                                value = fieldValues[i],
+                                onValueChange = { if (!isSaving) fieldValues[i] = it },
+                                label = { Text(field.label) },
+                                placeholder = if (fieldPlaceholders[i].isNotEmpty()) {
+                                    { Text(fieldPlaceholders[i]) }
+                                } else null,
+                                enabled = !isSaving,
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFieldIndex == i)
+                                },
+                                modifier = Modifier
+                                    .menuAnchor(MenuAnchorType.PrimaryEditable)
+                                    .fillMaxWidth(),
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedFieldIndex == i,
+                                onDismissRequest = { expandedFieldIndex = -1 },
+                            ) {
+                                distinctValues.forEach { value ->
+                                    DropdownMenuItem(
+                                        text = { Text(value.ifBlank { "(empty)" }) },
+                                        onClick = {
+                                            fieldValues[i] = value
+                                            expandedFieldIndex = -1
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        OutlinedTextField(
+                            value = fieldValues[i],
+                            onValueChange = { if (!isSaving) fieldValues[i] = it },
+                            label = { Text(field.label) },
+                            placeholder = if (fieldPlaceholders[i].isNotEmpty()) {
+                                { Text(fieldPlaceholders[i]) }
+                            } else null,
+                            enabled = !isSaving,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
                 }
             }
         },
