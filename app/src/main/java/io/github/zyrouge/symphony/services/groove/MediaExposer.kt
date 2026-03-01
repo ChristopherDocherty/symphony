@@ -52,6 +52,7 @@ class MediaExposer(private val symphony: Symphony) {
         val lyricsCacheUnused: ConcurrentSet<String>,
         val directoryArtworkCacheUnused: ConcurrentSet<String>,
         val directoryArtworkProcessed: ConcurrentSet<String>,
+        val directoryArtworkCoverJpg: ConcurrentSet<String>,
         val filter: MediaFilter,
         val songParseOptions: Song.ParseOptions,
     ) {
@@ -75,6 +76,7 @@ class MediaExposer(private val symphony: Symphony) {
                     lyricsCacheUnused = lyricsCacheUnused,
                     directoryArtworkCacheUnused = directoryArtworkCacheUnused,
                     directoryArtworkProcessed = concurrentSetOf(),
+                    directoryArtworkCoverJpg = concurrentSetOf(),
                     filter = filter,
                     songParseOptions = Song.ParseOptions.create(symphony),
                 )
@@ -339,8 +341,15 @@ class MediaExposer(private val symphony: Symphony) {
         explorer.addChildFile(path)
 
         val parentPath = path.parent?.pathString ?: return
-        if (cycle.directoryArtworkProcessed.add(parentPath)) {
+        if (path.name.equals("cover.jpg", ignoreCase = true)) {
+            // cover.jpg always wins — overwrite whatever other image was picked first
+            cycle.directoryArtworkCoverJpg.add(parentPath)
             symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
+        } else if (!cycle.directoryArtworkCoverJpg.contains(parentPath)) {
+            // Only use this image as a fallback if no cover.jpg has been found yet
+            if (cycle.directoryArtworkProcessed.add(parentPath)) {
+                symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
+            }
         }
         cycle.directoryArtworkCacheUnused.remove(parentPath)
     }
