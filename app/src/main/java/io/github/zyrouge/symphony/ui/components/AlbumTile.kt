@@ -63,8 +63,13 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
                 overflow = TextOverflow.Ellipsis,
             )
             if (album.artists.isNotEmpty()) {
+                val artistLabel = if (album.albumArtists.contains("Various Artists")) {
+                    "Various Artists"
+                } else {
+                    album.artists.joinToString()
+                }
                 Text(
-                    album.artists.joinToString(),
+                    artistLabel,
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
