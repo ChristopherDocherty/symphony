@@ -72,20 +72,23 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
             var completed = 0
             _refreshProgress.value = RefreshProgress(0, total)
 
-            // Fetch albums
+            // Fetch albums — query each (artist, album) pair and sum for multi-artist albums
             for (albumId in albumIds) {
                 val album = symphony.groove.album.get(albumId) ?: continue
-                val artist = album.artists.firstOrNull() ?: continue
-                val count = fetchAlbumScrobbles(artist, album.name, username, apiKey)
-                if (count != null) {
-                    albumScrobbles[albumId] = count
+                var totalCount: Long? = null
+                for (artist in album.artists) {
+                    val count = fetchAlbumScrobbles(artist, album.name, username, apiKey)
+                    if (count != null) totalCount = (totalCount ?: 0L) + count
+                    delay(100) // 10 req/sec
+                }
+                if (totalCount != null) {
+                    albumScrobbles[albumId] = totalCount
                     symphony.database.lastFmCache.upsert(
-                        LastFmCacheEntry("album:$albumId", count, System.currentTimeMillis())
+                        LastFmCacheEntry("album:$albumId", totalCount, System.currentTimeMillis())
                     )
                 }
                 completed++
                 _refreshProgress.value = RefreshProgress(completed, total)
-                delay(100) // 10 req/sec
             }
 
             // Fetch artists
@@ -125,17 +128,20 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
 
             for (albumId in albumIds) {
                 val album = symphony.groove.album.get(albumId) ?: continue
-                val artist = album.artists.firstOrNull() ?: continue
-                val count = fetchAlbumScrobbles(artist, album.name, username, apiKey)
-                if (count != null) {
-                    albumScrobbles[albumId] = count
+                var totalCount: Long? = null
+                for (artist in album.artists) {
+                    val count = fetchAlbumScrobbles(artist, album.name, username, apiKey)
+                    if (count != null) totalCount = (totalCount ?: 0L) + count
+                    delay(100) // 10 req/sec
+                }
+                if (totalCount != null) {
+                    albumScrobbles[albumId] = totalCount
                     symphony.database.lastFmCache.upsert(
-                        LastFmCacheEntry("album:$albumId", count, System.currentTimeMillis())
+                        LastFmCacheEntry("album:$albumId", totalCount, System.currentTimeMillis())
                     )
                 }
                 completed++
                 _refreshProgress.value = RefreshProgress(completed, total)
-                delay(100)
             }
 
             for (artistName in artistNames) {
