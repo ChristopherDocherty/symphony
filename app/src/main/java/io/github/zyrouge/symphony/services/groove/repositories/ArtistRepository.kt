@@ -1,6 +1,8 @@
 package io.github.zyrouge.symphony.services.groove.repositories
 
 import android.net.Uri
+import io.github.zyrouge.symphony.AlbumFilter
+import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.ArtistSortBy
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.groove.Artist
@@ -153,7 +155,13 @@ class ArtistRepository(private val symphony: Symphony) {
     fun search(artistNames: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, artistNames, maxLength = limit)
 
-    fun sort(artistNames: List<String>, by: ArtistSortBy, reverse: Boolean): List<String> {
+    fun sort(
+        artistNames: List<String>,
+        by: ArtistSortBy,
+        reverse: Boolean,
+        albumFilter: AlbumFilter = AlbumFilter.getDefaultInstance(),
+        hiddenAlbumIds: Set<String> = emptySet(),
+    ): List<String> {
         val sensitive = symphony.settingsState.value.caseSensitiveSorting
         val sorted = when (by) {
             ArtistSortBy.ARTIST_CUSTOM -> artistNames
@@ -167,15 +175,62 @@ class ArtistRepository(private val symphony: Symphony) {
                     }
                 }?.withCase(sensitive)
             }
-            ArtistSortBy.ARTIST_TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfTracks }
-            ArtistSortBy.ARTIST_ALBUMS_COUNT -> artistNames.sortedBy { get(it)?.numberOfAlbums }
-            ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> artistNames.sortedBy { get(it)?.numberOfUniqueTracks }
+            ArtistSortBy.ARTIST_TRACKS_COUNT -> artistNames.sortedBy {
+                effectiveSongCount(it, albumFilter, hiddenAlbumIds)
+            }
+            ArtistSortBy.ARTIST_ALBUMS_COUNT -> artistNames.sortedBy {
+                effectiveAlbumIds(it, albumFilter, hiddenAlbumIds).size
+            }
+            ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> artistNames.sortedBy {
+                effectiveUniqueTrackCount(it, albumFilter, hiddenAlbumIds)
+            }
             ArtistSortBy.ARTIST_SCROBBLE_COUNT -> artistNames.sortedBy {
                 symphony.lastFm.getArtistScrobbleCount(it)
             }
             ArtistSortBy.UNRECOGNIZED -> artistNames
         }
         return if (reverse) sorted.reversed() else sorted
+    }
+
+    private fun effectiveAlbumIds(
+        artistName: String,
+        albumFilter: AlbumFilter,
+        hiddenAlbumIds: Set<String>,
+    ): List<String> {
+        val ids = albumIdsCache[artistName]?.toList() ?: emptyList()
+        return symphony.groove.album.getAlbums(
+            albumIds = ids,
+            by = AlbumSortBy.ALBUM_CUSTOM,
+            reverse = false,
+            filter = albumFilter,
+            hiddenAlbumIds = hiddenAlbumIds,
+        )
+    }
+
+    private fun effectiveSongCount(
+        artistName: String,
+        albumFilter: AlbumFilter,
+        hiddenAlbumIds: Set<String>,
+    ): Int {
+        val filteredIds = effectiveAlbumIds(artistName, albumFilter, hiddenAlbumIds).toHashSet()
+        return songIdsCache[artistName]?.count { songId ->
+            val song = symphony.groove.song.get(songId) ?: return@count false
+            val albumId = symphony.groove.album.getIdFromSong(song)
+            albumId == null || albumId in filteredIds
+        } ?: 0
+    }
+
+    private fun effectiveUniqueTrackCount(
+        artistName: String,
+        albumFilter: AlbumFilter,
+        hiddenAlbumIds: Set<String>,
+    ): Int {
+        val filteredIds = effectiveAlbumIds(artistName, albumFilter, hiddenAlbumIds).toHashSet()
+        return songIdsCache[artistName]?.mapNotNullTo(mutableSetOf()) { songId ->
+            val song = symphony.groove.song.get(songId) ?: return@mapNotNullTo null
+            val albumId = symphony.groove.album.getIdFromSong(song)
+            if (albumId == null || albumId in filteredIds) song.title else null
+        }?.size ?: 0
     }
 
     fun filterByTrackCount(artistNames: List<String>) : List<String> {
