@@ -36,6 +36,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,11 +48,14 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import io.github.zyrouge.symphony.R
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.AppMeta
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSimpleTile
+import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import kotlinx.coroutines.launch
 import io.github.zyrouge.symphony.ui.view.settings.AppearanceSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.GrooveSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.HomePageSettingsViewRoute
@@ -73,6 +79,8 @@ data class SettingsViewRoute(val initialElement: String? = null) {
 fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
     val configuration = LocalConfiguration.current
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    val settings by context.symphony.settingsState.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -201,6 +209,19 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                         },
                         onClick = {
                             context.navController.navigate(LastFmSettingsViewRoute)
+                        },
+                    )
+                    HorizontalDivider()
+                    SettingsSwitchTile(
+                        icon = { Icon(Icons.Filled.BugReport, null) },
+                        title = { Text(stringResource(R.string.DebugMode)) },
+                        value = settings.debugMode,
+                        onChange = { value ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData {
+                                    it.copy { debugMode = value }
+                                }
+                            }
                         },
                     )
                 }

@@ -254,4 +254,6 @@
     <string name="CoverSearchHint">"%1$s" copied to clipboard. Find the cover, copy the image URL, then return here.</string>
     <string name="ImageUrl">Image URL</string>
     <string name="Apply">Apply</string>
+    <string name="DebugMode">Debug Mode</string>
+    <string name="DebugModeDescription">Expose extra diagnostic filter options in the album filter dialog</string>
 </resources>

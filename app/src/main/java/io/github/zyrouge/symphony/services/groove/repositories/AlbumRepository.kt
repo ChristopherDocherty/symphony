@@ -3,7 +3,16 @@ package io.github.zyrouge.symphony.services.groove.repositories
 import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.Symphony
+import io.github.zyrouge.symphony.services.groove.ALBUM_DEBUG_FILTER_FIELDS
 import io.github.zyrouge.symphony.services.groove.ALBUM_STRING_FILTER_FIELDS
+import io.github.zyrouge.symphony.services.groove.ARTWORK_SOURCE_DIRECTORY
+import io.github.zyrouge.symphony.services.groove.ARTWORK_SOURCE_EMBEDDED
+import io.github.zyrouge.symphony.services.groove.ARTWORK_SOURCE_NONE
+import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_HIGH
+import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_LOW
+import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_MEDIUM
+import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_UNKNOWN
+import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_VERY_HIGH
 import io.github.zyrouge.symphony.services.groove.BLANK_TAG_VALUE
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.services.groove.Song
@@ -12,6 +21,7 @@ import io.github.zyrouge.symphony.ui.helpers.createHandyImageRequest
 import io.github.zyrouge.symphony.utils.ConcurrentSet
 import io.github.zyrouge.symphony.utils.FuzzySearchOption
 import io.github.zyrouge.symphony.utils.FuzzySearcher
+import io.github.zyrouge.symphony.utils.SimplePath
 import io.github.zyrouge.symphony.utils.concurrentSetOf
 import io.github.zyrouge.symphony.utils.joinToStringIfNotEmpty
 import io.github.zyrouge.symphony.utils.withCase
@@ -28,6 +38,8 @@ class AlbumRepository(private val symphony: Symphony) {
     private val cache = ConcurrentHashMap<String, Album>()
     private val songIdsCache = ConcurrentHashMap<String, ConcurrentSet<String>>()
     private val customTagValuesCache = ConcurrentHashMap<String, ConcurrentHashMap<String, MutableSet<String>>>()
+    // Debug filter data: minimum known bitrate (bps) per album; absent = no bitrate data in any song
+    private val minBitrateCache = ConcurrentHashMap<String, Long>()
     private val searcher = FuzzySearcher<String>(
         options = listOf(
             FuzzySearchOption({ v -> get(v)?.name?.let { compareString(it) } }, 3),
@@ -73,6 +85,9 @@ class AlbumRepository(private val symphony: Symphony) {
             value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
         }
         indexCustomTags(albumId, song)
+        song.bitrate?.let { bitrate ->
+            minBitrateCache.merge(albumId, bitrate, ::minOf)
+        }
         cache.compute(albumId) { _, value ->
             value?.apply {
                 artists.addAll(song.artists)
@@ -117,6 +132,9 @@ class AlbumRepository(private val symphony: Symphony) {
                 value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
             }
             indexCustomTags(albumId, song)
+            song.bitrate?.let { bitrate ->
+                minBitrateCache.merge(albumId, bitrate, ::minOf)
+            }
             cache.compute(albumId) { _, value ->
                 value?.apply {
                     artists.addAll(song.artists)
@@ -162,6 +180,7 @@ class AlbumRepository(private val symphony: Symphony) {
         cache.clear()
         songIdsCache.clear()
         customTagValuesCache.clear()
+        minBitrateCache.clear()
         _all.update {
             emptyList()
         }
@@ -205,13 +224,22 @@ class AlbumRepository(private val symphony: Symphony) {
         val visibleIds = if (showHidden || hiddenAlbumIds.isEmpty()) albumIds
                          else albumIds.filterNot { it in hiddenAlbumIds }
 
+        val debugMode = symphony.settingsState.value.debugMode
         val filteredAlbumIds = visibleIds.filter { albumId ->
             ALBUM_STRING_FILTER_FIELDS.all { field ->
                 val selected = field.getSelected(filter)
                 if (selected.isEmpty()) return@all true
                 val albumValues = customTagValuesCache[albumId]?.get(field.tagName) ?: emptySet()
                 (BLANK_TAG_VALUE in selected && albumValues.isEmpty()) || albumValues.any { it in selected }
-            }
+            } && (!debugMode || run {
+                // Bitrate range filter
+                val bitrateSelected = filter.bitrateRangeList
+                val bitrateOk = bitrateSelected.isEmpty() || getBitrateRange(albumId) in bitrateSelected
+                // Artwork source filter
+                val artworkSelected = filter.artworkSourceList
+                val artworkOk = artworkSelected.isEmpty() || getArtworkSource(albumId) in artworkSelected
+                bitrateOk && artworkOk
+            })
         }
         val sorted = when (by) {
             AlbumSortBy.ALBUM_CUSTOM -> filteredAlbumIds
@@ -244,4 +272,38 @@ class AlbumRepository(private val symphony: Symphony) {
     fun getSongIds(albumId: String) = songIdsCache[albumId]?.toList() ?: emptyList()
     fun getCustomTagValues(albumId: String, tagName: String): Set<String> =
         customTagValuesCache[albumId]?.get(tagName) ?: emptySet()
+
+    // ── Debug filter helpers ────────────────────────────────────────────────
+
+    /**
+     * Returns the bitrate bucket for [albumId] based on the minimum known bitrate
+     * across all songs in the album (i.e. the "worst quality" track determines the
+     * bucket).  Albums where no song has bitrate metadata return [BITRATE_RANGE_UNKNOWN].
+     */
+    fun getBitrateRange(albumId: String): String {
+        val minBitrate = minBitrateCache[albumId] ?: return BITRATE_RANGE_UNKNOWN
+        return when {
+            minBitrate < 150_000L -> BITRATE_RANGE_LOW
+            minBitrate < 256_000L -> BITRATE_RANGE_MEDIUM
+            minBitrate < 320_000L -> BITRATE_RANGE_HIGH
+            else -> BITRATE_RANGE_VERY_HIGH
+        }
+    }
+
+    /**
+     * Returns the artwork source for [albumId] by inspecting the first song in the
+     * album.  Priority matches [SongRepository.getArtworkUri]:
+     * 1. Directory-level colocated file  → [ARTWORK_SOURCE_DIRECTORY]
+     * 2. Embedded cover in the audio file → [ARTWORK_SOURCE_EMBEDDED]
+     * 3. No artwork                        → [ARTWORK_SOURCE_NONE]
+     */
+    fun getArtworkSource(albumId: String): String {
+        val firstSongId = songIdsCache[albumId]?.firstOrNull() ?: return ARTWORK_SOURCE_NONE
+        val firstSong = symphony.groove.song.get(firstSongId) ?: return ARTWORK_SOURCE_NONE
+        val parentDir = SimplePath(firstSong.path).parent?.pathString
+        if (parentDir != null && symphony.database.directoryArtworkCache.get(parentDir) != null) {
+            return ARTWORK_SOURCE_DIRECTORY
+        }
+        return if (firstSong.coverFile != null) ARTWORK_SOURCE_EMBEDDED else ARTWORK_SOURCE_NONE
+    }
 }

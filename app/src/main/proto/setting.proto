@@ -75,6 +75,9 @@ message AlbumFilter {
   repeated string collections = 5;
   repeated uint32 album_of_the_year_rank = 6;
   repeated uint32 release_year = 7;
+  // Debug filters (only applied when debug_mode is enabled)
+  repeated string bitrate_range = 8;
+  repeated string artwork_source = 9;
 }
 
 // ---------------------------------------------------------------------------
@@ -231,6 +234,7 @@ message Settings {
   repeated string genre_tag_separators = 83;
   repeated string hidden_album_ids = 84;                   // albums hidden from all browse views
   bool show_hidden_albums = 85;                            // when true, show hidden albums in Albums grid
+  bool debug_mode = 86;                                    // when true, expose extra debug filter options
 
   // --- Existing album filters (field numbers preserved) ---
   AlbumFilter ui_album_grid_album_filter = 801;
