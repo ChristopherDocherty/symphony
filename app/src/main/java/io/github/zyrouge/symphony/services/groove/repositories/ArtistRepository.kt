@@ -27,7 +27,9 @@ class ArtistRepository(private val symphony: Symphony) {
             "EP",
             "Single",
             "Live Album",
-            "Compilation",
+            "Rarities/ B-Sides",
+            "Greatest Hits",
+            "Various Artists",
         )
     }
 
