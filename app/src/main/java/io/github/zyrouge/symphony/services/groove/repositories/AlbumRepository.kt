@@ -217,7 +217,12 @@ class AlbumRepository(private val symphony: Symphony) {
             AlbumSortBy.ALBUM_CUSTOM -> filteredAlbumIds
             AlbumSortBy.ALBUM_NAME -> filteredAlbumIds.sortedBy { get(it)?.name?.withCase(sensitive) }
             AlbumSortBy.ALBUM_ARTIST_NAME -> filteredAlbumIds.sortedBy {
-                get(it)?.artists?.joinToStringIfNotEmpty(sensitive)
+                get(it)?.artists?.let { artists ->
+                    if (artists.isEmpty()) null
+                    else artists.joinToString { name ->
+                        if (name.startsWith("The ", ignoreCase = true)) name.substring(4) else name
+                    }.withCase(sensitive)
+                }
             }
 
             AlbumSortBy.ALBUM_TRACKS_COUNT -> filteredAlbumIds.sortedBy { get(it)?.numberOfTracks }

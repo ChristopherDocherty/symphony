@@ -98,7 +98,14 @@ class SongRepository(private val symphony: Symphony) {
         val sorted = when (by) {
             SongSortBy.SONG_CUSTOM -> songIds
             SongSortBy.SONG_TITLE -> songIds.sortedBy { get(it)?.title?.withCase(sensitive) }
-            SongSortBy.SONG_ARTIST -> songIds.sortedBy { get(it)?.artists?.joinToStringIfNotEmpty(sensitive) }
+            SongSortBy.SONG_ARTIST -> songIds.sortedBy {
+                get(it)?.artists?.let { artists ->
+                    if (artists.isEmpty()) null
+                    else artists.joinToString { name ->
+                        if (name.startsWith("The ", ignoreCase = true)) name.substring(4) else name
+                    }.withCase(sensitive)
+                }
+            }
             SongSortBy.SONG_ALBUM -> songIds.sortedWith(
                 compareBy(
                     { get(it)?.album?.withCase(sensitive) },
