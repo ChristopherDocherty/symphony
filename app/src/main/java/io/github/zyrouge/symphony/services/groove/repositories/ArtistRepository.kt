@@ -177,17 +177,21 @@ class ArtistRepository(private val symphony: Symphony) {
                     }
                 }?.withCase(sensitive)
             }
-            ArtistSortBy.ARTIST_TRACKS_COUNT -> artistNames.sortedBy {
-                effectiveSongCount(it, albumFilter, hiddenAlbumIds)
+            ArtistSortBy.ARTIST_TRACKS_COUNT -> {
+                val counts = artistNames.associateWith { effectiveSongCount(it, albumFilter, hiddenAlbumIds) }
+                artistNames.sortedBy { counts[it] }
             }
-            ArtistSortBy.ARTIST_ALBUMS_COUNT -> artistNames.sortedBy {
-                effectiveAlbumIds(it, albumFilter, hiddenAlbumIds).size
+            ArtistSortBy.ARTIST_ALBUMS_COUNT -> {
+                val counts = artistNames.associateWith { effectiveAlbumIds(it, albumFilter, hiddenAlbumIds).size }
+                artistNames.sortedBy { counts[it] }
             }
-            ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> artistNames.sortedBy {
-                effectiveUniqueTrackCount(it, albumFilter, hiddenAlbumIds)
+            ArtistSortBy.ARTIST_UNIQUE_TRACKS_COUNT -> {
+                val counts = artistNames.associateWith { effectiveUniqueTrackCount(it, albumFilter, hiddenAlbumIds) }
+                artistNames.sortedBy { counts[it] }
             }
-            ArtistSortBy.ARTIST_SCROBBLE_COUNT -> artistNames.sortedBy {
-                symphony.lastFm.getArtistScrobbleCount(it)
+            ArtistSortBy.ARTIST_SCROBBLE_COUNT -> {
+                val counts = artistNames.associateWith { symphony.lastFm.getArtistScrobbleCount(it) }
+                artistNames.sortedBy { counts[it] }
             }
             ArtistSortBy.UNRECOGNIZED -> artistNames
         }
