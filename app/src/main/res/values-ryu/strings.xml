@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">きょくぬフィルターぬパターン</string>
     <string name="Reset">リセット</string>
     <string name="Theme">テーマ</string>
-    <string name="CheckForUpdates">こうしんかくにん</string>
     <string name="Version">バージョン</string>
     <string name="ShufflePlay">シャッフルさいせい</string>
     <string name="ViewAlbumArtist">アルバムアーティストんーじゅん</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">でぃんとうてぃき</string>
     <string name="Enabled">ゆうこう</string>
     <string name="Disabled">んーか</string>
-    <string name="ShowUpdateToast">かんしでぃちうちひょうじ</string>
     <string name="PlaylistStoreLocation">プレイリストぬばしょ</string>
     <string name="AppBuiltIn">アプリねーんぞう</string>
     <string name="LocalStorage">ローカルストレージ</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$sアーティスト</string>
     <string name="XAlbums">%1$sアルバム</string>
     <string name="MadeByX">%1$sにゆってぃさくせいさりやびたん</string>
-    <string name="NewVersionAvailableX">みーさるバージョンがいようかのうなやびたん！(%1$s)</string>
     <string name="XKbps">%1$skbps</string>
     <string name="XSecs">%1$sびょう</string>
     <string name="UnknownGenreX">ふめいうぅいなジャンル%1$s</string>
@@ -171,7 +168,6 @@
     <string name="ViewGenre">ジャンルんーじゅん</string>
     <string name="Interface">インターフェース</string>
     <string name="Rescan">こうしん</string>
-    <string name="Updates">アップデート</string>
     <string name="Help">ヘルプ</string>
     <string name="ShareSong">きょくちゅーゆうすん</string>
     <string name="ShareFailedX">ちゅーゆうにしっぺーさびたん（エラー： %1$s）</string>

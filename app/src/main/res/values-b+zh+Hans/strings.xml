@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">歌曲过滤模式</string>
     <string name="Reset">重置</string>
     <string name="Theme">主题</string>
-    <string name="CheckForUpdates">检查更新</string>
     <string name="Version">版本</string>
     <string name="ShufflePlay">随机播放</string>
     <string name="ViewAlbumArtist">查看专辑艺术家</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">经典</string>
     <string name="Enabled">已开启</string>
     <string name="Disabled">已关闭</string>
-    <string name="ShowUpdateToast">显示升级提示</string>
     <string name="PlaylistStoreLocation">播放列表存储位置</string>
     <string name="AppBuiltIn">应用内置</string>
     <string name="LocalStorage">设备内部存储</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$s 位艺术家</string>
     <string name="XAlbums">%1$s 张专辑</string>
     <string name="MadeByX">Made by %1$s</string>
-    <string name="NewVersionAvailableX">新版本可用！ (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">未知的类型 %1$s</string>
@@ -175,7 +172,6 @@
     <string name="ViewGenre">View Genre</string>
     <string name="Interface">Interface</string>
     <string name="Rescan">Re-scan</string>
-    <string name="Updates">Updates</string>
     <string name="Help">Help</string>
     <string name="PauseOnCurrentSongEnd">Pause on current song end</string>
     <string name="Export">Export</string>

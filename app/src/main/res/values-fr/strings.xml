@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Modèle de filtre de chansons</string>
     <string name="Reset">Réinitialiser</string>
     <string name="Theme">Thème</string>
-    <string name="CheckForUpdates">Rechercher des mises à jour</string>
     <string name="Version">Version</string>
     <string name="ShufflePlay">Lecture aléatoire</string>
     <string name="ViewAlbumArtist">Voir l\'artiste de l\'album</string>
@@ -144,7 +143,6 @@
     <string name="Traditional">Traditionnel</string>
     <string name="Enabled">Activé</string>
     <string name="Disabled">Désactivé</string>
-    <string name="ShowUpdateToast">Afficher la notification de mise à jour</string>
     <string name="PlaylistStoreLocation">Emplacement de la playlist</string>
     <string name="AppBuiltIn">Intégré</string>
     <string name="LocalStorage">Stockage local</string>
@@ -154,7 +152,6 @@
     <string name="XArtists">%1$s artistes</string>
     <string name="XAlbums">%1$s albums</string>
     <string name="MadeByX">Réalisé par %1$s</string>
-    <string name="NewVersionAvailableX">Nouvelle version disponible ! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">Genre inconnu (%1$s)</string>
@@ -173,7 +170,6 @@
     <string name="ViewGenre">Voir le genre</string>
     <string name="Interface">Interface</string>
     <string name="Rescan">Re-numériser</string>
-    <string name="Updates">Mises à jour</string>
     <string name="Help">Aide</string>
     <string name="ShareSong">Partager la chanson</string>
     <string name="ShareFailedX">Le partage a échoué (Erreur : %1$s)</string>

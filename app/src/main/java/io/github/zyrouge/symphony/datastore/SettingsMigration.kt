@@ -41,8 +41,6 @@ object SettingsMigration {
                 val lang = prefs.getString("language", null)
                 if (!lang.isNullOrEmpty()) language = lang
 
-                checkForUpdates = prefs.getBoolean("check_for_updates", false)
-                showUpdateToast = prefs.getBoolean("show_update_toast", true)
                 readIntroductoryMessage = prefs.getBoolean("introductory_message", false)
                 artworkQuality = parseArtworkQuality(prefs.getString("artwork_quality", null))
                 useMetaphony = prefs.getBoolean("use_metaphony", true)

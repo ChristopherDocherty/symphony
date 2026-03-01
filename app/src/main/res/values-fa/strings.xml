@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">الگوی فیلتر کردن آهنگها</string>
     <string name="Reset">ریست</string>
     <string name="Theme">تم</string>
-    <string name="CheckForUpdates">بررسی نسخه جدید</string>
     <string name="Version">نسخه</string>
     <string name="ShufflePlay">پخش تصادفی</string>
     <string name="ViewAlbumArtist">مشاهده هنرمند آلبوم</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">وسط</string>
     <string name="Enabled">فعال</string>
     <string name="Disabled">غیرفعال</string>
-    <string name="ShowUpdateToast">نمایش هشدار بروزرسانی</string>
     <string name="PlaylistStoreLocation">مکان لیست پخش</string>
     <string name="AppBuiltIn">درونی</string>
     <string name="LocalStorage">حافظه محلی</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$s هنرمند</string>
     <string name="XAlbums">%1$s آلبوم</string>
     <string name="MadeByX">ساخته شده توسط %1$s</string>
-    <string name="NewVersionAvailableX">نسخه جدید در دسترس! (%1$s)</string>
     <string name="XKbps">%1$s ک.ب</string>
     <string name="XSecs">%1$sث</string>
     <string name="UnknownGenreX">ژانر ناشناس (%1$s)</string>
@@ -171,7 +168,6 @@
     <string name="ViewGenre">مشاهده ژانر</string>
     <string name="Interface">صطح</string>
     <string name="Rescan">اسکن دوباره</string>
-    <string name="Updates">بروزرسانی ها</string>
     <string name="Help">کمک</string>
     <string name="ShareSong">ارسال آهنگ</string>
     <string name="ShareFailedX">ارسال نشد (ارور: %1$s)</string>

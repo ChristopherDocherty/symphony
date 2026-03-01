@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Mẫu lọc bài hát</string>
     <string name="Reset">Đặt lại</string>
     <string name="Theme">Chủ đề</string>
-    <string name="CheckForUpdates">Kiểm tra phiên bản mới</string>
     <string name="Version">Phiên bản</string>
     <string name="ShufflePlay">Phát ngẫu nhiên</string>
     <string name="ViewAlbumArtist">Xem nghệ sĩ album</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">Truyền thống</string>
     <string name="Enabled">Đã bật</string>
     <string name="Disabled">Đã tắt</string>
-    <string name="ShowUpdateToast">Hiển thị thông báo phiên bản mới</string>
     <string name="PlaylistStoreLocation">Vị trí danh sách phát</string>
     <string name="AppBuiltIn">Được lưu trong ứng dụng</string>
     <string name="LocalStorage">Được lưu trong máy</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$s nghệ sĩ</string>
     <string name="XAlbums">%1$s album</string>
     <string name="MadeByX">Được làm bởi %1$s</string>
-    <string name="NewVersionAvailableX">Đã có phiên bản mới! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$s giây</string>
     <string name="UnknownGenreX">Thể loại không xác định (%1$s)</string>
@@ -171,7 +168,6 @@
     <string name="ViewGenre">Xem thể loại</string>
     <string name="Interface">Giao diện</string>
     <string name="Rescan">Quét lại bài hát</string>
-    <string name="Updates">Cập nhật</string>
     <string name="Help">Trợ giúp</string>
     <string name="ShareSong">Chia sẻ bài hát</string>
     <string name="ShareFailedX">Chia sẻ bài hát thất bại (Lỗi: %1$s)</string>

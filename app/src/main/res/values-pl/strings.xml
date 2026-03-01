@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Wzorzec filtra utworów</string>
     <string name="Reset">Zresetuj</string>
     <string name="Theme">Motyw</string>
-    <string name="CheckForUpdates">Sprawdzaj aktualizacje</string>
     <string name="Version">Wersja</string>
     <string name="ShufflePlay">Odtwarzaj losowo</string>
     <string name="ViewAlbumArtist">Zobacz wykonawcę albumu</string>
@@ -144,7 +143,6 @@
     <string name="Traditional">Tradycyjny</string>
     <string name="Enabled">Włączono</string>
     <string name="Disabled">Wyłączono</string>
-    <string name="ShowUpdateToast">Wyświetlaj powiadomienie o aktualizacji</string>
     <string name="PlaylistStoreLocation">Umiejscowienie listy odtwarzania</string>
     <string name="AppBuiltIn">Aplikacja</string>
     <string name="LocalStorage">Pamięć lokalna</string>
@@ -154,7 +152,6 @@
     <string name="XArtists">%1$s wykonawców</string>
     <string name="XAlbums">%1$s albumów</string>
     <string name="MadeByX">Aplikację stworzył %1$s</string>
-    <string name="NewVersionAvailableX">Nowa wersja jest dostępna! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">Nieznany gatunek (%1$s)</string>
@@ -173,7 +170,6 @@
     <string name="ViewGenre">Wyświetl gatunek</string>
     <string name="Interface">Interfejs</string>
     <string name="Rescan">Przeskanuj ponownie</string>
-    <string name="Updates">Aktualizacje</string>
     <string name="Help">Pomoc</string>
     <string name="ShareSong">Udostępnij utwór</string>
     <string name="ShareFailedX">Nieudane udostępnienie (Błąd: %1$s)</string>

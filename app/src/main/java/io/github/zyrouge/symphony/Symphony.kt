@@ -1,26 +1,21 @@
 package io.github.zyrouge.symphony
 
 import android.app.Application
-import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.datastore.core.DataStore
 import io.github.zyrouge.symphony.datastore.SettingsDefaults
 import io.github.zyrouge.symphony.datastore.SettingsMigration
 import io.github.zyrouge.symphony.datastore.settingsDataStore
-import io.github.zyrouge.symphony.services.AppMeta
 import io.github.zyrouge.symphony.services.Permissions
 import io.github.zyrouge.symphony.services.database.Database
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.services.lastfm.LastFmService
 import io.github.zyrouge.symphony.services.radio.Radio
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import io.github.zyrouge.symphony.R
 
 class Symphony(application: Application) : AndroidViewModel(application), Symphony.Hooks {
     interface Hooks {
@@ -88,10 +83,6 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
         notifyHooks { onSymphonyActivityDestroy() }
     }
 
-    override fun onSymphonyReady() {
-        checkVersion()
-    }
-
     override fun onCleared() {
         super.onCleared()
         emitDestroy()
@@ -99,28 +90,5 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
 
     private fun notifyHooks(fn: Hooks.() -> Unit) {
         hooks.forEach { fn.invoke(it) }
-    }
-
-    private fun checkVersion() {
-        if (!settingsState.value.checkForUpdates) {
-            return
-        }
-        viewModelScope.launch {
-            val latestVersion = withContext(Dispatchers.IO) {
-                AppMeta.fetchLatestVersion()
-            }
-            if (latestVersion == null) {
-                return@launch
-            }
-            withContext(Dispatchers.Main) {
-                if (settingsState.value.showUpdateToast && AppMeta.version != latestVersion) {
-                    Toast.makeText(
-                        applicationContext,
-                        applicationContext.getString(R.string.NewVersionAvailableX, latestVersion),
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                }
-            }
-        }
     }
 }

@@ -173,8 +173,6 @@ message Settings {
 
   // --- App (10–19) ---
   string language = 10;                // empty = system default
-  bool check_for_updates = 11;
-  bool show_update_toast = 12;         // default true — written by migration
   bool read_introductory_message = 13;
   ArtworkQuality artwork_quality = 14; // default MEDIUM — written by migration
   bool use_metaphony = 15;             // default true — written by migration

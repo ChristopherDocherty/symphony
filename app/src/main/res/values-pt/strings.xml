@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Padrão de filtro de músicas</string>
     <string name="Reset">Redefinir</string>
     <string name="Theme">Tema</string>
-    <string name="CheckForUpdates">Verificar atualizações</string>
     <string name="Version">Versão</string>
     <string name="ShufflePlay">Reprodução aleatória</string>
     <string name="ViewAlbumArtist">Ver artista do álbum</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">Tradicional</string>
     <string name="Enabled">Ativado</string>
     <string name="Disabled">Desativado</string>
-    <string name="ShowUpdateToast">Mostrar aviso de atualização</string>
     <string name="PlaylistStoreLocation">Localização da lista de reprodução</string>
     <string name="AppBuiltIn">Incorporado no aplicativo</string>
     <string name="LocalStorage">Armazenamento local</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$s artistas</string>
     <string name="XAlbums">%1$s álbuns</string>
     <string name="MadeByX">Feito por %1$s</string>
-    <string name="NewVersionAvailableX">Nova versão disponível! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">Gênero desconhecido (%1$s)</string>
@@ -171,7 +168,6 @@
     <string name="ViewGenre">Ver gênero</string>
     <string name="Interface">Interface</string>
     <string name="Rescan">Reescanear</string>
-    <string name="Updates">Atualizações</string>
     <string name="Help">Ajuda</string>
     <string name="ShareSong">Compartilhar música</string>
     <string name="ShareFailedX">Falha ao compartilhar (Erro: %1$s)</string>

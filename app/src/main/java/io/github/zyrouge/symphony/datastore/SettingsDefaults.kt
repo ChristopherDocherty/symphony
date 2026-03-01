@@ -20,7 +20,6 @@ object SettingsDefaults {
         settingsInitialized = true
 
         // App
-        showUpdateToast = true
         useMetaphony = true
         artworkQuality = ArtworkQuality.ARTWORK_MEDIUM
 

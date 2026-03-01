@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Radio
-import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -58,7 +57,6 @@ import io.github.zyrouge.symphony.ui.view.settings.MiniPlayerSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.NowPlayingSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.PlayerSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsViewRoute
-import io.github.zyrouge.symphony.ui.view.settings.UpdateSettingsViewRoute
 import io.github.zyrouge.symphony.utils.ActivityUtils
 import kotlinx.serialization.Serializable
 import androidx.compose.ui.res.stringResource
@@ -117,15 +115,6 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                             Text(AppMeta.appName, style = MaterialTheme.typography.titleMedium)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(AppMeta.version, style = MaterialTheme.typography.labelMedium)
-                            AppMeta.latestVersion?.takeIf { AppMeta.version != it }?.let {
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    stringResource(R.string.NewVersionAvailableX, it),
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        color = MaterialTheme.colorScheme.primary,
-                                    ),
-                                )
-                            }
                         }
                     }
                     HorizontalDivider()
@@ -200,18 +189,6 @@ fun SettingsView(context: ViewContext, route: SettingsViewRoute) {
                         },
                         onClick = {
                             context.navController.navigate(NowPlayingSettingsViewRoute)
-                        },
-                    )
-                    HorizontalDivider()
-                    SettingsSimpleTile(
-                        icon = {
-                            Icon(Icons.Filled.Update, null)
-                        },
-                        title = {
-                            Text(stringResource(R.string.Updates))
-                        },
-                        onClick = {
-                            context.navController.navigate(UpdateSettingsViewRoute)
                         },
                     )
                     HorizontalDivider()

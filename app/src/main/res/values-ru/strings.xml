@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Шаблон фильтрации песен</string>
     <string name="Reset">Сброс</string>
     <string name="Theme">Тема</string>
-    <string name="CheckForUpdates">Проверять наличие обновлений</string>
     <string name="Version">Версия</string>
     <string name="ShufflePlay">Перемешать</string>
     <string name="ViewAlbumArtist">Посмотреть альбом исполнителя</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">Традиционно</string>
     <string name="Enabled">Вкл.</string>
     <string name="Disabled">Откл.</string>
-    <string name="ShowUpdateToast">Показывать уведомление об обновлении</string>
     <string name="PlaylistStoreLocation">Расположение плейлиста</string>
     <string name="AppBuiltIn">Внутренний</string>
     <string name="LocalStorage">Внешний</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$s исполнителей</string>
     <string name="XAlbums">%1$s альбомов</string>
     <string name="MadeByX">Создано %1$s</string>
-    <string name="NewVersionAvailableX">Доступна новая версия! (%1$s)</string>
     <string name="XKbps">%1$s Кбит/с</string>
     <string name="XSecs">%1$sс</string>
     <string name="UnknownGenreX">Неизвестный жанр %1$s</string>
@@ -171,7 +168,6 @@
     <string name="ViewGenre">Посмотреть жанр</string>
     <string name="Interface">Интерфейс</string>
     <string name="Rescan">Пересканировать</string>
-    <string name="Updates">Обновления</string>
     <string name="Help">Справка</string>
     <string name="ShareSong">Поделиться треком</string>
     <string name="ShareFailedX">Не удалось поделиться (Ошибка: %1$s)</string>

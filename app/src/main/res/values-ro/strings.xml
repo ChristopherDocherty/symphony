@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Filtru pentru piese</string>
     <string name="Reset">Resetează</string>
     <string name="Theme">Temă</string>
-    <string name="CheckForUpdates">Caută actualizări</string>
     <string name="Version">Versiune</string>
     <string name="ShufflePlay">Redare aleatorie</string>
     <string name="ViewAlbumArtist">Vezi artistul albumului</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">Tradițional</string>
     <string name="Enabled">Activat</string>
     <string name="Disabled">Dezactivat</string>
-    <string name="ShowUpdateToast">Arată notificări pentru actualizări</string>
     <string name="PlaylistStoreLocation">Locația de stocare a playlisturilor</string>
     <string name="AppBuiltIn">În aplicație</string>
     <string name="LocalStorage">În telefon</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$s artiști</string>
     <string name="XAlbums">%1$s albume</string>
     <string name="MadeByX">Creat de %1$s</string>
-    <string name="NewVersionAvailableX">Versiune nouă disponibilă! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">Gen necunoscut: %1$s</string>
@@ -171,7 +168,6 @@
     <string name="ViewGenre">Vezi genul</string>
     <string name="Interface">Interfață</string>
     <string name="Rescan">Scanează din nou</string>
-    <string name="Updates">Update-uri</string>
     <string name="Help">Ajutor</string>
     <string name="ShareSong">Împărtășește piesa</string>
     <string name="ShareFailedX">Împărtășirea a eșuat! (Eroare: %1$s)</string>

@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Шаблон фільтрацыі трэкаў</string>
     <string name="Reset">Скід</string>
     <string name="Theme">Тэма</string>
-    <string name="CheckForUpdates">Правяраць наяўнасць абнаўленняў</string>
     <string name="Version">Версія</string>
     <string name="ShufflePlay">Змяшаць</string>
     <string name="ViewAlbumArtist">Паглядзець альбом выканаўцы</string>
@@ -142,14 +141,12 @@
     <string name="Traditional">Традыцыйна</string>
     <string name="Enabled">Ўкл.</string>
     <string name="Disabled">Адкл.</string>
-    <string name="ShowUpdateToast">Паказваць апавяшчэнне аб абнаўленні</string>
     <string name="PlayingXofY">Гуляе %1$s з %2$s</string>
     <string name="UnknownArtistX">Невядомы выканаўца (%1$s)</string>
     <string name="XSongs">%1$s трэкаў</string>
     <string name="XArtists">%1$s выканаўцаў</string>
     <string name="XAlbums">%1$s альбомаў</string>
     <string name="MadeByX">Створана %1$s</string>
-    <string name="NewVersionAvailableX">Даступная новая версія! (%1$s)</string>
     <string name="XKbps">%1$s Кбіт/с</string>
     <string name="XSecs">%1$sс</string>
     <string name="UnknownGenreX">Невядомы жанр %1$s</string>
@@ -168,7 +165,6 @@
     <string name="ViewGenre">Паглядзець жанр</string>
     <string name="Interface">Інтэрфейс</string>
     <string name="Rescan">Перасканаваць</string>
-    <string name="Updates">Абнаўленні</string>
     <string name="Help">Даведка</string>
     <string name="ShareSong">Падзяліцца трэкам</string>
     <string name="ShareFailedX">Не ўдалося падзяліцца (Памылка: %1$s)</string>

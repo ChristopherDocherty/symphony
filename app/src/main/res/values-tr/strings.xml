@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Şarkı Filtre Şalbonu</string>
     <string name="Reset">Sıfırla</string>
     <string name="Theme">Tema</string>
-    <string name="CheckForUpdates">Güncellemeleri Kontrol Et</string>
     <string name="Version">Versiyon</string>
     <string name="ShufflePlay">Shuffle play</string>
     <string name="ViewAlbumArtist">Albüm Sanatçısını gör</string>
@@ -148,7 +147,6 @@
     <string name="XArtists">%1$s sanatçı</string>
     <string name="XAlbums">%1$s albüm</string>
     <string name="MadeByX">%1$s tarafından yapıldı</string>
-    <string name="NewVersionAvailableX">Yeni sürüm mevcut! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">Bilinmeyen tür %1$s</string>
@@ -167,7 +165,6 @@
     <string name="ViewGenre">Türü gör</string>
     <string name="Interface">Arayüz</string>
     <string name="Rescan">Yeniden tara</string>
-    <string name="Updates">Güncellemeler</string>
     <string name="Help">Yardım</string>
     <string name="ShareSong">Şarkıyı paylaş</string>
     <string name="ShareFailedX">Paylaşım başarısız oldu (Hata: %1$s)</string>
@@ -194,7 +191,6 @@
     <string name="Browser">Browser</string>
     <string name="CompactLeft">Compact (left)</string>
     <string name="CompactRight">Compact (right)</string>
-    <string name="ShowUpdateToast">Show update toast</string>
     <string name="PlaylistStoreLocation">Playlist location</string>
     <string name="AppBuiltIn">Built-in</string>
     <string name="LocalStorage">Local storage</string>

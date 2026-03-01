@@ -53,7 +53,6 @@
     <string name="SongsFilterPattern">Kappaleiden suodatus</string>
     <string name="Reset">Palauta oletus</string>
     <string name="Theme">Teema</string>
-    <string name="CheckForUpdates">Tarkista päivitykset</string>
     <string name="Version">Versio</string>
     <string name="ShufflePlay">Satunnaistoisto</string>
     <string name="ViewAlbumArtist">Näytä albumin artisti</string>
@@ -142,7 +141,6 @@
     <string name="Traditional">Perinteinen</string>
     <string name="Enabled">Päällä</string>
     <string name="Disabled">Pois päältä</string>
-    <string name="ShowUpdateToast">Ilmoita uusista versioista</string>
     <string name="PlaylistStoreLocation">Soittolistan sijainti</string>
     <string name="AppBuiltIn">Sisäänrakennettu</string>
     <string name="LocalStorage">Tallennustila</string>
@@ -152,7 +150,6 @@
     <string name="XArtists">%1$s artistia</string>
     <string name="XAlbums">%1$s albumia</string>
     <string name="MadeByX">Tehnyt %1$s</string>
-    <string name="NewVersionAvailableX">Uusi versio saatavilla! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">Tuntematon genre (%1$s)</string>
@@ -171,7 +168,6 @@
     <string name="ViewGenre">Näytä genre</string>
     <string name="Interface">Käyttöliittymä</string>
     <string name="Rescan">Päivitä kirjasto</string>
-    <string name="Updates">Päivitykset</string>
     <string name="Help">Apua</string>
     <string name="ShareSong">Jaa kappale</string>
     <string name="ShareFailedX">Jakaminen epäonnistui (Virhe: %1$s)</string>

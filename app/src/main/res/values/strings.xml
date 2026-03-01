@@ -54,7 +54,6 @@
     <string name="SongsFilterPattern">Songs filter pattern</string>
     <string name="Reset">Reset</string>
     <string name="Theme">Theme</string>
-    <string name="CheckForUpdates">Check for updates</string>
     <string name="Version">Version</string>
     <string name="ShufflePlay">Shuffle play</string>
     <string name="ViewAlbumArtist">View album artist</string>
@@ -145,7 +144,6 @@
     <string name="Traditional">Traditional</string>
     <string name="Enabled">Enabled</string>
     <string name="Disabled">Disabled</string>
-    <string name="ShowUpdateToast">Show update toast</string>
     <string name="PlaylistStoreLocation">Playlist location</string>
     <string name="AppBuiltIn">Built-in</string>
     <string name="LocalStorage">Local storage</string>
@@ -155,7 +153,6 @@
     <string name="XArtists">%1$s artists</string>
     <string name="XAlbums">%1$s albums</string>
     <string name="MadeByX">Made by %1$s</string>
-    <string name="NewVersionAvailableX">New version available! (%1$s)</string>
     <string name="XKbps">%1$s kbps</string>
     <string name="XSecs">%1$ss</string>
     <string name="UnknownGenreX">Unknown genre (%1$s)</string>
@@ -174,7 +171,6 @@
     <string name="ViewGenre">View Genre</string>
     <string name="Interface">Interface</string>
     <string name="Rescan">Re-scan</string>
-    <string name="Updates">Updates</string>
     <string name="Help">Help</string>
     <string name="ShareSong">Share song</string>
     <string name="ShareFailedX">Share failed (Error: %1$s)</string>
