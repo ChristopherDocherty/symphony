@@ -253,4 +253,9 @@
     <string name="LastFmUsername">Username</string>
     <string name="LastFmScrobbles">%1$s scrobbles</string>
     <string name="ShowScrobbleCounts">Show scrobble counts</string>
+    <string name="UpdateCoverArt">Update cover art</string>
+    <string name="SearchOnCovers">Search on Covers</string>
+    <string name="CoverSearchHint">"%1$s" copied to clipboard. Find the cover, copy the image URL, then return here.</string>
+    <string name="ImageUrl">Image URL</string>
+    <string name="Apply">Apply</string>
 </resources>
