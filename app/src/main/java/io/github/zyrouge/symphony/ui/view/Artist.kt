@@ -171,6 +171,7 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
 
 @Composable
 private fun ArtistHero(context: ViewContext, artist: Artist) {
+    val settings by context.symphony.settingsState.collectAsState()
     GenericGrooveBanner(
         image = artist.createArtworkImageRequest(context.symphony).build(),
         options = { expanded, onDismissRequest ->
@@ -181,6 +182,7 @@ private fun ArtistHero(context: ViewContext, artist: Artist) {
                 onDismissRequest = onDismissRequest
             )
         },
+        showOverlay = !settings.albumTileMinimalistMode,
         content = {
             Text(artist.name)
         }

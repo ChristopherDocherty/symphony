@@ -45,6 +45,8 @@ fun SquareGrooveTile(
     onLongClick: (() -> Unit)? = null,
     isSelected: Boolean = false,
     isMultiSelectMode: Boolean = false,
+    showOptions: Boolean = true,
+    showContent: Boolean = true,
 ) {
     Card(
         modifier = Modifier
@@ -80,7 +82,7 @@ fun SquareGrooveTile(
                                 .align(Alignment.TopStart)
                                 .padding(2.dp),
                         )
-                    } else {
+                    } else if (showOptions) {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
@@ -98,8 +100,10 @@ fun SquareGrooveTile(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                content()
+                if (showContent) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    content()
+                }
             }
         }
     }

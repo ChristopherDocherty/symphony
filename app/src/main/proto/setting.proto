@@ -233,6 +233,7 @@ message Settings {
   bool album_tile_show_scrobble_count = 92; // default false
   bool album_tile_show_release_year = 93;   // default false
   bool album_tile_show_release_month = 94;  // default false
+  bool album_tile_minimalist_mode = 95;     // default false; hides all tile labels and the 3-dot menu
 
   // --- Content filtering (80–89) ---
   string songs_filter_pattern = 80;                        // empty = unset

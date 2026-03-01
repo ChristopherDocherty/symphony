@@ -30,7 +30,8 @@ import kotlinx.coroutines.launch
 fun ArtistTile(context: ViewContext, artist: Artist) {
     val scope = rememberCoroutineScope()
     val settings by context.symphony.settingsState.collectAsState()
-    val scrobbles = if (settings.showScrobbleCounts) context.symphony.lastFm.getArtistScrobbleCount(artist.name) else 0L
+    val minimalistMode = settings.albumTileMinimalistMode
+    val scrobbles = if (!minimalistMode && settings.showScrobbleCounts) context.symphony.lastFm.getArtistScrobbleCount(artist.name) else 0L
 
     SquareGrooveTile(
         image = artist.createArtworkImageRequest(context.symphony).build(),
@@ -42,6 +43,8 @@ fun ArtistTile(context: ViewContext, artist: Artist) {
                 onDismissRequest = onDismissRequest,
             )
         },
+        showOptions = !minimalistMode,
+        showContent = !minimalistMode,
         content = {
             Text(
                 artist.name,

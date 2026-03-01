@@ -43,7 +43,8 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
     val isMultiSelectMode = pageState?.isMultiSelectMode == true
     val isSelected = pageState?.selectedAlbumIds?.contains(album.id) == true
     val settings by context.symphony.settingsState.collectAsState()
-    val scrobbles = if (settings.albumTileShowScrobbleCount) context.symphony.lastFm.getAlbumScrobbleCount(album.id) else 0L
+    val minimalistMode = settings.albumTileMinimalistMode
+    val scrobbles = if (!minimalistMode && settings.albumTileShowScrobbleCount) context.symphony.lastFm.getAlbumScrobbleCount(album.id) else 0L
 
     SquareGrooveTile(
         image = album.createArtworkImageRequest(context.symphony).build(),
@@ -55,6 +56,8 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
                 onDismissRequest = onDismissRequest,
             )
         },
+        showOptions = !minimalistMode,
+        showContent = !minimalistMode,
         content = {
             if (settings.albumTileShowName) {
                 Text(

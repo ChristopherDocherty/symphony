@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -32,6 +33,19 @@ fun AlbumTileInfoDialog(context: ViewContext, onDismissRequest: () -> Unit) {
         title = { Text(stringResource(R.string.AlbumTileInfo)) },
         content = {
             Column {
+            SettingsSwitchTile(
+                icon = { Icon(Icons.Filled.VisibilityOff, null) },
+                title = { Text(stringResource(R.string.MinimalistMode)) },
+                value = settings.albumTileMinimalistMode,
+                onChange = { value ->
+                    scope.launch {
+                        context.symphony.settings.updateData {
+                            it.copy { albumTileMinimalistMode = value }
+                        }
+                    }
+                },
+            )
+            HorizontalDivider()
             SettingsSwitchTile(
                 icon = { Icon(Icons.Filled.Album, null) },
                 title = { Text(stringResource(R.string.ShowAlbumName)) },

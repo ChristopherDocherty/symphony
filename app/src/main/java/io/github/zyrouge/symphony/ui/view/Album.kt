@@ -132,6 +132,7 @@ fun AlbumView(context: ViewContext, route: AlbumViewRoute) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AlbumHero(context: ViewContext, album: Album) {
+    val settings by context.symphony.settingsState.collectAsState()
     GenericGrooveBanner(
         image = album.createArtworkImageRequest(context.symphony).build(),
         options = { expanded, onDismissRequest ->
@@ -142,6 +143,7 @@ private fun AlbumHero(context: ViewContext, album: Album) {
                 onDismissRequest = onDismissRequest,
             )
         },
+        showOverlay = !settings.albumTileMinimalistMode,
         content = {
             Column {
                 Text(album.name)

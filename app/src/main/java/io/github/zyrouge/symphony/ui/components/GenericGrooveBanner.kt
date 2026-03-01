@@ -34,6 +34,7 @@ fun GenericGrooveBanner(
     image: ImageRequest,
     options: @Composable (Boolean, () -> Unit) -> Unit,
     content: @Composable () -> Unit,
+    showOverlay: Boolean = true,
 ) {
     val defaultHorizontalPadding = 20.dp
     Box{
@@ -43,43 +44,45 @@ fun GenericGrooveBanner(
             contentScale = ContentScale.Fit,
             modifier = Modifier.fillMaxWidth().aspectRatio(1f)
         )
-        Row(
-            modifier = Modifier
-                .background(
-                    brush = Brush.verticalGradient(
-                        0f to Color.Transparent,
-                        1f to MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-                    )
-                )
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Box(
+        if (showOverlay) {
+            Row(
                 modifier = Modifier
-                    .padding(defaultHorizontalPadding, 32.dp, 0.dp, 12.dp)
-                    .weight(1f)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            1f to MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                        )
+                    )
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom
             ) {
-                ProvideTextStyle(
-                    MaterialTheme.typography.headlineSmall
-                        .copy(fontWeight = FontWeight.Bold)
+                Box(
+                    modifier = Modifier
+                        .padding(defaultHorizontalPadding, 32.dp, 0.dp, 12.dp)
+                        .weight(1f)
                 ) {
-                    content()
-                }
-            }
-
-            Box(modifier = Modifier.padding(4.dp)) {
-                var showOptionsMenu by remember {
-                    mutableStateOf(false)
-                }
-                IconButton(
-                    onClick = {
-                        showOptionsMenu = !showOptionsMenu
+                    ProvideTextStyle(
+                        MaterialTheme.typography.headlineSmall
+                            .copy(fontWeight = FontWeight.Bold)
+                    ) {
+                        content()
                     }
-                ) {
-                    Icon(Icons.Filled.MoreVert, null)
-                    options(showOptionsMenu) {
-                        showOptionsMenu = false
+                }
+
+                Box(modifier = Modifier.padding(4.dp)) {
+                    var showOptionsMenu by remember {
+                        mutableStateOf(false)
+                    }
+                    IconButton(
+                        onClick = {
+                            showOptionsMenu = !showOptionsMenu
+                        }
+                    ) {
+                        Icon(Icons.Filled.MoreVert, null)
+                        options(showOptionsMenu) {
+                            showOptionsMenu = false
+                        }
                     }
                 }
             }
