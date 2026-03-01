@@ -117,23 +117,25 @@ fun SongCard(
     ) {
         Box(modifier = Modifier.padding(12.dp, 12.dp, 4.dp, 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (isMultiSelectMode) {
-                    Checkbox(
-                        checked = isSelected,
-                        onCheckedChange = null,
-                        modifier = Modifier.padding(end = 4.dp),
-                    )
-                } else {
+                if (!isMultiSelectMode) {
                     leading()
                 }
-                Box {
-                    AsyncImage(
-                        song.createArtworkImageRequest(context.symphony).build(),
-                        null,
-                        modifier = Modifier
-                            .size(45.dp)
-                            .clip(RoundedCornerShape(10.dp)),
-                    )
+                Box(contentAlignment = Alignment.Center) {
+                    if (isMultiSelectMode) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = null,
+                            modifier = Modifier.size(45.dp),
+                        )
+                    } else {
+                        AsyncImage(
+                            song.createArtworkImageRequest(context.symphony).build(),
+                            null,
+                            modifier = Modifier
+                                .size(45.dp)
+                                .clip(RoundedCornerShape(10.dp)),
+                        )
+                    }
                     thumbnailLabel?.let { it ->
                         val backgroundColor =
                             thumbnailLabelStyle.backgroundColor(MaterialTheme.colorScheme)
