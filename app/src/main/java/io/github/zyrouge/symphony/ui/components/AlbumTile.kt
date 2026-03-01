@@ -43,7 +43,7 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
     val isMultiSelectMode = pageState?.isMultiSelectMode == true
     val isSelected = pageState?.selectedAlbumIds?.contains(album.id) == true
     val settings by context.symphony.settingsState.collectAsState()
-    val scrobbles = if (settings.showScrobbleCounts) context.symphony.lastFm.getAlbumScrobbleCount(album.id) else 0L
+    val scrobbles = if (settings.albumTileShowScrobbleCount) context.symphony.lastFm.getAlbumScrobbleCount(album.id) else 0L
 
     SquareGrooveTile(
         image = album.createArtworkImageRequest(context.symphony).build(),
@@ -56,14 +56,16 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
             )
         },
         content = {
-            Text(
-                album.name,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (album.artists.isNotEmpty()) {
+            if (settings.albumTileShowName) {
+                Text(
+                    album.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (settings.albumTileShowArtist && album.artists.isNotEmpty()) {
                 val artistLabel = if (album.albumArtists.contains("Various Artists")) {
                     "Various Artists"
                 } else {
@@ -85,6 +87,28 @@ fun AlbumTile(context: ViewContext, album: Album, pageState: AlbumsPageState? = 
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+            val showYear = settings.albumTileShowReleaseYear
+            val showMonth = settings.albumTileShowReleaseMonth
+            if (showYear || showMonth) {
+                val year = album.date?.year ?: album.startYear
+                val month = album.date?.monthValue
+                val dateStr = when {
+                    showYear && showMonth && year != null && month != null ->
+                        "%02d/%d".format(month, year)
+                    showYear && year != null -> year.toString()
+                    showMonth && month != null -> "%02d".format(month)
+                    else -> null
+                }
+                if (dateStr != null) {
+                    Text(
+                        dateStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         },
         onPlay = {

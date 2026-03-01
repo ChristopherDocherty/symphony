@@ -45,7 +45,6 @@ import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.SupervisorAccount
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -100,6 +99,8 @@ import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import io.github.zyrouge.symphony.ui.view.home.ArtistsPageState
 import io.github.zyrouge.symphony.ui.view.home.HomePageState
+import androidx.compose.material.icons.filled.ViewModule
+import io.github.zyrouge.symphony.ui.components.AlbumTileInfoDialog
 import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsViewRoute
 import kotlinx.serialization.Serializable
 import androidx.compose.ui.res.stringResource
@@ -283,9 +284,7 @@ private fun HomeTopAppBarDropdownMenu(
     onLastFmRefreshClick: () -> Unit,
     onSettingsClick: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-    val settings by context.symphony.settingsState.collectAsState()
-    val showScrobbleCounts = settings.showScrobbleCounts
+    var showTileInfoDialog by remember { mutableStateOf(false) }
 
     DropdownMenu(
         expanded = expanded,
@@ -307,21 +306,12 @@ private fun HomeTopAppBarDropdownMenu(
         )
         DropdownMenuItem(
             leadingIcon = {
-                Icon(Icons.Filled.Settings, stringResource(R.string.Settings))
+                Icon(Icons.Filled.ViewModule, null)
             },
-            text = { Text(stringResource(R.string.ShowScrobbleCounts)) },
-            trailingIcon = {
-                Checkbox(
-                    checked = showScrobbleCounts,
-                    onCheckedChange = null,
-                )
-            },
+            text = { Text(stringResource(R.string.AlbumTileInfo)) },
             onClick = {
-                scope.launch {
-                    context.symphony.settings.updateData {
-                        it.copy { this.showScrobbleCounts = !showScrobbleCounts }
-                    }
-                }
+                onDismissRequest()
+                showTileInfoDialog = true
             },
         )
         DropdownMenuItem(
@@ -332,6 +322,13 @@ private fun HomeTopAppBarDropdownMenu(
             onClick = onSettingsClick
         )
         extraItems()
+    }
+
+    if (showTileInfoDialog) {
+        AlbumTileInfoDialog(
+            context = context,
+            onDismissRequest = { showTileInfoDialog = false },
+        )
     }
 }
 

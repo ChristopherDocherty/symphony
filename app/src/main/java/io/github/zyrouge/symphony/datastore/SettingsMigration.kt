@@ -211,6 +211,12 @@ object SettingsMigration {
                 if (!mediaFolderUris.isNullOrEmpty()) mediaFolders.addAll(mediaFolderUris)
 
                 // ---------------------------------------------------------------
+                // Album tile display
+                // ---------------------------------------------------------------
+                albumTileShowName = true
+                albumTileShowArtist = true
+
+                // ---------------------------------------------------------------
                 // Content filtering
                 // ---------------------------------------------------------------
                 val filterPattern = prefs.getString("songs_filter_pattern", null)

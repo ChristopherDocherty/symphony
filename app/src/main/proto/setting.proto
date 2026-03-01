@@ -227,6 +227,13 @@ message Settings {
   repeated string whitelist_folders = 71;
   repeated string media_folders = 72;                      // URIs as strings
 
+  // --- Album tile display (90–99) ---
+  bool album_tile_show_name = 90;           // default true — written by migration
+  bool album_tile_show_artist = 91;         // default true — written by migration
+  bool album_tile_show_scrobble_count = 92; // default false
+  bool album_tile_show_release_year = 93;   // default false
+  bool album_tile_show_release_month = 94;  // default false
+
   // --- Content filtering (80–89) ---
   string songs_filter_pattern = 80;                        // empty = unset
   uint32 min_song_duration = 81;

@@ -54,6 +54,10 @@ object SettingsDefaults {
         foldersHorizontalGridColumns = ResponsiveGridColumns.DEFAULT_HORIZONTAL_COLUMNS
         foldersVerticalGridColumns = ResponsiveGridColumns.DEFAULT_VERTICAL_COLUMNS
 
+        // Album tile display
+        albumTileShowName = true
+        albumTileShowArtist = true
+
         // Content
         artistTagSeparators.addAll(listOf(";", "/", ",", "+"))
         genreTagSeparators.addAll(listOf(";", "/", ",", "+"))

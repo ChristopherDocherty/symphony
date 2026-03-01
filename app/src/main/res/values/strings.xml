@@ -249,6 +249,12 @@
     <string name="LastFmUsername">Username</string>
     <string name="LastFmScrobbles">%1$s scrobbles</string>
     <string name="ShowScrobbleCounts">Show scrobble counts</string>
+    <string name="AlbumTileInfo">Album tile info</string>
+    <string name="ShowAlbumName">Show album name</string>
+    <string name="ShowArtistName">Show artist name</string>
+    <string name="ShowScrobbleCount">Show scrobble count</string>
+    <string name="ShowReleaseYear">Show release year</string>
+    <string name="ShowReleaseMonth">Show release month</string>
     <string name="UpdateCoverArt">Update cover art</string>
     <string name="SearchOnCovers">Search on Covers</string>
     <string name="CoverSearchHint">"%1$s" copied to clipboard. Find the cover, copy the image URL, then return here.</string>
