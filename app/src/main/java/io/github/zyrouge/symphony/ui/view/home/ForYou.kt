@@ -45,28 +45,41 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.SongSortBy
-import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
 import io.github.zyrouge.symphony.services.radio.Radio
 import io.github.zyrouge.symphony.ui.components.IconTextBody
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumArtistViewRoute
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
-import io.github.zyrouge.symphony.utils.randomSubList
 import io.github.zyrouge.symphony.utils.runIfOrDefault
 import io.github.zyrouge.symphony.utils.subListNonStrict
+import java.time.LocalDate
+import java.time.MonthDay
+import java.time.temporal.ChronoUnit
+import kotlin.random.Random
 import kotlinx.coroutines.flow.map
-import androidx.compose.ui.res.stringResource
-import io.github.zyrouge.symphony.R
 
 enum class ForYou(val label: (context: ViewContext) -> String) {
-    Albums(label = { it.activity.getString(R.string.SuggestedAlbums) }),
-    Artists(label = { it.activity.getString(R.string.SuggestedArtists) }),
+    Albums(label = { it.activity.getString(R.string.UnscrobbbledAlbums) }),
+    Artists(label = { it.activity.getString(R.string.UnscrobbbledArtists) }),
     AlbumArtists(label = { it.activity.getString(R.string.SuggestedAlbumArtists) })
+}
+
+private fun <T> seededSubList(list: List<T>, count: Int, seed: Long): List<T> {
+    val rng = Random(seed)
+    val mut = list.toMutableList()
+    val result = mutableListOf<T>()
+    repeat(minOf(count, mut.size)) {
+        val idx = rng.nextInt(mut.size)
+        result.add(mut.removeAt(idx))
+    }
+    return result
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,11 +96,13 @@ fun ForYouView(context: ViewContext) {
     val sortBy by context.symphony.settings.data.map { it.uiDefaultSongSort.by }.collectAsState(SongSortBy.SONG_TITLE)
     val sortReverse by context.symphony.settings.data.map { it.uiDefaultSongSort.reverse }.collectAsState(false)
     val forYouSettings by context.symphony.settingsState.collectAsState()
+    val isLastFmRefreshing by context.symphony.lastFm.isRefreshing.collectAsState()
     val contents = remember(forYouSettings.forYouContentsList) {
         forYouSettings.forYouContentsList
             .mapNotNull { runCatching { ForYou.valueOf(it) }.getOrNull() }
             .toSet()
     }
+    val daySeed = remember { LocalDate.now().toEpochDay() }
 
     when {
         songIds.isNotEmpty() -> {
@@ -109,24 +124,51 @@ fun ForYouView(context: ViewContext) {
                     }
                 }
             }
-            val randomAlbums by remember(albumsIsUpdating, albumIds) {
+            val randomAlbums by remember(albumsIsUpdating, albumIds, isLastFmRefreshing) {
                 derivedStateOf {
                     runIfOrDefault(!albumsIsUpdating, listOf()) {
-                        albumIds.randomSubList(6)
+                        val unscrobbled = albumIds.filter {
+                            context.symphony.lastFm.getAlbumScrobbleCount(it) == 0L
+                        }
+                        seededSubList(unscrobbled, 6, daySeed)
                     }
                 }
             }
-            val randomArtists by remember(artistsIsUpdating, artistNames) {
+            val randomArtists by remember(artistsIsUpdating, artistNames, isLastFmRefreshing) {
                 derivedStateOf {
                     runIfOrDefault(!artistsIsUpdating, listOf()) {
-                        artistNames.randomSubList(6)
+                        val unscrobbled = artistNames.filter {
+                            context.symphony.lastFm.getArtistScrobbleCount(it) == 0L
+                        }
+                        seededSubList(unscrobbled, 6, daySeed)
                     }
                 }
             }
             val randomAlbumArtists by remember(albumArtistsIsUpdating, albumArtistNames) {
                 derivedStateOf {
                     runIfOrDefault(!albumArtistsIsUpdating, listOf()) {
-                        albumArtistNames.randomSubList(6)
+                        seededSubList(albumArtistNames.toList(), 6, daySeed)
+                    }
+                }
+            }
+            val anniversaryAlbumIds by remember(albumsIsUpdating, albumIds) {
+                derivedStateOf {
+                    runIfOrDefault(!albumsIsUpdating, listOf()) {
+                        val today = LocalDate.now()
+                        val candidates = albumIds.filter { id ->
+                            val album = context.symphony.groove.album.get(id)
+                                ?: return@filter false
+                            val date = album.date ?: return@filter false
+                            if (date.year >= today.year) return@filter false
+                            val albumThisYear = try {
+                                MonthDay.from(date).atYear(today.year)
+                            } catch (e: Exception) {
+                                return@filter false
+                            }
+                            val diff = ChronoUnit.DAYS.between(albumThisYear, today).toInt()
+                            diff in -3..3
+                        }
+                        seededSubList(candidates, 6, daySeed)
                     }
                 }
             }
@@ -275,17 +317,25 @@ fun ForYouView(context: ViewContext) {
                         }
                     }
                 }
+                if (!albumsIsUpdating && anniversaryAlbumIds.isNotEmpty()) {
+                    AnniversaryAlbumsSection(
+                        context,
+                        isLoading = albumsIsUpdating,
+                        albumIds = anniversaryAlbumIds,
+                    )
+                }
                 contents.forEach {
                     when (it) {
                         ForYou.Albums -> SuggestedAlbums(
                             context,
+                            label = stringResource(R.string.UnscrobbbledAlbums),
                             isLoading = albumsIsUpdating,
                             albumIds = randomAlbums,
                         )
 
                         ForYou.Artists -> SuggestedArtists(
                             context,
-                            label = stringResource(R.string.SuggestedArtists),
+                            label = stringResource(R.string.UnscrobbbledArtists),
                             isLoading = artistsIsUpdating,
                             artistNames = randomArtists,
                         )
@@ -433,6 +483,7 @@ private fun <T> SixGrid(
 @Composable
 private fun SuggestedAlbums(
     context: ViewContext,
+    label: String,
     isLoading: Boolean,
     albumIds: List<String>,
 ) {
@@ -444,7 +495,7 @@ private fun SuggestedAlbums(
 
     Spacer(modifier = Modifier.height(24.dp))
     SideHeading {
-        Text(stringResource(R.string.SuggestedAlbums))
+        Text(label)
     }
     Spacer(modifier = Modifier.height(12.dp))
     StatedSixGrid(context, isLoading, albums) { album ->
@@ -462,6 +513,64 @@ private fun SuggestedAlbums(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(4.dp)),
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AnniversaryAlbumsSection(
+    context: ViewContext,
+    isLoading: Boolean,
+    albumIds: List<String>,
+) {
+    val albums by remember(albumIds) {
+        derivedStateOf {
+            albumIds.mapNotNull { context.symphony.groove.album.get(it) }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(24.dp))
+    SideHeading {
+        Text(stringResource(R.string.AnniversaryAlbums))
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+    StatedSixGrid(context, isLoading, albums) { album ->
+        Card(
+            onClick = {
+                context.navController.navigate(AlbumViewRoute(album.id))
+            }
+        ) {
+            Box(modifier = Modifier.aspectRatio(1f)) {
+                AsyncImage(
+                    album.createArtworkImageRequest(context.symphony).build(),
+                    null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                album.date?.year?.let { year ->
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0f),
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
+                                    )
+                                )
+                            )
+                            .padding(4.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            year.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                    }
+                }
+            }
         }
     }
 }

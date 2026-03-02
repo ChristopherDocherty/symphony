@@ -72,6 +72,9 @@
     <string name="ForYou">For you</string>
     <string name="SuggestedAlbums">Suggested albums</string>
     <string name="SuggestedArtists">Suggested artists</string>
+    <string name="UnscrobbbledAlbums">Unscrobbled albums</string>
+    <string name="UnscrobbbledArtists">Unscrobbled artists</string>
+    <string name="AnniversaryAlbums">Anniversary albums</string>
     <string name="RecentlyAddedSongs">Recently added songs</string>
     <string name="ClearSongCache">Clear song cache</string>
     <string name="SongCacheCleared">Song cache cleared</string>
