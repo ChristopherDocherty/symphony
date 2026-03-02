@@ -49,7 +49,9 @@ import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.LoopMode
 import io.github.zyrouge.symphony.services.radio.RadioQueue
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import io.github.zyrouge.symphony.ui.view.LyricsEditorViewRoute
 import io.github.zyrouge.symphony.ui.view.LyricsViewRoute
+import androidx.compose.material.icons.filled.Edit
 import io.github.zyrouge.symphony.ui.view.NowPlayingData
 import io.github.zyrouge.symphony.ui.view.NowPlayingDefaults
 import io.github.zyrouge.symphony.NowPlayingLyricsLayout
@@ -340,6 +342,18 @@ fun NowPlayingBodyBottomBar(
                         },
                         supportingContent = {
                             Text("x${data.currentPitch}")
+                        },
+                    )
+                    ListItem(
+                        modifier = Modifier.clickable {
+                            closeBottomSheet()
+                            context.navController.navigate(LyricsEditorViewRoute(data.song.id))
+                        },
+                        leadingContent = {
+                            Icon(Icons.Filled.Edit, null)
+                        },
+                        headlineContent = {
+                            Text(stringResource(R.string.EditLyrics))
                         },
                     )
                     Spacer(modifier = Modifier.height(8.dp))

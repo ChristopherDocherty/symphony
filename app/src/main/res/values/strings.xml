@@ -263,4 +263,13 @@
     <string name="Apply">Apply</string>
     <string name="DebugMode">Debug Mode</string>
     <string name="DebugModeDescription">Expose extra diagnostic filter options in the album filter dialog</string>
+    <string name="EditLyrics">Edit lyrics</string>
+    <string name="LyricsEditor">Lyrics editor</string>
+    <string name="PlainText">Plain text</string>
+    <string name="TimingMode">Timing</string>
+    <string name="MarkNextLine">Mark next line</string>
+    <string name="ResetTiming">Reset timing</string>
+    <string name="AllLinesMarked">All lines marked</string>
+    <string name="LyricsSave">Save lyrics</string>
+    <string name="LyricsSaved">Lyrics saved</string>
 </resources>

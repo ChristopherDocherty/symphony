@@ -164,6 +164,25 @@ class SongRepository(private val symphony: Symphony) {
         fallback = Assets.getPlaceholderId(symphony),
     )
 
+    sealed class LyricsSource {
+        data class Embedded(val song: Song) : LyricsSource()
+        data class Sidecar(val uri: Uri, val ext: String) : LyricsSource()
+        object None : LyricsSource()
+    }
+
+    fun getLyricsSource(song: Song): LyricsSource {
+        // Check for a sidecar file first (most specific)
+        symphony.groove.exposer.getSidecarUri(song.path)?.let { (uri, ext) ->
+            return LyricsSource.Sidecar(uri, ext)
+        }
+        // Fall back to embedded lyrics in cache
+        val lyricsKey = song.path.substringBeforeLast('.', song.path)
+        if (symphony.database.lyricsCache.get(lyricsKey) != null) {
+            return LyricsSource.Embedded(song)
+        }
+        return LyricsSource.None
+    }
+
     suspend fun getLyrics(song: Song): String? {
         try {
             // The key for the lyrics cache is the song's path without its file extension.

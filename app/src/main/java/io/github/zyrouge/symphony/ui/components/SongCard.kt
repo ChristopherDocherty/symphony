@@ -65,6 +65,8 @@ import io.github.zyrouge.symphony.ui.view.AlbumArtistViewRoute
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.ui.view.home.SongsPageState
+import io.github.zyrouge.symphony.ui.view.LyricsEditorViewRoute
+import androidx.compose.material.icons.filled.Edit
 import io.github.zyrouge.symphony.utils.Logger
 import androidx.compose.ui.res.stringResource
 
@@ -421,6 +423,14 @@ fun SongDropdownMenu(
                 onClick = {
                     onDismissRequest()
                     showInfoDialog = true
+                }
+            )
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.Filled.Edit, null) },
+                text = { Text(stringResource(R.string.EditLyrics)) },
+                onClick = {
+                    onDismissRequest()
+                    context.navController.navigate(LyricsEditorViewRoute(song.id))
                 }
             )
             trailingContent?.invoke(this, onDismissRequest)

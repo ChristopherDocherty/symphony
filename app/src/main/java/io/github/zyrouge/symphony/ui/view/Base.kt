@@ -107,6 +107,9 @@ fun BaseView(symphony: Symphony, activity: MainActivity) {
                 baseComposable<LastFmSettingsViewRoute> {
                     LastFmSettingsView(context)
                 }
+                baseComposable<LyricsEditorViewRoute> {
+                    LyricsEditorView(context, it.toRoute<LyricsEditorViewRoute>().songId)
+                }
             }
         }
     }

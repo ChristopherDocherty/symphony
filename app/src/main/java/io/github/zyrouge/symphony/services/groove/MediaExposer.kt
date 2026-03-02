@@ -429,6 +429,18 @@ class MediaExposer(private val symphony: Symphony) {
         }
     }
 
+    /**
+     * Look up the sidecar lyrics file for an audio file by its path.
+     * Checks for a .lrc file first, then a .txt file.
+     * Returns (uri, "lrc") or (uri, "txt"), or null if neither exists.
+     */
+    fun getSidecarUri(audioPath: String): Pair<Uri, String>? {
+        val base = audioPath.substringBeforeLast('.')
+        uris["$base.lrc"]?.let { return it to "lrc" }
+        uris["$base.txt"]?.let { return it to "txt" }
+        return null
+    }
+
     companion object {
         const val MIMETYPE_M3U = "audio/x-mpegurl"
     }
