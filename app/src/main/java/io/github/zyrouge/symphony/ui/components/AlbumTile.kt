@@ -6,6 +6,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Album // Added import
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shuffle
@@ -148,6 +149,7 @@ fun AlbumDropdownMenu(
     var showEnqueueSubmenu by remember { mutableStateOf(false) }
     var showLastFmSubmenu by remember { mutableStateOf(false) }
     var showCoverArtDialog by remember { mutableStateOf(false) }
+    var showArtManagerDialog by remember { mutableStateOf(false) }
     val uriHandler = LocalUriHandler.current
 
     val scope = rememberCoroutineScope()
@@ -300,6 +302,16 @@ fun AlbumDropdownMenu(
             )
             DropdownMenuItem(
                 leadingIcon = {
+                    Icon(Icons.Filled.PhotoLibrary, null)
+                },
+                text = { Text(stringResource(R.string.ManageCoverArt)) },
+                onClick = {
+                    onDismissRequest()
+                    showArtManagerDialog = true
+                }
+            )
+            DropdownMenuItem(
+                leadingIcon = {
                     Icon(painter=painterResource(R.drawable.last_fm), "last.fm icon")
                 },
                 text = { Text("Last.fm") },
@@ -337,6 +349,16 @@ fun AlbumDropdownMenu(
             album = album,
             onDismissRequest = {
                 showCoverArtDialog = false
+            }
+        )
+    }
+
+    if (showArtManagerDialog) {
+        AlbumArtManagerDialog(
+            context = context,
+            albumId = album.id,
+            onDismissRequest = {
+                showArtManagerDialog = false
             }
         )
     }

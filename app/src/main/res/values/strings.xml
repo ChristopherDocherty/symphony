@@ -257,6 +257,10 @@
     <string name="ShowReleaseMonth">Show release month</string>
     <string name="MinimalistMode">Minimalist mode</string>
     <string name="UpdateCoverArt">Update cover art</string>
+    <string name="ManageCoverArt">Manage cover art</string>
+    <string name="NoImagesFound">No image files found in this directory</string>
+    <string name="DeleteImage">Delete image</string>
+    <string name="DeleteImageConfirm">Delete "%1$s"? This cannot be undone.</string>
     <string name="SearchOnCovers">Search on Covers</string>
     <string name="CoverSearchHint">"%1$s" copied to clipboard. Find the cover, copy the image URL, then return here.</string>
     <string name="ImageUrl">Image URL</string>
