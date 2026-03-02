@@ -2,6 +2,7 @@ package io.github.zyrouge.symphony.ui.components
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import java.io.ByteArrayOutputStream
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.util.Log
@@ -189,8 +190,18 @@ fun AlbumCoverArtDialog(
                             ) ?: error("Failed to create cover.jpg document")
                             Log.d(TAG, "Writing cover to $coverUri")
 
+                            val maxBytes = 1_572_864 // 1.5 MB
+                            val bos = ByteArrayOutputStream()
+                            var quality = 100
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bos)
+                            while (bos.size() > maxBytes && quality > 10) {
+                                bos.reset()
+                                quality -= 5
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, bos)
+                            }
+                            Log.d(TAG, "Saving cover at quality=$quality, size=${bos.size()} bytes")
                             context.activity.contentResolver.openOutputStream(coverUri, "wt")?.use { fos ->
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+                                fos.write(bos.toByteArray())
                             } ?: error("Failed to open output stream for cover.jpg")
                             Log.d(TAG, "Write successful")
 
