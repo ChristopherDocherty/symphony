@@ -136,6 +136,15 @@ enum GenreSortBy {
   GENRE_SORT_TRACKS_COUNT = 2;
 }
 
+// Maps to WishlistRepository.sort(). Default (0) = CUSTOM — matches kotlin default.
+enum WishlistSortBy {
+  WISHLIST_SORT_CUSTOM = 0;
+  WISHLIST_SORT_NAME = 1;
+  WISHLIST_SORT_ARTIST = 2;
+  WISHLIST_SORT_YEAR = 3;
+  WISHLIST_SORT_PRIORITY = 4;
+}
+
 // Maps to PlaylistRepository.SortBy. Default (0) = CUSTOM — matches kotlin default.
 enum PlaylistSortBy {
   PLAYLIST_SORT_CUSTOM = 0;
@@ -226,6 +235,11 @@ message Settings {
   repeated string blacklist_folders = 70;
   repeated string whitelist_folders = 71;
   repeated string media_folders = 72;                      // URIs as strings
+  string wishlist_dir = 73;                                // URI as string
+  uint32 wishlist_horizontal_grid_columns = 74;
+  uint32 wishlist_vertical_grid_columns = 75;
+  WishlistSortBy wishlist_sort_by = 76;
+  bool wishlist_sort_reverse = 77;
 
   // --- Album tile display (90–99) ---
   bool album_tile_show_name = 90;           // default true — written by migration

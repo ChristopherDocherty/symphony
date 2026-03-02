@@ -7,6 +7,7 @@ import io.github.zyrouge.symphony.services.groove.repositories.ArtistRepository
 import io.github.zyrouge.symphony.services.groove.repositories.GenreRepository
 import io.github.zyrouge.symphony.services.groove.repositories.PlaylistRepository
 import io.github.zyrouge.symphony.services.groove.repositories.SongRepository
+import io.github.zyrouge.symphony.services.groove.repositories.WishlistRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,11 +35,13 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
     val albumArtist = AlbumArtistRepository(symphony)
     val genre = GenreRepository(symphony)
     val playlist = PlaylistRepository(symphony)
+    val wishlist = WishlistRepository(symphony)
 
     private suspend fun fetch() {
         coroutineScope.launch {
             exposer.fetch()
             playlist.fetch()
+            wishlist.fetch()
         }.join()
     }
 
@@ -46,6 +49,7 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
         coroutineScope.launch {
             exposer.loadFromCache()
             playlist.fetch()
+            wishlist.fetch()
         }.join()
     }
 
@@ -58,6 +62,7 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
                 async { artist.reset() },
                 async { genre.reset() },
                 async { playlist.reset() },
+                async { wishlist.reset() },
                 async { song.reset() },
             )
         }.join()

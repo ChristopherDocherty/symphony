@@ -279,4 +279,14 @@
     <string name="AllLinesMarked">All lines marked</string>
     <string name="LyricsSave">Save lyrics</string>
     <string name="LyricsSaved">Lyrics saved</string>
+    <string name="Wishlist">Wishlist</string>
+    <string name="WishlistEmpty">No albums in wishlist</string>
+    <string name="WishlistNoDirConfigured">No storage directory configured</string>
+    <string name="ConfigureDirectory">Configure directory</string>
+    <string name="AddToWishlist">Add to wishlist</string>
+    <string name="EditWishlistAlbum">Edit album</string>
+    <string name="DeleteWishlistAlbum">Delete album</string>
+    <string name="WishlistAlbumArtUrl">Album art URL (optional)</string>
+    <string name="Priority">Priority</string>
+    <string name="XWishlistAlbums">%1$s wishlist albums</string>
 </resources>

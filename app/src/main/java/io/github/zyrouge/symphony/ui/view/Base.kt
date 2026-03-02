@@ -110,6 +110,9 @@ fun BaseView(symphony: Symphony, activity: MainActivity) {
                 baseComposable<LyricsEditorViewRoute> {
                     LyricsEditorView(context, it.toRoute<LyricsEditorViewRoute>().songId)
                 }
+                baseComposable<WishlistAlbumViewRoute> {
+                    WishlistAlbumView(context, it.toRoute())
+                }
             }
         }
     }

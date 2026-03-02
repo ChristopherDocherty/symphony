@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.automirrored.outlined.QueueMusic
 import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.filled.SupervisorAccount
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Album
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
@@ -92,6 +94,8 @@ import io.github.zyrouge.symphony.ui.view.home.GenresView
 import io.github.zyrouge.symphony.ui.view.home.PlaylistsView
 import io.github.zyrouge.symphony.ui.view.home.SongsView
 import io.github.zyrouge.symphony.ui.view.home.TreeView
+import io.github.zyrouge.symphony.ui.view.home.WishlistPageState
+import io.github.zyrouge.symphony.ui.view.home.WishlistView
 import io.github.zyrouge.symphony.HomePageBottomBarLabelVisibility
 import io.github.zyrouge.symphony.copy
 import kotlinx.coroutines.launch
@@ -167,6 +171,11 @@ enum class HomePage(
         label = { it.activity.getString(R.string.Tree) },
         selectedIcon = { Icons.Filled.AccountTree },
         unselectedIcon = { Icons.Outlined.AccountTree }
+    ),
+    Wishlist(
+        label = { it.activity.getString(R.string.Wishlist) },
+        selectedIcon = { Icons.Filled.Bookmark },
+        unselectedIcon = { Icons.Outlined.BookmarkBorder }
     );
 }
 
@@ -270,6 +279,7 @@ private fun HomePageContent(
             HomePage.Folders -> FoldersView(context)
             HomePage.Playlists -> PlaylistsView(context)
             HomePage.Tree -> TreeView(context)
+            HomePage.Wishlist -> WishlistView(context, pageStates[page] as? WishlistPageState)
         }
     }
 }
@@ -406,6 +416,7 @@ fun HomeView(context: ViewContext) {
         HomePage.Songs to SongsPageState(),
         HomePage.Albums to AlbumsPageState(),
         HomePage.Artists to ArtistsPageState(),
+        HomePage.Wishlist to WishlistPageState(),
     ) }
     val currentPageState = pageStates[currentTab]
 
