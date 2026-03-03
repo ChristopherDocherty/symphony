@@ -95,7 +95,7 @@ fun AlbumFilterDialog(
             state.addAll(field.getSelected(filter))
         }
         availableValues.forEach { (field, avail) ->
-            avail.addAll(context.symphony.groove.album.getAvailableTagValues(field.tagName))
+            avail.addAll(field.sortValues(context.symphony.groove.album.getAvailableTagValues(field.tagName)))
         }
         debugFieldStates.forEach { (field, state) ->
             state.addAll(field.getSelected(filter))

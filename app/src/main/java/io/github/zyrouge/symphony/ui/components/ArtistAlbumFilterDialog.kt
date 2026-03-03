@@ -87,7 +87,7 @@ fun ArtistAlbumFilterDialog(
             state.addAll(field.getSelected(filter))
         }
         availableValues.forEach { (field, avail) ->
-            avail.addAll(context.symphony.groove.album.getAvailableTagValues(field.tagName))
+            avail.addAll(field.sortValues(context.symphony.groove.album.getAvailableTagValues(field.tagName)))
         }
         presets.addAll(settings.uiArtistViewAlbumFilterPresetsList)
         isLoading = false

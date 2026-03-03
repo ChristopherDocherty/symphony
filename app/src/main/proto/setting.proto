@@ -73,7 +73,7 @@ message AlbumFilter {
   repeated string listened_to_status = 3;
   repeated string country = 4;
   repeated string collections = 5;
-  repeated uint32 album_of_the_year_rank = 6;
+  repeated string album_of_the_year_rank = 6;
   repeated uint32 release_year = 7;
   // Debug filters (only applied when debug_mode is enabled)
   repeated string bitrate_range = 8;

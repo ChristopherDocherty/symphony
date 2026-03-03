@@ -9,6 +9,7 @@ data class StringFilterField(
     val tagName: String,
     val getSelected: (AlbumFilter) -> List<String>,
     val applyTo: (AlbumFilter.Builder, List<String>) -> AlbumFilter.Builder,
+    val sortValues: (List<String>) -> List<String> = { it.sorted() },
 )
 
 val ALBUM_STRING_FILTER_FIELDS = listOf(
@@ -41,6 +42,16 @@ val ALBUM_STRING_FILTER_FIELDS = listOf(
         tagName = "COLLECTIONS",
         getSelected = { it.collectionsList },
         applyTo = { b, v -> b.clearCollections().addAllCollections(v) },
+    ),
+    StringFilterField(
+        label = "AOTY Rank",
+        tagName = "AOTY",
+        getSelected = { it.albumOfTheYearRankList },
+        applyTo = { b, v -> b.clearAlbumOfTheYearRank().addAllAlbumOfTheYearRank(v) },
+        sortValues = { values ->
+            val (blank, rest) = values.partition { it == BLANK_TAG_VALUE }
+            blank + rest.sortedWith(compareBy { it.toIntOrNull() ?: Int.MAX_VALUE })
+        },
     ),
 )
 
