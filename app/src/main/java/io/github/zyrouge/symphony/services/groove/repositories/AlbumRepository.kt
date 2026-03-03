@@ -14,6 +14,10 @@ import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_MEDIUM
 import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_UNKNOWN
 import io.github.zyrouge.symphony.services.groove.BITRATE_RANGE_VERY_HIGH
 import io.github.zyrouge.symphony.services.groove.BLANK_TAG_VALUE
+import io.github.zyrouge.symphony.services.groove.LYRICS_SOURCE_EMBEDDED
+import io.github.zyrouge.symphony.services.groove.LYRICS_SOURCE_LRC
+import io.github.zyrouge.symphony.services.groove.LYRICS_SOURCE_NONE
+import io.github.zyrouge.symphony.services.groove.LYRICS_SOURCE_TXT
 import io.github.zyrouge.symphony.services.groove.Album
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.Assets
@@ -62,7 +66,11 @@ class AlbumRepository(private val symphony: Symphony) {
         customTagValuesCache.compute(albumId) { _, tagMap ->
             (tagMap ?: ConcurrentHashMap()).apply {
                 song.customTags.forEach { (tagName, value) ->
-                    compute(tagName) { _, values -> (values ?: mutableSetOf()).apply { add(value) } }
+                    compute(tagName) { _, values ->
+                        (values ?: mutableSetOf()).apply {
+                            value.split(",").map { it.trim() }.filter { it.isNotEmpty() }.forEach { add(it) }
+                        }
+                    }
                 }
             }
         }
@@ -225,6 +233,10 @@ class AlbumRepository(private val symphony: Symphony) {
                          else albumIds.filterNot { it in hiddenAlbumIds }
 
         val debugMode = symphony.settingsState.value.debugMode
+        val lyricsSelected = filter.lyricsSourceList
+        val lyricsKeys = if (debugMode && lyricsSelected.isNotEmpty()) {
+            symphony.database.lyricsCache.keys().toHashSet()
+        } else null
         val filteredAlbumIds = visibleIds.filter { albumId ->
             ALBUM_STRING_FILTER_FIELDS.all { field ->
                 val selected = field.getSelected(filter)
@@ -244,7 +256,9 @@ class AlbumRepository(private val symphony: Symphony) {
                 // Artwork source filter
                 val artworkSelected = filter.artworkSourceList
                 val artworkOk = artworkSelected.isEmpty() || getArtworkSource(albumId) in artworkSelected
-                bitrateOk && artworkOk
+                // Lyrics source filter
+                val lyricsOk = lyricsSelected.isEmpty() || getLyricsSource(albumId, lyricsKeys!!) in lyricsSelected
+                bitrateOk && artworkOk && lyricsOk
             })
         }
         val sorted = when (by) {
@@ -314,5 +328,32 @@ class AlbumRepository(private val symphony: Symphony) {
             return ARTWORK_SOURCE_DIRECTORY
         }
         return if (firstSong.coverFile != null) ARTWORK_SOURCE_EMBEDDED else ARTWORK_SOURCE_NONE
+    }
+
+    /**
+     * Returns the best lyrics source found across all songs in [albumId]:
+     * - [LYRICS_SOURCE_LRC] if any song has a .lrc sidecar (checked in-memory via exposer.uris)
+     * - [LYRICS_SOURCE_TXT] if any song has a .txt sidecar but none have .lrc
+     * - [LYRICS_SOURCE_EMBEDDED] if any song has embedded lyrics in the cache but no sidecars
+     * - [LYRICS_SOURCE_NONE] if no songs have any lyrics
+     *
+     * [lyricsKeys] is the pre-loaded set of keys from [lyricsCache] (one batch query per
+     * [getAlbums] call) so this helper avoids per-song SQLite queries.
+     */
+    fun getLyricsSource(albumId: String, lyricsKeys: Set<String>): String {
+        val songIds = songIdsCache[albumId] ?: return LYRICS_SOURCE_NONE
+        var bestSource = LYRICS_SOURCE_NONE
+        for (songId in songIds) {
+            val song = symphony.groove.song.get(songId) ?: continue
+            val sidecar = symphony.groove.exposer.getSidecarUri(song.path)
+            if (sidecar != null) {
+                if (sidecar.second == "lrc") return LYRICS_SOURCE_LRC
+                bestSource = LYRICS_SOURCE_TXT
+            } else if (bestSource == LYRICS_SOURCE_NONE) {
+                val lyricsKey = song.path.substringBeforeLast('.', song.path)
+                if (lyricsKey in lyricsKeys) bestSource = LYRICS_SOURCE_EMBEDDED
+            }
+        }
+        return bestSource
     }
 }

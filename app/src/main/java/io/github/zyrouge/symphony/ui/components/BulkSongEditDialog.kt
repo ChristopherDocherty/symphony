@@ -152,6 +152,7 @@ fun BulkSongEditDialog(
                                 placeholder = if (fieldPlaceholders[i].isNotEmpty()) {
                                     { Text(fieldPlaceholders[i]) }
                                 } else null,
+                                supportingText = field.hint?.let { hint -> { Text(hint) } },
                                 enabled = !isSaving,
                                 trailingIcon = {
                                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedFieldIndex == i)
@@ -183,6 +184,7 @@ fun BulkSongEditDialog(
                             placeholder = if (fieldPlaceholders[i].isNotEmpty()) {
                                 { Text(fieldPlaceholders[i]) }
                             } else null,
+                            supportingText = field.hint?.let { hint -> { Text(hint) } },
                             enabled = !isSaving,
                             modifier = Modifier.fillMaxWidth(),
                         )

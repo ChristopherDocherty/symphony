@@ -192,8 +192,8 @@ data class Song(
                 path = path.pathString,
                 customTags = ALBUM_STRING_FILTER_FIELDS
                     .mapNotNull { field ->
-                        metadata.customTags[field.tagName]?.firstOrNull()
-                            ?.let { field.tagName to it }
+                        metadata.customTags[field.tagName]?.takeIf { it.isNotEmpty() }
+                            ?.joinToString(",")?.let { field.tagName to it }
                     }
                     .toMap(),
             )

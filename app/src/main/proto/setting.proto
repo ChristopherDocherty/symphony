@@ -78,6 +78,7 @@ message AlbumFilter {
   // Debug filters (only applied when debug_mode is enabled)
   repeated string bitrate_range = 8;
   repeated string artwork_source = 9;
+  repeated string lyrics_source = 10;
 }
 
 // ---------------------------------------------------------------------------

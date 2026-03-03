@@ -10,6 +10,7 @@ data class StringFilterField(
     val getSelected: (AlbumFilter) -> List<String>,
     val applyTo: (AlbumFilter.Builder, List<String>) -> AlbumFilter.Builder,
     val sortValues: (List<String>) -> List<String> = { it.sorted() },
+    val hint: String? = null,
 )
 
 val ALBUM_STRING_FILTER_FIELDS = listOf(
@@ -42,6 +43,7 @@ val ALBUM_STRING_FILTER_FIELDS = listOf(
         tagName = "COLLECTIONS",
         getSelected = { it.collectionsList },
         applyTo = { b, v -> b.clearCollections().addAllCollections(v) },
+        hint = "Separate multiple values with commas",
     ),
     StringFilterField(
         label = "AOTY Rank",
@@ -81,6 +83,12 @@ const val ARTWORK_SOURCE_EMBEDDED = "embedded"
 const val ARTWORK_SOURCE_DIRECTORY = "directory file"
 const val ARTWORK_SOURCE_NONE = "none"
 
+// Lyrics-source identifiers (stored in AlbumFilter.lyrics_source)
+const val LYRICS_SOURCE_LRC = "lrc"
+const val LYRICS_SOURCE_TXT = "txt"
+const val LYRICS_SOURCE_EMBEDDED = "embedded"
+const val LYRICS_SOURCE_NONE = "none"
+
 val ALBUM_DEBUG_FILTER_FIELDS = listOf(
     DebugAlbumFilterField(
         label = "Bitrate",
@@ -103,5 +111,16 @@ val ALBUM_DEBUG_FILTER_FIELDS = listOf(
         ),
         getSelected = { it.artworkSourceList },
         applyTo = { b, v -> b.clearArtworkSource().addAllArtworkSource(v) },
+    ),
+    DebugAlbumFilterField(
+        label = "Lyrics Source",
+        values = listOf(
+            LYRICS_SOURCE_LRC,
+            LYRICS_SOURCE_TXT,
+            LYRICS_SOURCE_EMBEDDED,
+            LYRICS_SOURCE_NONE,
+        ),
+        getSelected = { it.lyricsSourceList },
+        applyTo = { b, v -> b.clearLyricsSource().addAllLyricsSource(v) },
     ),
 )
