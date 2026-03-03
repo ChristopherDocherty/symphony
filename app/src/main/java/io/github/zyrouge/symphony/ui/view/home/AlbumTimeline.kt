@@ -3,6 +3,7 @@ package io.github.zyrouge.symphony.ui.view.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +15,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material3.DropdownMenuItem
@@ -112,27 +116,40 @@ fun AlbumTimelineView(context: ViewContext, pageState: AlbumTimelinePageState? =
     val (yearGroups, noYearCount) = yearData
 
     LoaderScaffold(context, isLoading = isUpdating) {
-        Column(modifier = Modifier.fillMaxSize().padding(vertical = 16.dp)) {
-            if (noYearCount > 0) {
-                Text(
-                    text = "No year: $noYearCount album${if (noYearCount == 1) "" else "s"}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 12.dp),
-                )
-            }
-            if (yearGroups.isNotEmpty()) {
-                AlbumYearChart(yearGroups = yearGroups)
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            // Overhead = column vertical padding (32dp) + year label + spacer (~20dp)
+            // + "no year" row if present (~32dp)
+            val overhead = 52.dp + if (noYearCount > 0) 32.dp else 0.dp
+            val minChartHeight = 160.dp
+            val chartHeight = (maxHeight - overhead).coerceAtLeast(minChartHeight)
+            val needsScroll = maxHeight < (minChartHeight + overhead)
+
+            Column(
+                modifier = if (needsScroll)
+                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(vertical = 16.dp)
+                else
+                    Modifier.fillMaxSize().padding(vertical = 16.dp),
+            ) {
+                if (noYearCount > 0) {
+                    Text(
+                        text = "No year: $noYearCount album${if (noYearCount == 1) "" else "s"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 12.dp),
+                    )
+                }
+                if (yearGroups.isNotEmpty()) {
+                    AlbumYearChart(yearGroups = yearGroups, chartHeight = chartHeight)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun AlbumYearChart(yearGroups: List<Pair<Int, Int>>) {
-    val chartHeight = 220.dp
+private fun AlbumYearChart(yearGroups: List<Pair<Int, Int>>, chartHeight: Dp) {
     val barWidth = 44.dp
     val barGap = 6.dp
     val maxCount = yearGroups.maxOf { it.second }
