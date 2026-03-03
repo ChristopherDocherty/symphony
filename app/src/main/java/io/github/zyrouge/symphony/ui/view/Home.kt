@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.outlined.QueueMusic
 import androidx.compose.material.icons.filled.AccountTree
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Face
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
@@ -94,6 +96,7 @@ import io.github.zyrouge.symphony.ui.view.home.GenresView
 import io.github.zyrouge.symphony.ui.view.home.PlaylistsView
 import io.github.zyrouge.symphony.ui.view.home.SongsView
 import io.github.zyrouge.symphony.ui.view.home.TreeView
+import io.github.zyrouge.symphony.ui.view.home.ManualScrobblerView
 import io.github.zyrouge.symphony.ui.view.home.WishlistPageState
 import io.github.zyrouge.symphony.ui.view.home.WishlistView
 import io.github.zyrouge.symphony.HomePageBottomBarLabelVisibility
@@ -176,6 +179,11 @@ enum class HomePage(
         label = { it.activity.getString(R.string.Wishlist) },
         selectedIcon = { Icons.Filled.Bookmark },
         unselectedIcon = { Icons.Outlined.BookmarkBorder }
+    ),
+    ManualScrobbler(
+        label = { it.activity.getString(R.string.ManualScrobbler) },
+        selectedIcon = { Icons.Filled.CloudUpload },
+        unselectedIcon = { Icons.Outlined.CloudUpload },
     );
 }
 
@@ -280,6 +288,7 @@ private fun HomePageContent(
             HomePage.Playlists -> PlaylistsView(context)
             HomePage.Tree -> TreeView(context)
             HomePage.Wishlist -> WishlistView(context, pageStates[page] as? WishlistPageState)
+            HomePage.ManualScrobbler -> ManualScrobblerView(context)
         }
     }
 }

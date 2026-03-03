@@ -292,4 +292,18 @@
     <string name="WishlistAlbumArtUrl">Album art URL (optional)</string>
     <string name="Priority">Priority</string>
     <string name="XWishlistAlbums">%1$s wishlist albums</string>
+    <string name="ManualScrobbler">Manual Scrobbler</string>
+    <string name="LastFmApiSecret">API Secret</string>
+    <string name="LastFmAuthenticate">Authenticate with Last.fm</string>
+    <string name="LastFmAuthenticated">Authenticated</string>
+    <string name="LastFmNotAuthenticated">Not authenticated</string>
+    <string name="LastFmDisconnect">Disconnect</string>
+    <string name="LastFmAuthInstructions">Approve Symphony in your browser, then tap Done</string>
+    <string name="ScrobbleTrack">Scrobble</string>
+    <string name="ScrobbleSuccess">Scrobbled successfully</string>
+    <string name="ScrobbleFailed">Scrobble failed</string>
+    <string name="RecentScrobbles">Recent Scrobbles</string>
+    <string name="CopyToForm">Copy to form</string>
+    <string name="LastFmAuthenticateFirst">Authenticate with Last.fm in settings to enable scrobbling</string>
+    <string name="Timestamp">Timestamp</string>
 </resources>

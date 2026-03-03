@@ -298,4 +298,6 @@ message Settings {
   string last_fm_api_key = 600;
   string last_fm_username = 601;
   bool show_scrobble_counts = 602;
+  string last_fm_api_secret = 603;
+  string last_fm_session_key = 604;
 }
