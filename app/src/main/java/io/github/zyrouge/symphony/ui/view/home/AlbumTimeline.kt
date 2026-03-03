@@ -5,11 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -94,12 +95,16 @@ fun AlbumTimelineView(context: ViewContext, pageState: AlbumTimelinePageState? =
         derivedStateOf {
             val albums = filteredIds.mapNotNull { context.symphony.groove.album.get(it) }
             val noYearCount = albums.count { it.startYear == null }
-            val yearGroups = albums
+            val countByYear = albums
                 .filter { it.startYear != null }
                 .groupBy { it.startYear!! }
-                .entries
-                .sortedBy { it.key }
-                .map { (year, list) -> year to list.size }
+                .mapValues { (_, list) -> list.size }
+            val yearGroups = if (countByYear.isEmpty()) emptyList()
+            else {
+                val minYear = countByYear.keys.min()
+                val maxYear = countByYear.keys.max()
+                (minYear..maxYear).map { year -> year to (countByYear[year] ?: 0) }
+            }
             Pair(yearGroups, noYearCount)
         }
     }
@@ -161,31 +166,36 @@ private fun AlbumYearChart(yearGroups: List<Pair<Int, Int>>) {
                     modifier = Modifier.width(barWidth),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .height(chartHeight)
                             .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                        contentAlignment = Alignment.BottomCenter,
                     ) {
-                        Spacer(
-                            modifier = Modifier.weight(
-                                (maxCount - count).toFloat().coerceAtLeast(0.0001f)
-                            )
-                        )
-                        Text(
-                            text = "$count",
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = TextAlign.Center,
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.85f)
-                                .weight(count.toFloat())
-                                .background(
-                                    barColor,
-                                    RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp),
+                        if (count > 0) {
+                            val fraction = count.toFloat() / maxCount
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(fraction),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    text = "$count",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    textAlign = TextAlign.Center,
                                 )
-                        )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .weight(1f)
+                                        .background(
+                                            barColor,
+                                            RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp),
+                                        )
+                                )
+                            }
+                        }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
