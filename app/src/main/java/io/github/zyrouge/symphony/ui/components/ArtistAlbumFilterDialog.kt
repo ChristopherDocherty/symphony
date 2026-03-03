@@ -74,6 +74,8 @@ fun ArtistAlbumFilterDialog(
     val availableValues = remember {
         ALBUM_STRING_FILTER_FIELDS.map { it to mutableStateListOf<String>() }
     }
+    val yearState = remember { mutableStateListOf<Int>() }
+    val yearAvailable = remember { mutableStateListOf<Int>() }
 
     val presets = remember { mutableStateListOf<AlbumFilterPreset>() }
     var loadedPresetName by remember { mutableStateOf<String?>(null) }
@@ -89,6 +91,8 @@ fun ArtistAlbumFilterDialog(
         availableValues.forEach { (field, avail) ->
             avail.addAll(field.sortValues(context.symphony.groove.album.getAvailableTagValues(field.tagName)))
         }
+        yearState.addAll(filter.releaseYearList)
+        yearAvailable.addAll(context.symphony.groove.album.getAvailableYears())
         presets.addAll(settings.uiArtistViewAlbumFilterPresetsList)
         isLoading = false
     }
@@ -152,6 +156,14 @@ fun ArtistAlbumFilterDialog(
                             )
                         }
                     }
+                    if (yearAvailable.isNotEmpty()) {
+                        item {
+                            ArtistYearFilterSection(
+                                state = yearState,
+                                available = yearAvailable,
+                            )
+                        }
+                    }
                     item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
             }
@@ -170,6 +182,7 @@ fun ArtistAlbumFilterDialog(
                                     .fold(AlbumFilter.newBuilder()) { builder, (field, state) ->
                                         field.applyTo(builder, state.toList())
                                     }
+                                    .clearReleaseYear().addAllReleaseYear(yearState.toList())
                                     .build()
                             }
                         }
@@ -185,6 +198,7 @@ fun ArtistAlbumFilterDialog(
     if (showSavePreset) {
         ArtistSavePresetDialog(
             fieldStates = fieldStates,
+            yearState = yearState,
             onSave = { newPreset ->
                 presets.add(newPreset)
                 val toSave = presets.toList()
@@ -207,6 +221,7 @@ fun ArtistAlbumFilterDialog(
         ArtistPresetPickerDialog(
             presets = presets,
             fieldStates = fieldStates,
+            yearState = yearState,
             loadedPresetName = loadedPresetName,
             onPresetLoaded = { name -> loadedPresetName = name },
             onDeletePreset = { preset ->
@@ -317,6 +332,7 @@ private fun ArtistPickerDialog(
 @Composable
 private fun ArtistSavePresetDialog(
     fieldStates: List<Pair<StringFilterField, SnapshotStateList<String>>>,
+    yearState: SnapshotStateList<Int>,
     onSave: (AlbumFilterPreset) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
@@ -361,6 +377,7 @@ private fun ArtistSavePresetDialog(
                         .fold(AlbumFilter.newBuilder()) { builder, (field, state) ->
                             field.applyTo(builder, state.toList())
                         }
+                        .clearReleaseYear().addAllReleaseYear(yearState.toList())
                         .build()
                     val newPreset = AlbumFilterPreset.newBuilder()
                         .setName(input.trim())
@@ -379,6 +396,7 @@ private fun ArtistSavePresetDialog(
 private fun ArtistPresetPickerDialog(
     presets: SnapshotStateList<AlbumFilterPreset>,
     fieldStates: List<Pair<StringFilterField, SnapshotStateList<String>>>,
+    yearState: SnapshotStateList<Int>,
     loadedPresetName: String?,
     onPresetLoaded: (String) -> Unit,
     onDeletePreset: (AlbumFilterPreset) -> Unit,
@@ -402,6 +420,8 @@ private fun ArtistPresetPickerDialog(
                                 state.clear()
                                 state.addAll(field.getSelected(preset.filter))
                             }
+                            yearState.clear()
+                            yearState.addAll(preset.filter.releaseYearList)
                             onPresetLoaded(preset.name)
                             onDismissRequest()
                         },
@@ -410,4 +430,65 @@ private fun ArtistPresetPickerDialog(
             }
         },
     )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ArtistYearFilterSection(
+    state: SnapshotStateList<Int>,
+    available: List<Int>,
+) {
+    var showPicker by remember { mutableStateOf(false) }
+    val pickable = available.filter { it !in state }
+
+    Text(
+        "Release Year",
+        style = MaterialTheme.typography.labelMedium,
+        modifier = Modifier.padding(bottom = 8.dp),
+    )
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        state.forEachIndexed { i, value ->
+            Row(
+                modifier = Modifier
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                    .padding(start = 10.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    value.toString(),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(
+                    modifier = Modifier.size(20.dp),
+                    onClick = { state.removeAt(i) },
+                ) {
+                    Icon(Icons.Filled.Close, null, modifier = Modifier.size(12.dp))
+                }
+            }
+        }
+        if (pickable.isNotEmpty()) {
+            TextButton(onClick = { showPicker = true }) {
+                Text("+ Add")
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+
+    if (showPicker) {
+        ArtistPickerDialog(
+            title = "Release Year",
+            options = pickable.map { it.toString() },
+            onSelect = { value ->
+                state.add(value.toInt())
+                showPicker = false
+            },
+            onDismissRequest = { showPicker = false },
+        )
+    }
 }

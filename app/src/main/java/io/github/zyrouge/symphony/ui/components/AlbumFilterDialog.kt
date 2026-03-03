@@ -82,6 +82,8 @@ fun AlbumFilterDialog(
     val debugFieldStates = remember {
         ALBUM_DEBUG_FILTER_FIELDS.map { it to mutableStateListOf<String>() }
     }
+    val yearState = remember { mutableStateListOf<Int>() }
+    val yearAvailable = remember { mutableStateListOf<Int>() }
 
     val presets = remember { mutableStateListOf<AlbumFilterPreset>() }
     var loadedPresetName by remember { mutableStateOf<String?>(null) }
@@ -100,6 +102,8 @@ fun AlbumFilterDialog(
         debugFieldStates.forEach { (field, state) ->
             state.addAll(field.getSelected(filter))
         }
+        yearState.addAll(filter.releaseYearList)
+        yearAvailable.addAll(context.symphony.groove.album.getAvailableYears())
         presets.addAll(settings.uiAlbumFilterPresetsList)
         showHiddenAlbums = settings.showHiddenAlbums
         debugMode = settings.debugMode
@@ -112,7 +116,7 @@ fun AlbumFilterDialog(
         }
         return debugFieldStates.fold(base) { builder, (field, state) ->
             field.applyTo(builder, state.toList())
-        }.build()
+        }.clearReleaseYear().addAllReleaseYear(yearState.toList()).build()
     }
 
     ScaffoldDialog(
@@ -171,6 +175,14 @@ fun AlbumFilterDialog(
                                 field = field,
                                 state = state,
                                 available = avail,
+                            )
+                        }
+                    }
+                    if (yearAvailable.isNotEmpty()) {
+                        item {
+                            YearFilterSection(
+                                state = yearState,
+                                available = yearAvailable,
                             )
                         }
                     }
@@ -265,6 +277,7 @@ fun AlbumFilterDialog(
             presets = presets,
             fieldStates = fieldStates,
             debugFieldStates = debugFieldStates,
+            yearState = yearState,
             loadedPresetName = loadedPresetName,
             onPresetLoaded = { name -> loadedPresetName = name },
             onDeletePreset = { preset ->
@@ -494,6 +507,7 @@ private fun PresetPickerDialog(
     presets: SnapshotStateList<AlbumFilterPreset>,
     fieldStates: List<Pair<StringFilterField, SnapshotStateList<String>>>,
     debugFieldStates: List<Pair<DebugAlbumFilterField, SnapshotStateList<String>>>,
+    yearState: SnapshotStateList<Int>,
     loadedPresetName: String?,
     onPresetLoaded: (String) -> Unit,
     onDeletePreset: (AlbumFilterPreset) -> Unit,
@@ -521,6 +535,8 @@ private fun PresetPickerDialog(
                                 state.clear()
                                 state.addAll(field.getSelected(preset.filter))
                             }
+                            yearState.clear()
+                            yearState.addAll(preset.filter.releaseYearList)
                             onPresetLoaded(preset.name)
                             onDismissRequest()
                         },
@@ -529,4 +545,65 @@ private fun PresetPickerDialog(
             }
         },
     )
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun YearFilterSection(
+    state: SnapshotStateList<Int>,
+    available: List<Int>,
+) {
+    var showPicker by remember { mutableStateOf(false) }
+    val pickable = available.filter { it !in state }
+
+    Text(
+        "Release Year",
+        style = MaterialTheme.typography.labelMedium,
+        modifier = Modifier.padding(bottom = 8.dp),
+    )
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        state.forEachIndexed { i, value ->
+            Row(
+                modifier = Modifier
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                    .padding(start = 10.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    value.toString(),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = LocalTextStyle.current.copy(fontWeight = FontWeight.Bold),
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                IconButton(
+                    modifier = Modifier.size(20.dp),
+                    onClick = { state.removeAt(i) },
+                ) {
+                    Icon(Icons.Filled.Close, null, modifier = Modifier.size(12.dp))
+                }
+            }
+        }
+        if (pickable.isNotEmpty()) {
+            TextButton(onClick = { showPicker = true }) {
+                Text("+ Add")
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+
+    if (showPicker) {
+        PickerDialog(
+            title = "Release Year",
+            options = pickable.map { it.toString() },
+            onSelect = { value ->
+                state.add(value.toInt())
+                showPicker = false
+            },
+            onDismissRequest = { showPicker = false },
+        )
+    }
 }

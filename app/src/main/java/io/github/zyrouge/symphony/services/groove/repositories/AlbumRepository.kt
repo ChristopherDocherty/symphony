@@ -231,6 +231,12 @@ class AlbumRepository(private val symphony: Symphony) {
                 if (selected.isEmpty()) return@all true
                 val albumValues = customTagValuesCache[albumId]?.get(field.tagName) ?: emptySet()
                 (BLANK_TAG_VALUE in selected && albumValues.isEmpty()) || albumValues.any { it in selected }
+            } && run {
+                val yearSelected = filter.releaseYearList
+                yearSelected.isEmpty() || run {
+                    val albumYear = get(albumId)?.startYear
+                    albumYear != null && albumYear in yearSelected
+                }
             } && (!debugMode || run {
                 // Bitrate range filter
                 val bitrateSelected = filter.bitrateRangeList
@@ -262,6 +268,9 @@ class AlbumRepository(private val symphony: Symphony) {
         }
         return if (reverse) sorted.reversed() else sorted
     }
+
+    fun getAvailableYears(): List<Int> =
+        cache.values.mapNotNull { it.startYear }.distinct().sortedDescending()
 
     fun count() = cache.size
     fun ids() = cache.keys.toList()
