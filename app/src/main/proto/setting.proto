@@ -257,6 +257,7 @@ message Settings {
   repeated string hidden_album_ids = 84;                   // albums hidden from all browse views
   bool show_hidden_albums = 85;                            // when true, show hidden albums in Albums grid
   bool debug_mode = 86;                                    // when true, expose extra debug filter options
+  uint32 min_artist_track_count = 87;                      // 0 = no filter; N = show artists with >= N tracks
 
   // --- Existing album filters (field numbers preserved) ---
   AlbumFilter ui_album_grid_album_filter = 801;

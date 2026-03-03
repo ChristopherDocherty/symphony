@@ -44,9 +44,12 @@ fun ArtistGrid(
     val hiddenAlbumIds by context.symphony.settings.data
         .map { it.hiddenAlbumIdsList.toSet() }
         .collectAsState(emptySet())
-    val sortedArtistNames by remember(artistName, sortBy, sortReverse, albumFilter, hiddenAlbumIds) {
+    val minArtistTrackCount by context.symphony.settings.data
+        .map { it.minArtistTrackCount }
+        .collectAsState(0)
+    val sortedArtistNames by remember(artistName, sortBy, sortReverse, albumFilter, hiddenAlbumIds, minArtistTrackCount) {
         derivedStateOf {
-            val filtered = context.symphony.groove.artist.filterByTrackCount(artistName)
+            val filtered = context.symphony.groove.artist.filterByTrackCount(artistName, minArtistTrackCount)
             val sorted = context.symphony.groove.artist.sort(filtered, sortBy, sortReverse, albumFilter, hiddenAlbumIds)
             sorted.filter { name ->
                 val albumIds = context.symphony.groove.artist.getAlbumIds(name)

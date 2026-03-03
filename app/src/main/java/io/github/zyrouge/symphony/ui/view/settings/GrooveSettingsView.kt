@@ -86,6 +86,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
 
     val songsFilterPattern = settings.songsFilterPattern.takeIf { it.isNotEmpty() }
     val minSongDuration = settings.minSongDuration
+    val minArtistTrackCount = settings.minArtistTrackCount
     val blacklistFolders = settings.blacklistFoldersList.toSet()
     val whitelistFolders = settings.whitelistFoldersList.toSet()
     val artistTagSeparators = settings.artistTagSeparatorsList.toSet()
@@ -137,6 +138,7 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
                     val defaultSongsFilterPattern = ".*"
                     val minSongDurationRange = 0f..60f
+                    val minArtistTrackCountRange = 0f..20f
 
                     SettingsSideHeading(stringResource(R.string.Groove))
                     SpotlightTile(route.initialElement == SettingsViewRoute.ELEMENT_MEDIA_FOLDERS) {
@@ -217,6 +219,36 @@ fun GrooveSettingsView(context: ViewContext, route: GrooveSettingsViewRoute) {
                         onReset = {
                             coroutineScope.launch {
                                 context.symphony.settings.updateData { it.copy { this.minSongDuration = 0 } }
+                            }
+                        },
+                    )
+                    HorizontalDivider()
+                    SettingsSliderTile(
+                        context,
+                        icon = {
+                            Icon(Icons.Filled.FilterAlt, null)
+                        },
+                        title = {
+                            Text(stringResource(R.string.MinArtistTrackCountFilter))
+                        },
+                        label = { value ->
+                            val count = value.toInt()
+                            if (count == 0) Text(stringResource(R.string.Off))
+                            else Text(stringResource(R.string.XTracks, count.toString()))
+                        },
+                        range = minArtistTrackCountRange,
+                        initialValue = minArtistTrackCount.toFloat(),
+                        onValue = { value ->
+                            value.roundToInt().toFloat()
+                        },
+                        onChange = { value ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.minArtistTrackCount = value.toInt() } }
+                            }
+                        },
+                        onReset = {
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { it.copy { this.minArtistTrackCount = 0 } }
                             }
                         },
                     )

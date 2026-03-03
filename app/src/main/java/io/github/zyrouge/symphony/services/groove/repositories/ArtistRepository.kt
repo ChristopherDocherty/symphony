@@ -239,8 +239,9 @@ class ArtistRepository(private val symphony: Symphony) {
         }?.size ?: 0
     }
 
-    fun filterByTrackCount(artistNames: List<String>) : List<String> {
-        return artistNames.filter { (get(it)?.numberOfTracks ?: 0) > 3 }
+    fun filterByTrackCount(artistNames: List<String>, minCount: Int): List<String> {
+        if (minCount <= 0) return artistNames
+        return artistNames.filter { (get(it)?.numberOfTracks ?: 0) >= minCount }
     }
 
     fun count() = cache.size

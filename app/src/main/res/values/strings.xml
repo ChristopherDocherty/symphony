@@ -245,6 +245,9 @@
     <string name="CaseSensitiveSorting">Case sensitive sorting</string>
     <string name="KeepScreenAwakeOnLyrics">Keep screen awake on lyrics content</string>
     <string name="MinSongDurationFilter">Minimum song duration filter</string>
+    <string name="MinArtistTrackCountFilter">Minimum tracks per artist</string>
+    <string name="XTracks">%1$s tracks</string>
+    <string name="Off">Off</string>
     <string name="RefreshLastFm">Refresh Last.fm</string>
     <string name="ScrobbleCount">Scrobble Count</string>
     <string name="LastFm">Last.fm</string>
