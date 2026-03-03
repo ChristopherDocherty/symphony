@@ -230,28 +230,33 @@ fun AlbumDropdownMenu(
                 text = { Text("Last.fm") },
                 onClick = { showLastFmSubmenu = false }
             )
-            HorizontalDivider()
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(Icons.Filled.Album, null)
-                },
-                text = { Text("Album") },
-                onClick = {
-                    onDismissRequest()
-                    uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(album.artists.first())}/${escapeTextForLastFmUrl(album.name)}")
+            if (album.artists.size <= 3) {
+                HorizontalDivider()
+                album.artists.forEach { artistName ->
+                    DropdownMenuItem(
+                        leadingIcon = {
+                            Icon(Icons.Filled.Album, null)
+                        },
+                        text = { Text("Album: $artistName") },
+                        onClick = {
+                            onDismissRequest()
+                            uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(artistName)}/${escapeTextForLastFmUrl(album.name)}")
+                        }
+                    )
                 }
-            )
-            album.artists.forEach { artistName ->
-                DropdownMenuItem(
-                    leadingIcon = {
-                        Icon(Icons.Filled.Person, null)
-                    },
-                    text = { Text("Artist: $artistName") },
-                    onClick = {
-                        onDismissRequest()
-                        uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(artistName)}")
-                    }
-                )
+                HorizontalDivider()
+                album.artists.forEach { artistName ->
+                    DropdownMenuItem(
+                        leadingIcon = {
+                            Icon(Icons.Filled.Person, null)
+                        },
+                        text = { Text("Artist: $artistName") },
+                        onClick = {
+                            onDismissRequest()
+                            uriHandler.openUri("https://last.fm/user/chrisd_99/library/music/${escapeTextForLastFmUrl(artistName)}")
+                        }
+                    )
+                }
             }
         } else {
             DropdownMenuItem(
@@ -276,19 +281,21 @@ fun AlbumDropdownMenu(
                     showSelectDiscDialog = true
                 }
             )
-            album.artists.forEach { artistName ->
-                DropdownMenuItem(
-                    leadingIcon = {
-                        Icon(Icons.Filled.Person, null)
-                    },
-                    text = {
-                        Text("${stringResource(R.string.ViewArtist)}: $artistName")
-                    },
-                    onClick = {
-                        onDismissRequest()
-                        context.navController.navigate(ArtistViewRoute(artistName))
-                    }
-                )
+            if (album.artists.size <= 3) {
+                album.artists.forEach { artistName ->
+                    DropdownMenuItem(
+                        leadingIcon = {
+                            Icon(Icons.Filled.Person, null)
+                        },
+                        text = {
+                            Text("${stringResource(R.string.ViewArtist)}: $artistName")
+                        },
+                        onClick = {
+                            onDismissRequest()
+                            context.navController.navigate(ArtistViewRoute(artistName))
+                        }
+                    )
+                }
             }
             DropdownMenuItem(
                 leadingIcon = {
@@ -310,16 +317,18 @@ fun AlbumDropdownMenu(
                     showArtManagerDialog = true
                 }
             )
-            DropdownMenuItem(
-                leadingIcon = {
-                    Icon(painter=painterResource(R.drawable.last_fm), "last.fm icon")
-                },
-                text = { Text("Last.fm") },
-                trailingIcon = {
-                    Icon(Icons.Filled.KeyboardArrowRight, null)
-                },
-                onClick = { showLastFmSubmenu = true }
-            )
+            if (album.artists.size <= 3) {
+                DropdownMenuItem(
+                    leadingIcon = {
+                        Icon(painter = painterResource(R.drawable.last_fm), "last.fm icon")
+                    },
+                    text = { Text("Last.fm") },
+                    trailingIcon = {
+                        Icon(Icons.Filled.KeyboardArrowRight, null)
+                    },
+                    onClick = { showLastFmSubmenu = true }
+                )
+            }
         }
     }
 
