@@ -27,7 +27,7 @@ import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
 import kotlinx.coroutines.launch
 
 @Composable
-fun ArtistTile(context: ViewContext, artist: Artist) {
+fun ArtistTile(context: ViewContext, artist: Artist, onClickOverride: (() -> Unit)? = null) {
     val scope = rememberCoroutineScope()
     val settings by context.symphony.settingsState.collectAsState()
     val minimalistMode = settings.albumTileMinimalistMode
@@ -68,7 +68,7 @@ fun ArtistTile(context: ViewContext, artist: Artist) {
                 context.symphony.radio.shorty.playQueue(artist.getSortedSongIds(context.symphony))
             }
         },
-        onClick = {
+        onClick = onClickOverride ?: {
             context.navController.navigate(ArtistViewRoute(artist.name))
         }
     )

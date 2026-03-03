@@ -77,6 +77,9 @@ fun BaseView(symphony: Symphony, activity: MainActivity) {
                 baseComposable<GenreViewRoute> {
                     GenreView(context, it.toRoute())
                 }
+                baseComposable<GenreArtistViewRoute> {
+                    GenreArtistView(context, it.toRoute())
+                }
                 baseComposable<PlaylistViewRoute> {
                     PlaylistView(context, it.toRoute())
                 }
