@@ -25,7 +25,13 @@ Services implement `Symphony.Hooks` to receive lifecycle events (`onSymphonyRead
   - `RadioNotificationService` — the Android `Service`. Signals start/stop via `RadioNotificationService.events` (an `Eventer`).
 - **`Database`** — wraps `CacheDatabase` (Room, song cache + last.fm cache) and `PersistentDatabase` (Room, playlists). Uses `fallbackToDestructiveMigration()`.
 - **`LastFmService`** — fetches album/artist scrobble counts from Last.fm API, persists to `lastfm_cache` Room table.
-- **`LastFmScrobbler`** — plain `object` (not a `Symphony.Hooks` service) in `services/lastfm/`. Handles all write-path Last.fm API interactions: `sign()` (MD5 sig), `getToken()`, `buildAuthUrl()`, `getSession()`, `scrobble()`, `getRecentTracks()`. Used directly from composables on IO thread.
+- **`LastFmScrobbler`** — plain `object` (not a `Symphony.Hooks` service) in `services/lastfm/`. Handles all write-path Last.fm API interactions: `sign()` (MD5 sig), `getToken()`, `buildAuthUrl()`, `getSession()`, `scrobble()`, `getRecentTracks()`, `getRecentTracksPage()` (paginated, supports `from`/`to` unix-second params). Used directly from composables on IO thread.
+- **`LastFmBackupService`** — `Symphony.Hooks` service that backs up scrobble history to a SAF directory and derives per-song play counts. Two sync modes:
+  - *Initial pull*: timestamp-checkpoint approach resumable across restarts. Fetches newest-first with `to = oldestFetched - 1` per page. Checkpoint is written **only after** a successful SAF write, so a write failure doesn't advance the cursor. Marks `initialComplete` when done.
+  - *Daily sync*: collects all pages in memory with `from = newestSeen`, then writes atomically — a partial API failure (null page) abandons the whole sync without touching the CSV or advancing `newestSeen`. Guards against `newestSeen == 0` to prevent accidental full re-pull.
+  - Play counts stored in `lastfm_play_counts` Room table (keyed `"artist_lc|track_lc"`), mirrored in a `ConcurrentHashMap` for synchronous lookup via `getSongScrobbleCount(artist, track)`.
+  - **Rolling zip archives**: after each CSV append, if `scrobbles.csv` exceeds 5 MB (~50 k rows), the file is read, rows are deduplicated by exact string match (`distinct()`), min/max timestamps extracted for the filename, then written as `scrobbles_YYYYMMDD_YYYYMMDD.zip`. If the zip write fails the partial zip is deleted. Active CSV is deleted after a successful archive.
+  - **Rebuild**: `rebuildPlayCounts()` scans the backup dir for `scrobbles.csv` + all `scrobbles*.zip` files, parses via `ZipInputStream.readBytes()` (safe — no cross-entry buffering), and atomically replaces the Room table via `LastFmPlayCountStore.replace()` (`@Transaction` clear + insert).
 
 ### Eventer
 `utils/Eventer.kt` — simple synchronous pub/sub. `dispatch()` calls all subscribers inline on the calling thread. No threading guarantees.
@@ -39,7 +45,7 @@ Stored via Proto DataStore (proto3). Schema: `app/src/main/proto/setting.proto`.
 - Proto string fields default to `""`, bool to `false`, uint32 to `0`.
 - Field number ranges: App 10–19, Appearance 20–29, Home 30–39, Library 40–79, Filtering 80–89, Playback 300–399, NowPlaying 400–499, MiniPlayer 500–599, Last.fm 600–699.
 - Used filtering fields: 80 `songs_filter_pattern`, 81 `min_song_duration`, 82 `artist_tag_separators`, 83 `genre_tag_separators`, 84 `hidden_album_ids`, 85 `show_hidden_albums`, 86 `debug_mode`.
-- Used Last.fm fields: 600 `last_fm_api_key`, 601 `last_fm_username`, 602 `show_scrobble_counts`, 603 `last_fm_api_secret`, 604 `last_fm_session_key`.
+- Used Last.fm fields: 600 `last_fm_api_key`, 601 `last_fm_username`, 602 `show_scrobble_counts`, 603 `last_fm_api_secret`, 604 `last_fm_session_key`, 605 `last_fm_backup_dir`, 606 `last_fm_backup_enabled`, 607 `last_fm_backup_newest_seen`, 608 `last_fm_backup_oldest_fetched`, 609 `last_fm_backup_initial_complete`, 610 `last_fm_backup_total`, 611 `last_fm_backup_fetched_count`, 612 `last_fm_backup_last_sync`.
 
 ### HTTP
 `HttpClient` singleton in `utils/Http.kt` (OkHttp). Pattern:
@@ -112,6 +118,12 @@ Reuse this pattern wherever a URL input field needs a cover-art lookup shortcut.
 ### Last.fm Auth Flow
 Auth lives in `LastFmSettingsView.kt`. Flow: enter API key + secret → tap "Authenticate" → `LastFmScrobbler.getToken()` on IO thread → open browser with `buildAuthUrl()` → `AlertDialog` shown → on Done: `LastFmScrobbler.getSession()` → session key saved to `settings.lastFmSessionKey`. "Disconnect" clears the session key. The Authenticate button is disabled when either API key or secret is blank.
 
+### Last.fm Backup UI
+Also in `LastFmSettingsView.kt`, below the auth section. SAF directory picker (same `OpenDocumentTree` + `makePersistableReadWriteUri` pattern as wishlist), enable switch, and three conditional states:
+- Initial pull not yet started: "Never synced" + "Sync now" button → calls `symphony.lastFmBackup.startInitialPull()`
+- Initial pull in progress: `LinearProgressIndicator` with `fetched / total` from `initialPullProgress: StateFlow<Pair<Long,Long>>`
+- After first sync complete: "Last synced: \<date\>" + "Sync now" button + "Rebuild play counts from backup" tile
+
 ### Manual Scrobbler Tab
 `ManualScrobblerView` (in `ui/view/home/ManualScrobbler.kt`) is a home tab — no `HomePageState` subclass needed (no sort/filter dropdown). Uses a `Box` + `LazyColumn` + a `SnackbarHost` anchored at `BottomCenter` (avoids nested `Scaffold`). Timestamp field is pre-filled with current time formatted as `yyyy-MM-dd HH:mm:ss`; copy-to-form from recent tracks also copies the timestamp. Recent tracks list is loaded via `LaunchedEffect(Unit)`; "now playing" entries (`timestampSeconds == 0`) are filtered out.
 
@@ -167,5 +179,7 @@ Auth lives in `LastFmSettingsView.kt`. Flow: enter API key + secret → tap "Aut
 | Wishlist grid + tile | `ui/components/WishlistGrid.kt` |
 | Wishlist add/edit dialog | `ui/components/AddWishlistAlbumDialog.kt` |
 | Last.fm scrobbler (write API) | `services/lastfm/LastFmScrobbler.kt` |
+| Last.fm backup service | `services/lastfm/LastFmBackupService.kt` |
+| Last.fm play count store | `services/database/store/LastFmPlayCountStore.kt` |
 | Manual scrobbler home tab | `ui/view/home/ManualScrobbler.kt` |
 | Album timeline home tab | `ui/view/home/AlbumTimeline.kt` |
