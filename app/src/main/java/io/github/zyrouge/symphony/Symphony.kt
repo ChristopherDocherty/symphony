@@ -10,6 +10,7 @@ import io.github.zyrouge.symphony.datastore.settingsDataStore
 import io.github.zyrouge.symphony.services.Permissions
 import io.github.zyrouge.symphony.services.database.Database
 import io.github.zyrouge.symphony.services.groove.Groove
+import io.github.zyrouge.symphony.services.lastfm.LastFmBackupService
 import io.github.zyrouge.symphony.services.lastfm.LastFmService
 import io.github.zyrouge.symphony.services.radio.Radio
 import kotlinx.coroutines.flow.SharingStarted
@@ -46,11 +47,12 @@ class Symphony(application: Application) : AndroidViewModel(application), Sympho
     val groove = Groove(this)
     val radio = Radio(this)
     val lastFm = LastFmService(this)
+    val lastFmBackup = LastFmBackupService(this)
 
     val applicationContext get() = getApplication<Application>().applicationContext
     var closeApp: (() -> Unit)? = null
     private var isReady = false
-    private var hooks = listOf(this, radio, groove, lastFm)
+    private var hooks = listOf(this, radio, groove, lastFm, lastFmBackup)
 
     init {
         viewModelScope.launch {

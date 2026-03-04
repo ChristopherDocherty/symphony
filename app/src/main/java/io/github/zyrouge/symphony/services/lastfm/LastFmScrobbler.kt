@@ -15,6 +15,12 @@ data class LastFmRecentTrack(
     val timestampSeconds: Long,
 )
 
+data class RecentTracksPage(
+    val tracks: List<LastFmRecentTrack>,
+    val totalPages: Int,
+    val total: Long,
+)
+
 object LastFmScrobbler {
 
     fun sign(params: Map<String, String>, apiSecret: String): String {
@@ -114,6 +120,53 @@ object LastFmScrobbler {
         } catch (err: Exception) {
             Logger.warn("LastFmScrobbler", "scrobble failed", err)
             false
+        }
+    }
+
+    fun getRecentTracksPage(
+        apiKey: String,
+        username: String,
+        page: Int,
+        limit: Int = 200,
+        from: Long? = null,
+        to: Long? = null,
+    ): RecentTracksPage? {
+        return try {
+            val url = buildString {
+                append("https://ws.audioscrobbler.com/2.0/")
+                append("?method=user.getRecentTracks")
+                append("&api_key=${enc(apiKey)}")
+                append("&user=${enc(username)}")
+                append("&limit=$limit")
+                append("&page=$page")
+                append("&format=json")
+                if (from != null) append("&from=$from")
+                if (to != null) append("&to=$to")
+            }
+            val body = fetch(url) ?: return null
+            if (body.has("error")) return null
+            val recenttracks = body.getJSONObject("recenttracks")
+            val attr = recenttracks.optJSONObject("@attr")
+            val totalPages = attr?.optString("totalPages")?.toIntOrNull() ?: 1
+            val total = attr?.optString("total")?.toLongOrNull() ?: 0L
+            val tracksArray = recenttracks.getJSONArray("track")
+            val tracks = mutableListOf<LastFmRecentTrack>()
+            for (i in 0 until tracksArray.length()) {
+                val t = tracksArray.getJSONObject(i)
+                val ts = t.optJSONObject("date")?.optString("uts")?.toLongOrNull() ?: 0L
+                tracks.add(
+                    LastFmRecentTrack(
+                        artist = t.optJSONObject("artist")?.optString("#text") ?: t.optString("artist"),
+                        track = t.optString("name"),
+                        album = t.optJSONObject("album")?.optString("#text") ?: "",
+                        timestampSeconds = ts,
+                    )
+                )
+            }
+            RecentTracksPage(tracks, totalPages, total)
+        } catch (err: Exception) {
+            Logger.warn("LastFmScrobbler", "getRecentTracksPage failed", err)
+            null
         }
     }
 

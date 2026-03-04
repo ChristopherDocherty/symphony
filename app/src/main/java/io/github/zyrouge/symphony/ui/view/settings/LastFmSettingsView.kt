@@ -1,19 +1,27 @@
 package io.github.zyrouge.symphony.ui.view.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -21,6 +29,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -47,12 +56,17 @@ import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsLinkTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsSideHeading
+import io.github.zyrouge.symphony.ui.components.settings.SettingsSimpleTile
+import io.github.zyrouge.symphony.ui.components.settings.SettingsSwitchTile
 import io.github.zyrouge.symphony.ui.components.settings.SettingsTextInputTile
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
+import io.github.zyrouge.symphony.utils.ActivityUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import java.text.DateFormat
+import java.util.Date
 
 @Serializable
 object LastFmSettingsViewRoute
@@ -67,6 +81,21 @@ fun LastFmSettingsView(context: ViewContext) {
 
     var pendingToken by remember { mutableStateOf<String?>(null) }
     var showAuthDialog by remember { mutableStateOf(false) }
+
+    val isInitialPullInProgress by context.symphony.lastFmBackup.isInitialPullInProgress.collectAsState()
+    val initialPullProgress by context.symphony.lastFmBackup.initialPullProgress.collectAsState()
+    val isSyncing by context.symphony.lastFmBackup.isSyncing.collectAsState()
+
+    val dirPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            ActivityUtils.makePersistableReadWriteUri(context.activity, it)
+            scope.launch {
+                context.symphony.settings.updateData { s -> s.copy { lastFmBackupDir = it.toString() } }
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -213,6 +242,106 @@ fun LastFmSettingsView(context: ViewContext) {
                         },
                         url = "https://www.last.fm/api/account/create",
                     )
+                    HorizontalDivider()
+                    SettingsSideHeading(stringResource(R.string.LastFmBackup))
+                    SettingsSimpleTile(
+                        icon = { Icon(Icons.Filled.Folder, null) },
+                        title = { Text(stringResource(R.string.LastFmBackupDirectory)) },
+                        subtitle = {
+                            Text(
+                                if (settings.lastFmBackupDir.isBlank()) stringResource(R.string.LastFmBackupDirectoryNone)
+                                else settings.lastFmBackupDir
+                            )
+                        },
+                        onClick = { dirPicker.launch(null) },
+                    )
+                    HorizontalDivider()
+                    SettingsSwitchTile(
+                        icon = { Icon(Icons.Filled.Backup, null) },
+                        title = { Text(stringResource(R.string.LastFmBackupEnabled)) },
+                        value = settings.lastFmBackupEnabled,
+                        onChange = { value ->
+                            scope.launch {
+                                context.symphony.settings.updateData { it.copy { lastFmBackupEnabled = value } }
+                            }
+                        },
+                    )
+                    if (isInitialPullInProgress) {
+                        HorizontalDivider()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            val (fetched, total) = initialPullProgress
+                            Text(
+                                text = stringResource(R.string.LastFmInitialPullProgress, fetched, total),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            LinearProgressIndicator(
+                                progress = { if (total > 0) fetched.toFloat() / total else 0f },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                            )
+                        }
+                    } else if (settings.lastFmBackupEnabled && settings.lastFmBackupDir.isNotBlank() && !settings.lastFmBackupInitialComplete) {
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.LastFmNeverSynced),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Button(
+                                onClick = { context.symphony.lastFmBackup.startInitialPull() },
+                                enabled = !isSyncing,
+                            ) {
+                                Icon(Icons.Filled.CloudSync, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(R.string.LastFmSyncNow))
+                            }
+                        }
+                    } else if (settings.lastFmBackupInitialComplete) {
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = if (settings.lastFmBackupLastSync > 0L) {
+                                    val date = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+                                        .format(Date(settings.lastFmBackupLastSync * 1000))
+                                    stringResource(R.string.LastFmLastSynced, date)
+                                } else {
+                                    stringResource(R.string.LastFmNeverSynced)
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            OutlinedButton(
+                                onClick = { context.symphony.lastFmBackup.syncNow() },
+                                enabled = !isSyncing && !isInitialPullInProgress,
+                            ) {
+                                Text(stringResource(R.string.LastFmSyncNow))
+                            }
+                        }
+                        HorizontalDivider()
+                        SettingsSimpleTile(
+                            icon = { Icon(Icons.Filled.Refresh, null) },
+                            title = { Text(stringResource(R.string.LastFmRebuildPlayCounts)) },
+                            onClick = { context.symphony.lastFmBackup.rebuildPlayCounts() },
+                        )
+                    }
                 }
             }
         }

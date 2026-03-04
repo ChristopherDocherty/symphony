@@ -301,4 +301,12 @@ message Settings {
   bool show_scrobble_counts = 602;
   string last_fm_api_secret = 603;
   string last_fm_session_key = 604;
+  string last_fm_backup_dir = 605;           // SAF tree URI
+  bool   last_fm_backup_enabled = 606;
+  int64  last_fm_backup_newest_seen = 607;   // newest scrobble timestamp (daily sync start point)
+  int64  last_fm_backup_oldest_fetched = 608;// checkpoint cursor for initial pull (oldest ts seen so far)
+  bool   last_fm_backup_initial_complete = 609;
+  int64  last_fm_backup_total = 610;         // for progress display
+  int64  last_fm_backup_fetched_count = 611; // for progress display
+  int64  last_fm_backup_last_sync = 612;     // unix ts of last daily sync
 }

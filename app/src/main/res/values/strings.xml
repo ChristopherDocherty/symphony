@@ -307,4 +307,13 @@
     <string name="LastFmAuthenticateFirst">Authenticate with Last.fm in settings to enable scrobbling</string>
     <string name="Timestamp">Timestamp</string>
     <string name="AlbumTimeline">Timeline</string>
+    <string name="LastFmBackup">Backup</string>
+    <string name="LastFmBackupDirectory">Backup directory</string>
+    <string name="LastFmBackupDirectoryNone">None configured</string>
+    <string name="LastFmBackupEnabled">Enable backup</string>
+    <string name="LastFmInitialPullProgress">Fetching scrobbles: %1$s of %2$s</string>
+    <string name="LastFmLastSynced">Last synced: %1$s</string>
+    <string name="LastFmNeverSynced">Never synced</string>
+    <string name="LastFmSyncNow">Sync now</string>
+    <string name="LastFmRebuildPlayCounts">Rebuild play counts from backup</string>
 </resources>

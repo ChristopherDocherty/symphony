@@ -10,25 +10,29 @@ import androidx.room.migration.AutoMigrationSpec
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.database.store.LastFmCacheEntry
 import io.github.zyrouge.symphony.services.database.store.LastFmCacheStore
+import io.github.zyrouge.symphony.services.database.store.LastFmPlayCountEntry
+import io.github.zyrouge.symphony.services.database.store.LastFmPlayCountStore
 import io.github.zyrouge.symphony.services.database.store.SongCacheStore
 import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.utils.RoomConvertors
 
 @Database(
-    entities = [Song::class, LastFmCacheEntry::class],
-    version = 6,
+    entities = [Song::class, LastFmCacheEntry::class, LastFmPlayCountEntry::class],
+    version = 7,
     autoMigrations = [
         AutoMigration(1, 2, CacheDatabase.Migration1To2::class),
         AutoMigration(2, 3),
         AutoMigration(3, 4),
         AutoMigration(4, 5, CacheDatabase.Migration4To5::class),
         AutoMigration(5, 6),
+        AutoMigration(6, 7),
     ]
 )
 @TypeConverters(RoomConvertors::class)
 abstract class CacheDatabase : RoomDatabase() {
     abstract fun songs(): SongCacheStore
     abstract fun lastFmCache(): LastFmCacheStore
+    abstract fun lastFmPlayCounts(): LastFmPlayCountStore
 
     companion object {
         fun create(symphony: Symphony) = Room
