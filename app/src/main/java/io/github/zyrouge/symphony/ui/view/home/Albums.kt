@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,18 +35,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.AlbumGroupBy
+import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.components.AlbumFilterDialog
 import io.github.zyrouge.symphony.ui.components.AlbumGrid
 import io.github.zyrouge.symphony.ui.components.BulkAlbumEditDialog
+import io.github.zyrouge.symphony.ui.components.GroupedAlbumGrid
 import io.github.zyrouge.symphony.ui.components.HideAlbumsDialog
 import io.github.zyrouge.symphony.ui.components.LoaderScaffold
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class AlbumsPageState : HomePageState {
+class AlbumsPageState(private val context: ViewContext) : HomePageState {
     var showFilterDialog by mutableStateOf(false)
     var isMultiSelectMode by mutableStateOf(false)
     var selectedAlbumIds by mutableStateOf<Set<String>>(emptySet())
@@ -90,6 +96,11 @@ class AlbumsPageState : HomePageState {
                 onClick = { exitMultiSelect() },
             )
         } else {
+            val coroutineScope = rememberCoroutineScope()
+            val currentGroupBy by context.symphony.settings.data
+                .map { it.albumGroupBy }
+                .collectAsState(AlbumGroupBy.ALBUM_GROUP_NONE)
+
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.Filled.FilterAlt, contentDescription = "filter") },
                 text = { Text("Filter") },
@@ -100,6 +111,27 @@ class AlbumsPageState : HomePageState {
                 text = { Text("Select") },
                 onClick = { enterMultiSelect() },
             )
+            HorizontalDivider()
+            listOf(
+                AlbumGroupBy.ALBUM_GROUP_NONE to stringResource(R.string.GroupByNone),
+                AlbumGroupBy.ALBUM_GROUP_YEAR to stringResource(R.string.GroupByYear),
+                AlbumGroupBy.ALBUM_GROUP_ARTIST to stringResource(R.string.GroupByArtist),
+                AlbumGroupBy.ALBUM_GROUP_NAME to stringResource(R.string.GroupByAlbumName),
+            ).forEach { (mode, label) ->
+                DropdownMenuItem(
+                    leadingIcon = if (currentGroupBy == mode) {
+                        { Icon(Icons.Filled.Check, null) }
+                    } else null,
+                    text = { Text(label) },
+                    onClick = {
+                        coroutineScope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { albumGroupBy = mode }
+                            }
+                        }
+                    },
+                )
+            }
         }
     }
 
@@ -167,6 +199,9 @@ fun AlbumsView(context: ViewContext, pageState: AlbumsPageState? = null) {
         derivedStateOf { pageState?.selectedAlbumIds?.any { it in hiddenAlbumIds } == true }
     }
     val settings by context.symphony.settingsState.collectAsState()
+    val albumGroupBy by context.symphony.settings.data
+        .map { it.albumGroupBy }
+        .collectAsState(AlbumGroupBy.ALBUM_GROUP_NONE)
     val isLastFmConfigured by remember(settings) {
         derivedStateOf { settings.lastFmApiKey.isNotBlank() && settings.lastFmUsername.isNotBlank() }
     }
@@ -174,11 +209,20 @@ fun AlbumsView(context: ViewContext, pageState: AlbumsPageState? = null) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         LoaderScaffold(context, isLoading = isUpdating) {
-            AlbumGrid(
-                context,
-                albumIds = albumIds,
-                pageState = pageState,
-            )
+            if (albumGroupBy == AlbumGroupBy.ALBUM_GROUP_NONE) {
+                AlbumGrid(
+                    context,
+                    albumIds = albumIds,
+                    pageState = pageState,
+                )
+            } else {
+                GroupedAlbumGrid(
+                    context,
+                    albumIds = albumIds,
+                    groupBy = albumGroupBy,
+                    pageState = pageState,
+                )
+            }
         }
         if (pageState?.isMultiSelectMode == true) {
             MultiSelectBottomBar(

@@ -321,4 +321,9 @@
     <string name="ZapStop">Stop</string>
     <string name="ZapSkip">Skip</string>
     <string name="ZapEmpty">Press Start to listen to random snippets</string>
+    <string name="GroupByNone">No grouping</string>
+    <string name="GroupByYear">Group by year</string>
+    <string name="GroupByArtist">Group by artist</string>
+    <string name="GroupByAlbumName">Group by album name</string>
+    <string name="Unknown">Unknown</string>
 </resources>

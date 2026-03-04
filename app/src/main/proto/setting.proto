@@ -153,6 +153,14 @@ enum PlaylistSortBy {
   PLAYLIST_SORT_TRACKS_COUNT = 2;
 }
 
+// Maps to AlbumGroupBy kotlin enum. Default (0) = NONE — no grouping.
+enum AlbumGroupBy {
+  ALBUM_GROUP_NONE = 0;
+  ALBUM_GROUP_YEAR = 1;
+  ALBUM_GROUP_ARTIST = 2;
+  ALBUM_GROUP_NAME = 3;
+}
+
 // Maps to StringListUtils.SortBy. Default (0) = CUSTOM; migration writes NAME for existing users.
 enum PathSortBy {
   PATH_SORT_CUSTOM = 0;
@@ -241,6 +249,7 @@ message Settings {
   uint32 wishlist_vertical_grid_columns = 75;
   WishlistSortBy wishlist_sort_by = 76;
   bool wishlist_sort_reverse = 77;
+  AlbumGroupBy album_group_by = 78;
 
   // --- Album tile display (90–99) ---
   bool album_tile_show_name = 90;           // default true — written by migration
