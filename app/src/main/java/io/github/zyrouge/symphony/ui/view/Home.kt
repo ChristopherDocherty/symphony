@@ -51,6 +51,8 @@ import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.SupervisorAccount
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -106,6 +108,8 @@ import io.github.zyrouge.symphony.copy
 import kotlinx.coroutines.launch
 import io.github.zyrouge.symphony.ui.view.home.AlbumTimelinePageState
 import io.github.zyrouge.symphony.ui.view.home.AlbumTimelineView
+import io.github.zyrouge.symphony.ui.view.home.ZapPageState
+import io.github.zyrouge.symphony.ui.view.home.ZapView
 import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import io.github.zyrouge.symphony.ui.view.home.SongsPageState
 import io.github.zyrouge.symphony.ui.view.home.ArtistsPageState
@@ -193,6 +197,11 @@ enum class HomePage(
         label = { it.activity.getString(R.string.AlbumTimeline) },
         selectedIcon = { Icons.Filled.BarChart },
         unselectedIcon = { Icons.Outlined.BarChart },
+    ),
+    Zap(
+        label = { it.activity.getString(R.string.Zap) },
+        selectedIcon = { Icons.Filled.Bolt },
+        unselectedIcon = { Icons.Outlined.Bolt },
     );
 }
 
@@ -299,6 +308,7 @@ private fun HomePageContent(
             HomePage.Wishlist -> WishlistView(context, pageStates[page] as? WishlistPageState)
             HomePage.ManualScrobbler -> ManualScrobblerView(context)
             HomePage.AlbumTimeline -> AlbumTimelineView(context, pageStates[page] as? AlbumTimelinePageState)
+            HomePage.Zap -> ZapView(context, pageStates[page] as? ZapPageState)
         }
     }
 }
@@ -437,6 +447,7 @@ fun HomeView(context: ViewContext) {
         HomePage.Artists to ArtistsPageState(),
         HomePage.Wishlist to WishlistPageState(),
         HomePage.AlbumTimeline to AlbumTimelinePageState(),
+        HomePage.Zap to ZapPageState(),
     ) }
     val currentPageState = pageStates[currentTab]
 

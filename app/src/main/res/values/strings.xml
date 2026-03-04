@@ -316,4 +316,9 @@
     <string name="LastFmNeverSynced">Never synced</string>
     <string name="LastFmSyncNow">Sync now</string>
     <string name="LastFmRebuildPlayCounts">Rebuild play counts from backup</string>
+    <string name="Zap">Zap</string>
+    <string name="ZapStart">Start</string>
+    <string name="ZapStop">Stop</string>
+    <string name="ZapSkip">Skip</string>
+    <string name="ZapEmpty">Press Start to listen to random snippets</string>
 </resources>
