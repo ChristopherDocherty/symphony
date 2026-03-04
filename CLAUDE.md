@@ -136,6 +136,9 @@ Also in `LastFmSettingsView.kt`, below the auth section. SAF directory picker (s
 - **`AlbumTimelinePageState`** is the minimal `HomePageState` pattern — just a `showFilterDialog` flag with a single "Filter" `DropdownMenuItem`. Use this as a template for filter-only tabs that don't need multi-select.
 - **Note:** `fillMaxHeight` requires an explicit import (`androidx.compose.foundation.layout.fillMaxHeight`) — it is not pulled in transitively.
 
+### Zap Tab
+`ZapView` (in `ui/view/home/Zap.kt`) is a home tab that plays random 5-second snippets from the library. `ZapPageState` holds `isZapping`, `playedSongs`, and `skipTick`. Playback loop uses `LaunchedEffect(isZapping, skipTick)` — Compose cancels the coroutine on any key change, so `delay(5_000L)` is interrupted immediately on Stop or Skip; auto-advance increments `skipTick` after the delay. Each snippet starts at a random position in the middle 80% of the song (10%–90% of `song.duration`) passed via `Radio.PlayOptions(startPosition = ...)` to `queue.add()`.
+
 ### String Resources
 `app/src/main/res/values/strings.xml`. Always add new strings here rather than using literals in composables.
 
