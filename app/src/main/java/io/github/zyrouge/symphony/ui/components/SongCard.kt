@@ -23,7 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
@@ -356,7 +356,7 @@ fun SongDropdownMenu(
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
                 text = { Text("Enqueue") },
-                trailingIcon = { Icon(Icons.Filled.KeyboardArrowRight, null) },
+                trailingIcon = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
                 onClick = { showEnqueueSubmenu = true }
             )
             song.artists.forEach { artistName ->
@@ -392,7 +392,7 @@ fun SongDropdownMenu(
             DropdownMenuItem(
                 leadingIcon = { Icon(painter = painterResource(R.drawable.last_fm), "last.fm icon") },
                 text = { Text("Last.fm") },
-                trailingIcon = { Icon(Icons.Filled.KeyboardArrowRight, null) },
+                trailingIcon = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
                 onClick = { showLastFmSubmenu = true }
             )
             DropdownMenuItem(

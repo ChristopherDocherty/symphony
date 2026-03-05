@@ -205,7 +205,7 @@ fun AddWishlistAlbumDialog(
                     errorMessage = null
                     coroutineScope.launch(Dispatchers.IO) {
                         try {
-                            if (isEdit && existingAlbum != null) {
+                            if (isEdit) {
                                 context.symphony.groove.wishlist.update(
                                     existingAlbum.id, artist, albumName, year, priority,
                                     artUrl.trim().takeIf { it.isNotBlank() },

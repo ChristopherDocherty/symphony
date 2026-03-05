@@ -7,7 +7,7 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Album // Added import
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.DropdownMenu
@@ -265,7 +265,7 @@ fun AlbumDropdownMenu(
                 },
                 text = { Text("Enqueue") },
                 trailingIcon = {
-                    Icon(Icons.Filled.KeyboardArrowRight, null)
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
                 },
                 onClick = { showEnqueueSubmenu = true }
             )
@@ -324,7 +324,7 @@ fun AlbumDropdownMenu(
                     },
                     text = { Text("Last.fm") },
                     trailingIcon = {
-                        Icon(Icons.Filled.KeyboardArrowRight, null)
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null)
                     },
                     onClick = { showLastFmSubmenu = true }
                 )
