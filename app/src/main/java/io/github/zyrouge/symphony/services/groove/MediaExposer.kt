@@ -45,40 +45,82 @@ class MediaExposer(private val symphony: Symphony) {
         value
     }
 
-    private data class ScanCycle(
-        val songCache: ConcurrentHashMap<String, Song>,
-        val songCacheUnused: ConcurrentSet<String>,
-        val artworkCacheUnused: ConcurrentSet<String>,
-        val lyricsCacheUnused: ConcurrentSet<String>,
-        val directoryArtworkCacheUnused: ConcurrentSet<String>,
-        val directoryArtworkProcessed: ConcurrentSet<String>,
-        val directoryArtworkCoverJpg: ConcurrentSet<String>,
+    private data class ScanConfig(
         val filter: MediaFilter,
         val songParseOptions: Song.ParseOptions,
     ) {
         companion object {
-            suspend fun create(symphony: Symphony): ScanCycle {
-                val songCache = ConcurrentHashMap(symphony.database.songCache.entriesPathMapped())
-                val songCacheUnused = concurrentSetOf(songCache.map { it.value.id })
-                val artworkCacheUnused = concurrentSetOf(symphony.database.artworkCache.all())
-                val lyricsCacheUnused = concurrentSetOf(symphony.database.lyricsCache.keys())
-                val directoryArtworkCacheUnused = concurrentSetOf(symphony.database.directoryArtworkCache.keys())
+            suspend fun create(symphony: Symphony): ScanConfig {
                 val s = symphony.settingsState.value
                 val filter = MediaFilter(
                     s.songsFilterPattern.takeIf { it.isNotEmpty() },
                     s.blacklistFoldersList.toSortedSet(),
                     s.whitelistFoldersList.toSortedSet()
                 )
-                return ScanCycle(
-                    songCache = songCache,
-                    songCacheUnused = songCacheUnused,
-                    artworkCacheUnused = artworkCacheUnused,
-                    lyricsCacheUnused = lyricsCacheUnused,
-                    directoryArtworkCacheUnused = directoryArtworkCacheUnused,
-                    directoryArtworkProcessed = concurrentSetOf(),
-                    directoryArtworkCoverJpg = concurrentSetOf(),
+                return ScanConfig(
                     filter = filter,
                     songParseOptions = Song.ParseOptions.create(symphony),
+                )
+            }
+        }
+    }
+
+    private class CachePruner private constructor(
+        songCacheData: Map<String, Song>,
+        artworkKeys: Collection<String>,
+        lyricsKeys: Collection<String>,
+        dirArtworkKeys: Collection<String>,
+    ) {
+        val songCache: ConcurrentHashMap<String, Song> = ConcurrentHashMap(songCacheData)
+        private val unusedSongIds = concurrentSetOf(songCacheData.values.map { it.id })
+        private val unusedArtwork = concurrentSetOf(artworkKeys)
+        private val unusedLyrics = concurrentSetOf(lyricsKeys)
+        private val unusedDirArt = concurrentSetOf(dirArtworkKeys)
+        val dirArtworkProcessed: ConcurrentSet<String> = concurrentSetOf()
+        val dirArtworkCoverJpg: ConcurrentSet<String> = concurrentSetOf()
+
+        fun markSongSeen(song: Song) {
+            unusedSongIds.remove(song.id)
+            song.coverFile?.let { unusedArtwork.remove(it) }
+        }
+
+        fun removeArtwork(file: String) = unusedArtwork.remove(file)
+        fun markLyricsSeen(key: String) = unusedLyrics.remove(key)
+        fun markDirArtworkSeen(parentPath: String) = unusedDirArt.remove(parentPath)
+
+        suspend fun prune(symphony: Symphony) {
+            try {
+                symphony.database.songCache.delete(unusedSongIds)
+            } catch (err: Exception) {
+                Logger.warn("MediaExposer", "trim song cache failed", err)
+            }
+            for (x in unusedArtwork) {
+                try {
+                    symphony.database.artworkCache.get(x).delete()
+                } catch (err: Exception) {
+                    Logger.warn("MediaExposer", "delete artwork cache file failed", err)
+                }
+            }
+            try {
+                symphony.database.lyricsCache.delete(unusedLyrics)
+            } catch (err: Exception) {
+                Logger.warn("MediaExposer", "trim lyrics cache failed", err)
+            }
+            try {
+                symphony.database.directoryArtworkCache.delete(unusedDirArt)
+            } catch (err: Exception) {
+                Logger.warn("MediaExposer", "trim directory artwork cache failed", err)
+            }
+        }
+
+        companion object {
+            suspend fun create(symphony: Symphony): CachePruner {
+                val songCache = symphony.database.songCache.entriesPathMapped()
+                return CachePruner(
+                    songCacheData = songCache,
+                    artworkKeys = symphony.database.artworkCache.all(),
+                    lyricsKeys = symphony.database.lyricsCache.keys(),
+                    dirArtworkKeys = symphony.database.directoryArtworkCache.keys(),
                 )
             }
         }
@@ -91,7 +133,8 @@ class MediaExposer(private val symphony: Symphony) {
         try {
             val context = symphony.applicationContext
             val folderUris = symphony.settingsState.value.mediaFoldersList.map { android.net.Uri.parse(it) }.toSet()
-            val cycle = ScanCycle.create(symphony)
+            val config = ScanConfig.create(symphony)
+            val pruner = CachePruner.create(symphony)
 
             scanCompletedDirs.set(0)
             scanTotalDirs.set(0)
@@ -104,7 +147,7 @@ class MediaExposer(private val symphony: Symphony) {
                     docFile?.let {
                         val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
                         async(Dispatchers.IO) {
-                            scanMediaTree(cycle, path, docFile)
+                            scanMediaTree(config, pruner, path, docFile)
                         }
                     }
                 }
@@ -114,7 +157,7 @@ class MediaExposer(private val symphony: Symphony) {
             }
 
             emitSongs(allCollectedSongs)
-            trimCache(cycle)
+            pruner.prune(symphony)
 
         } catch (err: Exception) {
             Logger.error("MediaExposer", "fetch failed", err)
@@ -125,9 +168,9 @@ class MediaExposer(private val symphony: Symphony) {
         emitFinish()
     }
 
-    private suspend fun scanMediaTree(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): List<Song> {
+    private suspend fun scanMediaTree(config: ScanConfig, pruner: CachePruner, path: SimplePath, file: DocumentFileX): List<Song> {
         try {
-            if (!cycle.filter.isWhitelisted(path.pathString)) {
+            if (!config.filter.isWhitelisted(path.pathString)) {
                 return emptyList()
             }
             val children = file.list()
@@ -138,19 +181,14 @@ class MediaExposer(private val symphony: Symphony) {
             }
             val songsFound = mutableListOf<Song>()
             coroutineScope {
-                val songLists = children.map { childFile ->
+                val results = children.map { childFile ->
                     val childPath = path.join(childFile.name)
                     async {
-                        when {
-                            childFile.isDirectory -> scanMediaTree(cycle, childPath, childFile)
-                            else -> scanMediaFile(cycle, childPath, childFile)
-                        }
+                        if (childFile.isDirectory) scanMediaTree(config, pruner, childPath, childFile)
+                        else listOfNotNull(scanMediaFile(config, pruner, childPath, childFile))
                     }
                 }.awaitAll()
-
-                for (songList in songLists) {
-                    songsFound.addAll(songList)
-                }
+                songsFound.addAll(results.flatten())
             }
             return songsFound
         } catch (err: Exception) {
@@ -169,14 +207,15 @@ class MediaExposer(private val symphony: Symphony) {
             val existingSongs = symphony.groove.song.values()
             val existingSongsByPath = existingSongs.associateBy { it.path }
 
-            // Invalidate DB cache entries for paths being rescanned before ScanCycle loads the
+            // Invalidate DB cache entries for paths being rescanned before CachePruner loads the
             // cache, so scanAudioFile is forced to re-parse instead of returning stale metadata.
             val idsToInvalidate = paths.mapNotNull { existingSongsByPath[it]?.id }
             if (idsToInvalidate.isNotEmpty()) {
                 symphony.database.songCache.delete(idsToInvalidate)
             }
 
-            val cycle = ScanCycle.create(symphony)
+            val config = ScanConfig.create(symphony)
+            val pruner = CachePruner.create(symphony)
 
             val updatedSongs = coroutineScope {
                 paths.mapNotNull { path ->
@@ -185,7 +224,7 @@ class MediaExposer(private val symphony: Symphony) {
                     val uri = uris[path] ?: existingSongsByPath[path]?.uri ?: return@mapNotNull null
                     val docFile = DocumentFileX.fromSingleUri(context, uri) ?: return@mapNotNull null
                     async(Dispatchers.IO) {
-                        scanMediaFile(cycle, SimplePath(path), docFile).firstOrNull()
+                        scanMediaFile(config, pruner, SimplePath(path), docFile)
                     }
                 }.awaitAll().filterNotNull()
             }
@@ -232,48 +271,45 @@ class MediaExposer(private val symphony: Symphony) {
         emitFinish()
     }
 
-    private suspend fun scanMediaFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): List<Song> {
+    private suspend fun scanMediaFile(config: ScanConfig, pruner: CachePruner, path: SimplePath, file: DocumentFileX): Song? {
         scanCompletedDirs.incrementAndGet()
         emitScanProgress()
         try {
             when {
                 path.extension == "lrc" || path.extension == "txt" -> {
-                    scanLrcFile(cycle, path, file)
-                    return emptyList()
+                    scanLrcFile(pruner, path, file)
+                    return null
                 }
                 file.mimeType == MIMETYPE_M3U -> {
-                    scanM3UFile(cycle, path, file)
-                    return emptyList()
+                    scanM3UFile(path, file)
+                    return null
                 }
-                file.mimeType.startsWith("audio/") -> {
-                    val song = scanAudioFile(cycle, path, file)
-                    return song?.let { listOf(it) } ?: emptyList()
-                }
+                file.mimeType.startsWith("audio/") -> return scanAudioFile(config, pruner, path, file)
                 file.mimeType.startsWith("image/") -> {
-                    scanImageFile(cycle, path, file)
-                    return emptyList()
+                    scanImageFile(pruner, path, file)
+                    return null
                 }
-                else -> return emptyList()
+                else -> return null
             }
         } catch (err: Exception) {
             val pathString = path.pathString
             Logger.error("MediaExposer", "scan media file failed for $pathString", err)
-            return emptyList()
+            return null
         }
     }
 
-    private suspend fun scanAudioFile(cycle: ScanCycle, path: SimplePath, file: DocumentFileX): Song? {
+    private suspend fun scanAudioFile(config: ScanConfig, pruner: CachePruner, path: SimplePath, file: DocumentFileX): Song? {
         val pathString = path.pathString
         uris[pathString] = file.uri
         val lastModified = file.lastModified
-        val cached = cycle.songCache[pathString]
+        val cached = pruner.songCache[pathString]
         val cacheHit = cached != null &&
                 cached.dateModified == lastModified &&
                 (cached.coverFile?.let { symphony.database.artworkCache.get(it).exists() } != false)
 
         val song = when {
             cacheHit -> cached!!
-            else -> Song.parse(path, file, cycle.songParseOptions)
+            else -> Song.parse(path, file, config.songParseOptions)
         }
 
         if (song.duration.milliseconds < symphony.settingsState.value.minSongDuration.seconds) {
@@ -285,23 +321,20 @@ class MediaExposer(private val symphony: Symphony) {
             cached?.coverFile?.let { oldCoverFile ->
                 if (oldCoverFile != song.coverFile) {
                     if (symphony.database.artworkCache.get(oldCoverFile).delete()) {
-                        cycle.artworkCacheUnused.remove(oldCoverFile)
+                        pruner.removeArtwork(oldCoverFile)
                     }
                 }
             }
         }
-        cycle.songCacheUnused.remove(song.id)
-        song.coverFile?.let {
-            cycle.artworkCacheUnused.remove(it)
-        }
+        pruner.markSongSeen(song)
         val lyricsKey = song.path.substringBeforeLast('.', song.path)
-        cycle.lyricsCacheUnused.remove(lyricsKey)
+        pruner.markLyricsSeen(lyricsKey)
         explorer.addChildFile(path)
         return song
     }
 
     private suspend fun scanLrcFile(
-        cycle: ScanCycle,
+        pruner: CachePruner,
         path: SimplePath,
         file: DocumentFileX,
     ) {
@@ -312,7 +345,7 @@ class MediaExposer(private val symphony: Symphony) {
             if (lyricsContent != null) {
                 val key = path.pathString.substringBeforeLast('.', path.pathString)
                 symphony.database.lyricsCache.put(key, lyricsContent)
-                cycle.lyricsCacheUnused.remove(key)
+                pruner.markLyricsSeen(key)
             }
         } catch (e: Exception) {
             Logger.error("MediaExposer", "Failed to read or cache LRC file: ${path.pathString}", e)
@@ -320,7 +353,6 @@ class MediaExposer(private val symphony: Symphony) {
     }
 
     private fun scanM3UFile(
-        @Suppress("Unused") cycle: ScanCycle,
         path: SimplePath,
         file: DocumentFileX,
     ) {
@@ -332,7 +364,7 @@ class MediaExposer(private val symphony: Symphony) {
     }
 
     private fun scanImageFile(
-        cycle: ScanCycle,
+        pruner: CachePruner,
         path: SimplePath,
         file: DocumentFileX,
     ) {
@@ -343,40 +375,15 @@ class MediaExposer(private val symphony: Symphony) {
         val parentPath = path.parent?.pathString ?: return
         if (path.name.equals("cover.jpg", ignoreCase = true)) {
             // cover.jpg always wins — overwrite whatever other image was picked first
-            cycle.directoryArtworkCoverJpg.add(parentPath)
+            pruner.dirArtworkCoverJpg.add(parentPath)
             symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
-        } else if (!cycle.directoryArtworkCoverJpg.contains(parentPath)) {
+        } else if (!pruner.dirArtworkCoverJpg.contains(parentPath)) {
             // Only use this image as a fallback if no cover.jpg has been found yet
-            if (cycle.directoryArtworkProcessed.add(parentPath)) {
+            if (pruner.dirArtworkProcessed.add(parentPath)) {
                 symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
             }
         }
-        cycle.directoryArtworkCacheUnused.remove(parentPath)
-    }
-
-    private suspend fun trimCache(cycle: ScanCycle) {
-        try {
-            symphony.database.songCache.delete(cycle.songCacheUnused)
-        } catch (err: Exception) {
-            Logger.warn("MediaExposer", "trim song cache failed", err)
-        }
-        for (x in cycle.artworkCacheUnused) {
-            try {
-                symphony.database.artworkCache.get(x).delete()
-            } catch (err: Exception) {
-                Logger.warn("MediaExposer", "delete artwork cache file failed", err)
-            }
-        }
-        try {
-            symphony.database.lyricsCache.delete(cycle.lyricsCacheUnused)
-        } catch (err: Exception) {
-            Logger.warn("MediaExposer", "trim lyrics cache failed", err)
-        }
-        try {
-            symphony.database.directoryArtworkCache.delete(cycle.directoryArtworkCacheUnused)
-        } catch (err: Exception) {
-            Logger.warn("MediaExposer", "trim directory artwork cache failed", err)
-        }
+        pruner.markDirArtworkSeen(parentPath)
     }
 
     suspend fun reset() {
@@ -393,9 +400,10 @@ class MediaExposer(private val symphony: Symphony) {
     }
 
     private fun emitSongs(songs: List<Song>) {
-        symphony.groove.album.rebuildFromSongs(songs)
-        symphony.groove.artist.rebuildFromSongs(songs)
         symphony.groove.song.setSongs(songs)
+        symphony.groove.album.rebuildFromSongs(songs)
+        symphony.groove.albumArtist.rebuildFromSongs(songs)
+        symphony.groove.artist.rebuildFromSongs(songs)
         symphony.groove.genre.rebuildFromSongs(songs)
     }
 

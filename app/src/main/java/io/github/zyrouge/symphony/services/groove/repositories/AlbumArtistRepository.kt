@@ -65,6 +65,35 @@ class AlbumArtistRepository(private val symphony: Symphony) {
         }
     }
 
+    internal fun rebuildFromSongs(songs: List<Song>) {
+        songs.forEach { song ->
+            song.albumArtists.forEach { albumArtist ->
+                songIdsCache.compute(albumArtist) { _, value ->
+                    value?.apply { add(song.id) } ?: concurrentSetOf(song.id)
+                }
+                symphony.groove.album.getIdFromSong(song)?.let { albumId ->
+                    albumIdsCache.compute(albumArtist) { _, value ->
+                        value?.apply { add(albumId) } ?: concurrentSetOf(albumId)
+                    }
+                }
+                cache.compute(albumArtist) { _, value ->
+                    value?.apply {
+                        numberOfAlbums = albumIdsCache[albumArtist]?.size ?: 0
+                        numberOfTracks++
+                    } ?: AlbumArtist(
+                        name = albumArtist,
+                        numberOfAlbums = albumIdsCache[albumArtist]?.size ?: 0,
+                        numberOfTracks = 1,
+                    )
+                }
+            }
+        }
+        _all.update {
+            cache.keys.toList()
+        }
+        emitCount()
+    }
+
     fun reset() {
         cache.clear()
         _all.update {
