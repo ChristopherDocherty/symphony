@@ -1,22 +1,45 @@
 package io.github.zyrouge.symphony.ui.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.AlbumFilter
+import io.github.zyrouge.symphony.AlbumGroupBy
 import io.github.zyrouge.symphony.AlbumSortBy
+import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
@@ -24,8 +47,6 @@ import io.github.zyrouge.symphony.ui.view.home.AlbumsPageState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import androidx.compose.ui.res.stringResource
-import io.github.zyrouge.symphony.R
 
 enum class AlbumGridType {
     Default,
@@ -133,7 +154,7 @@ fun AlbumGrid(
             }
 
             if (showModifyLayoutSheet) {
-                ResponsiveGridSizeAdjustBottomSheet(
+                AlbumGridLayoutSheet(
                     context,
                     columns = gridColumns,
                     onColumnsChange = { cols ->
@@ -152,6 +173,119 @@ fun AlbumGrid(
                 )
             }
         }
+    )
+}
+
+@Composable
+internal fun AlbumGridLayoutSheet(
+    context: ViewContext,
+    columns: ResponsiveGridColumns,
+    onColumnsChange: (ResponsiveGridColumns) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    val isVertical = LocalConfiguration.current.run { screenHeightDp > screenWidthDp }
+    val maxWidth = LocalConfiguration.current.screenWidthDp
+    val maxColumns = maxWidth / ResponsiveGridColumns.MIN_GRID_WIDTH
+    val effectiveColumns by remember(isVertical, columns) {
+        derivedStateOf {
+            when {
+                isVertical -> columns.vertical
+                else -> columns.horizontal
+            }
+        }
+    }
+    var sliderValue by remember { mutableFloatStateOf(effectiveColumns.toFloat()) }
+    val currentGroupBy by context.symphony.settings.data
+        .map { it.albumGroupBy }
+        .collectAsState(AlbumGroupBy.ALBUM_GROUP_NONE)
+    val coroutineScope = rememberCoroutineScope()
+    var showGroupByDropdown by remember { mutableStateOf(false) }
+
+    val groupByOptions = listOf(
+        AlbumGroupBy.ALBUM_GROUP_NONE to stringResource(R.string.GroupByNone),
+        AlbumGroupBy.ALBUM_GROUP_YEAR to stringResource(R.string.GroupByYear),
+        AlbumGroupBy.ALBUM_GROUP_ARTIST to stringResource(R.string.GroupByArtist),
+        AlbumGroupBy.ALBUM_GROUP_NAME to stringResource(R.string.GroupByAlbumName),
+    )
+    val currentGroupByLabel = groupByOptions.firstOrNull { it.first == currentGroupBy }?.second
+        ?: stringResource(R.string.GroupByNone)
+
+    ScaffoldDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(stringResource(R.string.GridColumns)) },
+        content = {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 16.dp),
+            ) {
+                Slider(
+                    value = sliderValue,
+                    onChange = { sliderValue = it.toInt().toFloat() },
+                    range = 1f..maxColumns.toFloat(),
+                    label = { Text(it.toInt().toString()) },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                Text(
+                    stringResource(R.string.GroupBy),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                )
+                Box {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showGroupByDropdown = true }
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = currentGroupByLabel,
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = LocalContentColor.current,
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showGroupByDropdown,
+                        onDismissRequest = { showGroupByDropdown = false },
+                    ) {
+                        groupByOptions.forEach { (mode, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    coroutineScope.launch {
+                                        context.symphony.settings.updateData { s ->
+                                            s.copy { albumGroupBy = mode }
+                                        }
+                                    }
+                                    showGroupByDropdown = false
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        actions = {
+            TextButton(
+                onClick = {
+                    val nColumns = when {
+                        isVertical -> columns.copy(vertical = sliderValue.toInt())
+                        else -> columns.copy(horizontal = sliderValue.toInt())
+                    }
+                    onColumnsChange(nColumns)
+                    onDismissRequest()
+                }
+            ) {
+                Text(stringResource(R.string.Done))
+            }
+        },
     )
 }
 

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +33,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.AlbumGroupBy
 import io.github.zyrouge.symphony.R
@@ -96,11 +93,6 @@ class AlbumsPageState(private val context: ViewContext) : HomePageState {
                 onClick = { exitMultiSelect() },
             )
         } else {
-            val coroutineScope = rememberCoroutineScope()
-            val currentGroupBy by context.symphony.settings.data
-                .map { it.albumGroupBy }
-                .collectAsState(AlbumGroupBy.ALBUM_GROUP_NONE)
-
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.Filled.FilterAlt, contentDescription = "filter") },
                 text = { Text("Filter") },
@@ -111,27 +103,6 @@ class AlbumsPageState(private val context: ViewContext) : HomePageState {
                 text = { Text("Select") },
                 onClick = { enterMultiSelect() },
             )
-            HorizontalDivider()
-            listOf(
-                AlbumGroupBy.ALBUM_GROUP_NONE to stringResource(R.string.GroupByNone),
-                AlbumGroupBy.ALBUM_GROUP_YEAR to stringResource(R.string.GroupByYear),
-                AlbumGroupBy.ALBUM_GROUP_ARTIST to stringResource(R.string.GroupByArtist),
-                AlbumGroupBy.ALBUM_GROUP_NAME to stringResource(R.string.GroupByAlbumName),
-            ).forEach { (mode, label) ->
-                DropdownMenuItem(
-                    leadingIcon = if (currentGroupBy == mode) {
-                        { Icon(Icons.Filled.Check, null) }
-                    } else null,
-                    text = { Text(label) },
-                    onClick = {
-                        coroutineScope.launch {
-                            context.symphony.settings.updateData { s ->
-                                s.copy { albumGroupBy = mode }
-                            }
-                        }
-                    },
-                )
-            }
         }
     }
 

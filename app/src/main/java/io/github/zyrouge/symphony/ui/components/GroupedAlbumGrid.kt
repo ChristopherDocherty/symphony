@@ -143,7 +143,7 @@ fun GroupedAlbumGrid(
             }
 
             if (showModifyLayoutSheet) {
-                ResponsiveGridSizeAdjustBottomSheet(
+                AlbumGridLayoutSheet(
                     context,
                     columns = gridColumns,
                     onColumnsChange = { cols ->
