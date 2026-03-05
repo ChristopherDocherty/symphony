@@ -89,6 +89,19 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
         }
     }
 
+    fun resetBackupState() {
+        symphony.viewModelScope.launch(Dispatchers.IO) {
+            symphony.settings.updateData { it.copy {
+                lastFmBackupInitialComplete = false
+                lastFmBackupTotal = 0
+                lastFmBackupFetchedCount = 0
+                lastFmBackupOldestFetched = 0
+                lastFmBackupNewestSeen = 0
+                lastFmBackupLastSync = 0
+            }}
+        }
+    }
+
     private suspend fun runInitialPull() {
         if (_isInitialPullInProgress.value) return
         _isInitialPullInProgress.value = true
@@ -134,12 +147,16 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
             }
 
             // Continue fetching older pages via timestamp checkpoint
+            var pullCompleted = false
             while (oldestFetched > 0) {
                 val page = LastFmScrobbler.getRecentTracksPage(
                     apiKey, username, 1, 200, to = oldestFetched - 1
                 ) ?: break
                 val validTracks = page.tracks.filter { it.timestampSeconds > 0 }
-                if (validTracks.isEmpty()) break
+                if (validTracks.isEmpty()) {
+                    pullCompleted = true
+                    break
+                }
 
                 // FIX #1: only advance checkpoint if write succeeded
                 if (!appendToCsv(dirUri, validTracks)) break
@@ -155,10 +172,12 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
                 delay(100)
             }
 
-            symphony.settings.updateData { it.copy {
-                lastFmBackupInitialComplete = true
-                lastFmBackupLastSync = System.currentTimeMillis() / 1000
-            }}
+            if (pullCompleted) {
+                symphony.settings.updateData { it.copy {
+                    lastFmBackupInitialComplete = true
+                    lastFmBackupLastSync = System.currentTimeMillis() / 1000
+                }}
+            }
         } catch (err: Exception) {
             Logger.error("LastFmBackupService", "runInitialPull failed", err)
         } finally {

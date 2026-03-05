@@ -341,6 +341,12 @@ fun LastFmSettingsView(context: ViewContext) {
                             title = { Text(stringResource(R.string.LastFmRebuildPlayCounts)) },
                             onClick = { context.symphony.lastFmBackup.rebuildPlayCounts() },
                         )
+                        HorizontalDivider()
+                        SettingsSimpleTile(
+                            icon = { Icon(Icons.Filled.Refresh, null) },
+                            title = { Text(stringResource(R.string.LastFmResetBackupState)) },
+                            onClick = { context.symphony.lastFmBackup.resetBackupState() },
+                        )
                     }
                 }
             }
