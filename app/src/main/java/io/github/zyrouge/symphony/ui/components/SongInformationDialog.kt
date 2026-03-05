@@ -175,9 +175,9 @@ fun SongInformationDialog(context: ViewContext, song: Song, onDismissRequest: ()
     )
 
     if (showMetadataEditorDialog) {
-        SongMetadataEditorDialog(
+        SongTagEditorDialog(
             context = context,
-            song = song,
+            songs = listOf(song),
             onDismissRequest = { showMetadataEditorDialog = false },
         )
     }
