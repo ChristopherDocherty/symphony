@@ -326,4 +326,8 @@
     <string name="GroupByArtist">Group by artist</string>
     <string name="GroupByAlbumName">Group by album name</string>
     <string name="Unknown">Unknown</string>
+    <string name="RenameFromTags">Rename from tags</string>
+    <string name="RenameTemplate">Filename template</string>
+    <string name="RenamingProgress">Renaming %1$s of %2$s…</string>
+    <string name="RenameXSongsFromTags">Rename %1$s songs from tags</string>
 </resources>

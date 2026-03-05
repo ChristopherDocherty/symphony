@@ -25,6 +25,7 @@ class SongsPageState : HomePageState {
     var selectedSongIds by mutableStateOf<Set<String>>(emptySet())
     var showBulkEditDialog by mutableStateOf(false)
     var showAutoNumberDialog by mutableStateOf(false)
+    var showRenameDialog by mutableStateOf(false)
 
     // Updated from SongList via SideEffect — not observed by state
     var sortedSongIds: List<String> = emptyList()

@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DriveFileRenameOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.MusicNote
@@ -191,6 +192,7 @@ fun SongList(
                 onSelectAll = { pageState.selectedSongIds = pageState.sortedSongIds.toSet() },
                 onEdit = { pageState.showBulkEditDialog = true },
                 onAutoNumber = { pageState.showAutoNumberDialog = true },
+                onRename = { pageState.showRenameDialog = true },
                 onExit = { pageState.exitMultiSelect() },
             )
         }
@@ -213,6 +215,17 @@ fun SongList(
                 },
             )
         }
+
+        if (pageState?.showRenameDialog == true && pageState.selectedSongIds.isNotEmpty()) {
+            RenameFromTagsDialog(
+                context = context,
+                songIds = pageState.selectedSongIds.toList(),
+                onDismissRequest = {
+                    pageState.showRenameDialog = false
+                    pageState.exitMultiSelect()
+                },
+            )
+        }
     }
 }
 
@@ -223,6 +236,7 @@ private fun SongMultiSelectBottomBar(
     onSelectAll: () -> Unit,
     onEdit: () -> Unit,
     onAutoNumber: () -> Unit,
+    onRename: () -> Unit,
     onExit: () -> Unit,
 ) {
     Surface(
@@ -248,6 +262,9 @@ private fun SongMultiSelectBottomBar(
             }
             IconButton(onClick = onAutoNumber, enabled = selectedCount > 0) {
                 Icon(Icons.Filled.FormatListNumbered, contentDescription = "Autonumber")
+            }
+            IconButton(onClick = onRename, enabled = selectedCount > 0) {
+                Icon(Icons.Filled.DriveFileRenameOutline, contentDescription = "Rename from tags")
             }
             IconButton(onClick = onExit) {
                 Icon(Icons.Filled.Close, contentDescription = "Exit select mode")
