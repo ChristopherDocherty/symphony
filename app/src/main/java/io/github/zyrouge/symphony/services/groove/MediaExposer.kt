@@ -32,12 +32,12 @@ class MediaExposer(private val symphony: Symphony) {
     private val _scanProgress = MutableStateFlow<ScanProgress?>(null)
     val scanProgress = _scanProgress.asStateFlow()
 
-    private val scanCompletedDirs = AtomicInteger(0)
-    private val scanTotalDirs = AtomicInteger(0)
+    private val scanCompletedFiles = AtomicInteger(0)
+    private val scanTotalFiles = AtomicInteger(0)
 
     private fun emitScanProgress() {
-        val completed = scanCompletedDirs.get()
-        val total = scanTotalDirs.get()
+        val completed = scanCompletedFiles.get()
+        val total = scanTotalFiles.get()
         _scanProgress.update { ScanProgress(completed, total) }
     }
 
@@ -123,6 +123,15 @@ class MediaExposer(private val symphony: Symphony) {
                     dirArtworkKeys = symphony.database.directoryArtworkCache.keys(),
                 )
             }
+
+            // Must delete stale rows BEFORE snapshotting the cache so scanAudioFile
+            // sees them as absent and re-parses instead of returning stale metadata.
+            suspend fun createForPaths(symphony: Symphony, forceRescanIds: Set<String>): CachePruner {
+                if (forceRescanIds.isNotEmpty()) {
+                    symphony.database.songCache.delete(forceRescanIds)
+                }
+                return create(symphony)
+            }
         }
     }
 
@@ -136,24 +145,24 @@ class MediaExposer(private val symphony: Symphony) {
             val config = ScanConfig.create(symphony)
             val pruner = CachePruner.create(symphony)
 
-            scanCompletedDirs.set(0)
-            scanTotalDirs.set(0)
+            scanCompletedFiles.set(0)
+            scanTotalFiles.set(0)
+            emitScanProgress()
+
+            val allFiles = mutableListOf<Pair<SimplePath, DocumentFileX>>()
+            for (uri in folderUris) {
+                ActivityUtils.makePersistableReadWriteUri(context, uri)
+                val docFile = DocumentFileX.fromTreeUri(context, uri) ?: continue
+                val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
+                collectFiles(config.filter, path, docFile, allFiles)
+            }
+            scanTotalFiles.set(allFiles.size)
             emitScanProgress()
 
             coroutineScope {
-                val deferredSongLists = folderUris.mapNotNull { uri ->
-                    ActivityUtils.makePersistableReadWriteUri(context, uri)
-                    val docFile = DocumentFileX.fromTreeUri(context, uri)
-                    docFile?.let {
-                        val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
-                        async(Dispatchers.IO) {
-                            scanMediaTree(config, pruner, path, docFile)
-                        }
-                    }
-                }
-                deferredSongLists.awaitAll().forEach { songList ->
-                    allCollectedSongs.addAll(songList)
-                }
+                allFiles.map { (path, file) ->
+                    async(Dispatchers.IO) { scanMediaFile(config, pruner, path, file) }
+                }.awaitAll().filterNotNull().forEach { allCollectedSongs.add(it) }
             }
 
             emitSongs(allCollectedSongs)
@@ -168,54 +177,37 @@ class MediaExposer(private val symphony: Symphony) {
         emitFinish()
     }
 
-    private suspend fun scanMediaTree(config: ScanConfig, pruner: CachePruner, path: SimplePath, file: DocumentFileX): List<Song> {
+    private suspend fun collectFiles(
+        filter: MediaFilter,
+        path: SimplePath,
+        dir: DocumentFileX,
+        into: MutableList<Pair<SimplePath, DocumentFileX>>,
+    ) {
+        if (!filter.isWhitelisted(path.pathString)) return
         try {
-            if (!config.filter.isWhitelisted(path.pathString)) {
-                return emptyList()
+            for (child in dir.list()) {
+                val childPath = path.join(child.name)
+                if (child.isDirectory) collectFiles(filter, childPath, child, into)
+                else into.add(childPath to child)
             }
-            val children = file.list()
-            val fileCount = children.count { !it.isDirectory }
-            if (fileCount > 0) {
-                scanTotalDirs.addAndGet(fileCount)
-                emitScanProgress()
-            }
-            val songsFound = mutableListOf<Song>()
-            coroutineScope {
-                val results = children.map { childFile ->
-                    val childPath = path.join(childFile.name)
-                    async {
-                        if (childFile.isDirectory) scanMediaTree(config, pruner, childPath, childFile)
-                        else listOfNotNull(scanMediaFile(config, pruner, childPath, childFile))
-                    }
-                }.awaitAll()
-                songsFound.addAll(results.flatten())
-            }
-            return songsFound
         } catch (err: Exception) {
-            Logger.error("MediaExposer", "scan media tree failed for ${path.pathString}", err)
-            return emptyList()
+            Logger.error("MediaExposer", "collectFiles failed for ${path.pathString}", err)
         }
     }
 
     suspend fun fetchPaths(paths: List<String>) {
         emitUpdate(true)
-        scanCompletedDirs.set(0)
-        scanTotalDirs.set(paths.size)
+        scanCompletedFiles.set(0)
+        scanTotalFiles.set(paths.size)
         emitScanProgress()
         try {
             val context = symphony.applicationContext
             val existingSongs = symphony.groove.song.values()
             val existingSongsByPath = existingSongs.associateBy { it.path }
 
-            // Invalidate DB cache entries for paths being rescanned before CachePruner loads the
-            // cache, so scanAudioFile is forced to re-parse instead of returning stale metadata.
-            val idsToInvalidate = paths.mapNotNull { existingSongsByPath[it]?.id }
-            if (idsToInvalidate.isNotEmpty()) {
-                symphony.database.songCache.delete(idsToInvalidate)
-            }
-
+            val idsToInvalidate = paths.mapNotNull { existingSongsByPath[it]?.id }.toSet()
             val config = ScanConfig.create(symphony)
-            val pruner = CachePruner.create(symphony)
+            val pruner = CachePruner.createForPaths(symphony, idsToInvalidate)
 
             val updatedSongs = coroutineScope {
                 paths.mapNotNull { path ->
@@ -272,7 +264,7 @@ class MediaExposer(private val symphony: Symphony) {
     }
 
     private suspend fun scanMediaFile(config: ScanConfig, pruner: CachePruner, path: SimplePath, file: DocumentFileX): Song? {
-        scanCompletedDirs.incrementAndGet()
+        scanCompletedFiles.incrementAndGet()
         emitScanProgress()
         try {
             when {

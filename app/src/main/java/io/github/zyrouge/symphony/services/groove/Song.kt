@@ -132,36 +132,9 @@ data class Song(
                 ?.use { AudioMetadataParser.parse(file.name, it.detachFd()) }
                 ?: return null
             val id = symphony.groove.song.idGenerator.next()
-            //START cover art logic
             val coverFile = metadata.pictures.firstOrNull()?.let {
-                val cacheKey = "${metadata.album}_${metadata.artists.hashCode()}_${metadata.date.hashCode()}"
-                if (symphony.database.artworkCache.get(cacheKey).exists()) {
-                    return@let cacheKey
-                }
-
-                val extension = when (it.mimeType) {
-                    "image/jpg", "image/jpeg" -> "jpg"
-                    "image/png" -> "png"
-                    else -> null
-                }
-                if (extension == null) {
-                    return@let null
-                }
-                val quality = symphony.settingsState.value.artworkQuality.toImagePreserverQuality()
-                if (quality.maxSide == null) {
-                    val name = "$id.$extension"
-                    symphony.database.artworkCache.get(name).writeBytes(it.data)
-                    return@let name
-                }
-                val bitmap = BitmapFactory.decodeByteArray(it.data, 0, it.data.size)
-                FileOutputStream(symphony.database.artworkCache.get(cacheKey)).use { writer ->
-                    ImagePreserver
-                        .resize(bitmap, quality)
-                        .compress(Bitmap.CompressFormat.JPEG, 100, writer)
-                }
-                cacheKey
+                saveCoverArt(symphony, metadata.album, metadata.artists, it.data, it.mimeType)
             }
-           // END cover art logic
             metadata.lyrics?.let {
                 val lyricsKey = path.pathString.substringBeforeLast('.', path.pathString)
                 symphony.database.lyricsCache.put(lyricsKey, it)
@@ -207,21 +180,14 @@ data class Song(
             val symphony = options.symphony
             val retriever = MediaMetadataRetriever()
             retriever.setDataSource(symphony.applicationContext, file.uri)
-            val id = symphony.groove.song.idGenerator.next() + ".mr"
-            val coverFile = retriever.embeddedPicture?.let {
-                val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-                val quality = symphony.settingsState.value.artworkQuality.toImagePreserverQuality()
-                val name = "$id.jpg"
-                FileOutputStream(symphony.database.artworkCache.get(name)).use { writer ->
-                    ImagePreserver
-                        .resize(bitmap, quality)
-                        .compress(Bitmap.CompressFormat.JPEG, 100, writer)
-                }
-                name
-            }
+            val id = symphony.groove.song.idGenerator.next()
             val title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
             val album = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
             val artists = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+            val parsedArtists = parseMultiValue(artists, options.artistSeparatorRegex)
+            val coverFile = retriever.embeddedPicture?.let {
+                saveCoverArt(symphony, album, parsedArtists, it, "image/jpeg")
+            }
             val composers = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_COMPOSER)
             val albumArtists =
                 retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUMARTIST)
@@ -252,7 +218,7 @@ data class Song(
                 id = id,
                 title = title ?: path.nameWithoutExtension,
                 album = album,
-                artists = parseMultiValue(artists, options.artistSeparatorRegex),
+                artists = parsedArtists,
                 composers = parseMultiValue(composers, options.artistSeparatorRegex),
                 albumArtists = parseMultiValue(albumArtists, options.artistSeparatorRegex),
                 genres = parseMultiValue(genres, options.genreSeparatorRegex),
@@ -273,6 +239,28 @@ data class Song(
                 uri = file.uri,
                 path = path.pathString,
             )
+        }
+
+        private fun saveCoverArt(
+            symphony: Symphony,
+            album: String?,
+            artists: Set<String>,
+            data: ByteArray,
+            mimeType: String,
+        ): String? {
+            val extension = when (mimeType) {
+                "image/jpg", "image/jpeg" -> "jpg"
+                "image/png" -> "png"
+                else -> return null
+            }
+            val cacheKey = "${album}_${artists.hashCode()}.$extension"
+            if (symphony.database.artworkCache.get(cacheKey).exists()) return cacheKey
+            val quality = symphony.settingsState.value.artworkQuality.toImagePreserverQuality()
+            val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+            FileOutputStream(symphony.database.artworkCache.get(cacheKey)).use { writer ->
+                ImagePreserver.resize(bitmap, quality).compress(Bitmap.CompressFormat.JPEG, 100, writer)
+            }
+            return cacheKey
         }
 
         private fun makeSeparatorsRegex(separators: Set<String>): Regex? {
