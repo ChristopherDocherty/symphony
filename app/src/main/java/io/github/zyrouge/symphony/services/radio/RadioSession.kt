@@ -210,6 +210,7 @@ class RadioSession(val symphony: Symphony) {
     }
 
     private suspend fun updateAsync() {
+        if (symphony.radio.zapMode) return
         val song = symphony.radio.queue.currentSongId
             ?.let { symphony.groove.song.get(it) } ?: return
         currentSongId = song.id

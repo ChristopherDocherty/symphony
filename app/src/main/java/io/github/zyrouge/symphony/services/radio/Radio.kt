@@ -71,6 +71,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     var persistedPitch = RadioPlayer.DEFAULT_PITCH
     var sleepTimer: SleepTimer? = null
     var pauseOnCurrentSongEnd = false
+    var zapMode = false
 
     init {
         nativeReceiver.start()

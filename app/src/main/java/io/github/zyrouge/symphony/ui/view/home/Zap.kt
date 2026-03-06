@@ -48,9 +48,11 @@ fun ZapView(context: ViewContext, pageState: ZapPageState? = null) {
 
     LaunchedEffect(state.isZapping, state.skipTick) {
         if (!state.isZapping) {
+            context.symphony.radio.zapMode = false
             context.symphony.radio.stop()
             return@LaunchedEffect
         }
+        context.symphony.radio.zapMode = true
         val playedIds = state.playedSongs.map { it.id }.toSet()
         val remaining = allSongIds.filter { it !in playedIds }
         val pool = remaining.ifEmpty { allSongIds }
