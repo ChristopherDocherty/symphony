@@ -3,7 +3,6 @@ package io.github.zyrouge.symphony.services.groove
 import android.net.Uri
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.utils.ActivityUtils
-import io.github.zyrouge.symphony.utils.ConcurrentSet
 import io.github.zyrouge.symphony.utils.DocumentFileX
 import io.github.zyrouge.symphony.utils.Logger
 import io.github.zyrouge.symphony.utils.SimpleFileSystem
@@ -69,15 +68,13 @@ class MediaExposer(private val symphony: Symphony) {
         songCacheData: Map<String, Song>,
         artworkKeys: Collection<String>,
         lyricsKeys: Collection<String>,
-        dirArtworkKeys: Collection<String>,
+        val existingDirArtwork: Map<String, Uri>,
     ) {
         val songCache: ConcurrentHashMap<String, Song> = ConcurrentHashMap(songCacheData)
         private val unusedSongIds = concurrentSetOf(songCacheData.values.map { it.id })
         private val unusedArtwork = concurrentSetOf(artworkKeys)
         private val unusedLyrics = concurrentSetOf(lyricsKeys)
-        private val unusedDirArt = concurrentSetOf(dirArtworkKeys)
-        val dirArtworkProcessed: ConcurrentSet<String> = concurrentSetOf()
-        val dirArtworkCoverJpg: ConcurrentSet<String> = concurrentSetOf()
+        private val unusedDirArt = concurrentSetOf(existingDirArtwork.keys)
 
         fun markSongSeen(song: Song) {
             unusedSongIds.remove(song.id)
@@ -120,7 +117,7 @@ class MediaExposer(private val symphony: Symphony) {
                     songCacheData = songCache,
                     artworkKeys = symphony.database.artworkCache.all(),
                     lyricsKeys = symphony.database.lyricsCache.keys(),
-                    dirArtworkKeys = symphony.database.directoryArtworkCache.keys(),
+                    existingDirArtwork = symphony.database.directoryArtworkCache.entries(),
                 )
             }
 
@@ -156,16 +153,33 @@ class MediaExposer(private val symphony: Symphony) {
                 val path = SimplePath(DocumentFileX.getParentPathOfTreeUri(uri) ?: docFile.name)
                 collectFiles(config.filter, path, docFile, allFiles)
             }
-            scanTotalFiles.set(allFiles.size)
+            val (imageFiles, scanFiles) = allFiles.partition { (_, file) -> file.mimeType.startsWith("image/") }
+            for ((path, file) in imageFiles) {
+                uris[path.pathString] = file.uri
+                explorer.addChildFile(path)
+            }
+            scanTotalFiles.set(scanFiles.size)
             emitScanProgress()
 
             coroutineScope {
-                allFiles.map { (path, file) ->
+                scanFiles.map { (path, file) ->
                     async(Dispatchers.IO) { scanMediaFile(config, pruner, path, file) }
                 }.awaitAll().filterNotNull().forEach { allCollectedSongs.add(it) }
             }
 
             emitSongs(allCollectedSongs)
+
+            val imagesByDir = imageFiles.groupBy { (path, _) -> path.parent?.pathString }
+            for ((parentPath, dirFiles) in imagesByDir) {
+                if (parentPath == null) continue
+                val winner = dirFiles.find { (path, _) -> path.name.equals("cover.jpg", ignoreCase = true) }
+                    ?: dirFiles.first()
+                pruner.markDirArtworkSeen(parentPath)
+                if (pruner.existingDirArtwork[parentPath] != winner.second.uri) {
+                    symphony.database.directoryArtworkCache.insert(parentPath, winner.second.uri)
+                }
+            }
+
             pruner.prune(symphony)
 
         } catch (err: Exception) {
@@ -246,8 +260,6 @@ class MediaExposer(private val symphony: Symphony) {
             explorer = SimpleFileSystem.Folder()
 
             val cachedSongs = symphony.database.songCache.entriesPathMapped().values.toList()
-            //cachedSongs.forEach { explorer.addChildFile(SimplePath(it.path)) }
-
 
             if (cachedSongs.isEmpty()) {
                 Logger.warn("MediaExposer", "No songs found in cache to load.")
@@ -277,10 +289,6 @@ class MediaExposer(private val symphony: Symphony) {
                     return null
                 }
                 file.mimeType.startsWith("audio/") -> return scanAudioFile(config, pruner, path, file)
-                file.mimeType.startsWith("image/") -> {
-                    scanImageFile(pruner, path, file)
-                    return null
-                }
                 else -> return null
             }
         } catch (err: Exception) {
@@ -355,36 +363,13 @@ class MediaExposer(private val symphony: Symphony) {
         symphony.groove.playlist.add(playlist)
     }
 
-    private fun scanImageFile(
-        pruner: CachePruner,
-        path: SimplePath,
-        file: DocumentFileX,
-    ) {
-        val pathString = path.pathString
-        uris[pathString] = file.uri
-        explorer.addChildFile(path)
-
-        val parentPath = path.parent?.pathString ?: return
-        if (path.name.equals("cover.jpg", ignoreCase = true)) {
-            // cover.jpg always wins — overwrite whatever other image was picked first
-            pruner.dirArtworkCoverJpg.add(parentPath)
-            symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
-        } else if (!pruner.dirArtworkCoverJpg.contains(parentPath)) {
-            // Only use this image as a fallback if no cover.jpg has been found yet
-            if (pruner.dirArtworkProcessed.add(parentPath)) {
-                symphony.database.directoryArtworkCache.insert(parentPath, file.uri)
-            }
-        }
-        pruner.markDirArtworkSeen(parentPath)
-    }
-
     suspend fun reset() {
         emitUpdate(true)
         uris.clear()
         explorer = SimpleFileSystem.Folder()
         symphony.database.songCache.clear()
-        symphony.database.artworkCache.clear() // Added to ensure artwork cache is cleared
-        symphony.database.lyricsCache.clear() // Added to ensure lyrics cache is cleared
+        symphony.database.artworkCache.clear()
+        symphony.database.lyricsCache.clear()
         symphony.database.directoryArtworkCache.clear()
         emitSongs(emptyList())
         emitUpdate(false)
@@ -429,11 +414,6 @@ class MediaExposer(private val symphony: Symphony) {
         }
     }
 
-    /**
-     * Look up the sidecar lyrics file for an audio file by its path.
-     * Checks for a .lrc file first, then a .txt file.
-     * Returns (uri, "lrc") or (uri, "txt"), or null if neither exists.
-     */
     fun getSidecarUri(audioPath: String): Pair<Uri, String>? {
         val base = audioPath.substringBeforeLast('.')
         uris["$base.lrc"]?.let { return it to "lrc" }

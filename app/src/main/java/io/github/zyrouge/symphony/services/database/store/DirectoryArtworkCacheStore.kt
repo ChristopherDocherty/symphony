@@ -96,6 +96,28 @@ class DirectoryArtworkCacheStore(symphony: Symphony) {
         return originalKeys
     }
 
+    fun entries(): Map<String, Uri> {
+        val result = mutableMapOf<String, Uri>()
+        for (hashedFilename in adapter.list()) {
+            val keyFile = adapter.get(hashedFilename)
+            if (keyFile.exists() && keyFile.isFile) {
+                try {
+                    val lines = keyFile.readLines()
+                    if (lines.size >= 2) {
+                        val originalPath = lines[0]
+                        val uriString = lines[1]
+                        if (originalPath.isNotBlank() && uriString.isNotBlank()) {
+                            result[originalPath] = Uri.parse(uriString)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(logTag, "Error reading cache entry. Hashed key: '$hashedFilename'", e)
+                }
+            }
+        }
+        return result
+    }
+
     fun delete(directoryPathKeys: Collection<String>) {
         directoryPathKeys.forEach { originalPath ->
             if (originalPath.isNotBlank()) {
