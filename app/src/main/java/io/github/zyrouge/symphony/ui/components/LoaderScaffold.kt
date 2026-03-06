@@ -118,13 +118,16 @@ fun LoaderScaffold(
                         )
                 ) {
                     scanProgress?.let { progress ->
-                        LinearProgressIndicator(
-                            progress = {
-                                progress.completed.toFloat() /
-                                        progress.total.coerceAtLeast(1)
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        if (progress.total > 0) {
+                            LinearProgressIndicator(
+                                progress = {
+                                    progress.completed.toFloat() / progress.total
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        } else {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
                     }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -136,8 +139,10 @@ fun LoaderScaffold(
                             modifier = Modifier.size(16.dp),
                         )
                         Text(
-                            text = scanProgress?.let { "Scanning ${it.completed} / ${it.total} files" }
-                                ?: stringResource(R.string.Loading),
+                            text = scanProgress?.let {
+                                if (it.total == 0) stringResource(R.string.DiscoveringFiles)
+                                else "Scanning ${it.completed} / ${it.total} files"
+                            } ?: stringResource(R.string.Loading),
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }

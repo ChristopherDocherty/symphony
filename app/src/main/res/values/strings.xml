@@ -106,6 +106,7 @@
     <string name="TrackNumber">Track number</string>
     <string name="Tree">Tree</string>
     <string name="Loading">Loading...</string>
+    <string name="DiscoveringFiles">Discovering files…</string>
     <string name="Name">Name</string>
     <string name="AddFolder">Add folder</string>
     <string name="BlacklistFolders">Blacklist folders</string>
