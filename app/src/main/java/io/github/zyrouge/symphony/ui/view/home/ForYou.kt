@@ -128,7 +128,12 @@ fun ForYouView(context: ViewContext) {
                 derivedStateOf {
                     runIfOrDefault(!albumsIsUpdating, listOf()) {
                         val unscrobbled = albumIds.filter {
-                            context.symphony.lastFm.getAlbumScrobbleCount(it) == 0L
+                            val album = context.symphony.groove.album.get(it)
+                            album != null &&
+                                album.albumArtists.none { artist ->
+                                    artist.equals("Various Artists", ignoreCase = true)
+                                } &&
+                                context.symphony.lastFm.getAlbumScrobbleCount(it) == 0L
                         }
                         seededSubList(unscrobbled, 6, daySeed)
                     }
