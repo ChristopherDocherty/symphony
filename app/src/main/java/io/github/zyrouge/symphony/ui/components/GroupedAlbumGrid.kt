@@ -166,7 +166,7 @@ fun GroupedAlbumGrid(
 }
 
 @Composable
-private fun GroupSectionHeader(title: String) {
+internal fun GroupSectionHeader(title: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

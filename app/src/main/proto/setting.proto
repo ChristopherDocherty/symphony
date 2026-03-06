@@ -147,6 +147,12 @@ enum WishlistSortBy {
   WISHLIST_SORT_PRIORITY = 4;
 }
 
+// Maps to WishlistGroupBy kotlin enum. Default (0) = NONE — no grouping.
+enum WishlistGroupBy {
+  WISHLIST_GROUP_NONE = 0;
+  WISHLIST_GROUP_PRIORITY = 1;
+}
+
 // Maps to PlaylistRepository.SortBy. Default (0) = CUSTOM — matches kotlin default.
 enum PlaylistSortBy {
   PLAYLIST_SORT_CUSTOM = 0;
@@ -251,6 +257,7 @@ message Settings {
   WishlistSortBy wishlist_sort_by = 76;
   bool wishlist_sort_reverse = 77;
   AlbumGroupBy album_group_by = 78;
+  WishlistGroupBy wishlist_group_by = 79;
 
   // --- Album tile display (90–99) ---
   bool album_tile_show_name = 90;           // default true — written by migration

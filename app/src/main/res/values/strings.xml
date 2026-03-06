@@ -328,6 +328,8 @@
     <string name="GroupByYear">Group by year</string>
     <string name="GroupByArtist">Group by artist</string>
     <string name="GroupByAlbumName">Group by album name</string>
+    <string name="GroupByPriority">Group by priority</string>
+    <string name="NoPriority">No priority</string>
     <string name="Unknown">Unknown</string>
     <string name="RenameFromTags">Rename from tags</string>
     <string name="RenameTemplate">Filename template</string>
