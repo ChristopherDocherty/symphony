@@ -35,6 +35,7 @@ enum AlbumSortBy {
   ALBUM_TRACKS_COUNT = 3;
   ALBUM_YEAR = 4;
   ALBUM_SCROBBLE_COUNT = 5;
+  ALBUM_AOTY_RANKING = 6;
 }
 
 message AlbumSortPreference {

@@ -278,6 +278,9 @@ class AlbumRepository(private val symphony: Symphony) {
             AlbumSortBy.ALBUM_SCROBBLE_COUNT -> filteredAlbumIds.sortedBy {
                 symphony.lastFm.getAlbumScrobbleCount(it)
             }
+            AlbumSortBy.ALBUM_AOTY_RANKING -> filteredAlbumIds.sortedWith(
+                compareBy { customTagValuesCache[it]?.get("AOTY")?.firstOrNull()?.toIntOrNull() ?: Int.MAX_VALUE }
+            )
             AlbumSortBy.UNRECOGNIZED -> filteredAlbumIds
         }
         return if (reverse) sorted.reversed() else sorted

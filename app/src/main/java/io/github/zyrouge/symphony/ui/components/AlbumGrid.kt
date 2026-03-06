@@ -326,5 +326,6 @@ fun AlbumSortBy.label(context: ViewContext) = when (this) {
     AlbumSortBy.ALBUM_TRACKS_COUNT -> context.activity.getString(R.string.TrackCount)
     AlbumSortBy.ALBUM_YEAR -> context.activity.getString(R.string.Year)
     AlbumSortBy.ALBUM_SCROBBLE_COUNT -> context.activity.getString(R.string.ScrobbleCount)
+    AlbumSortBy.ALBUM_AOTY_RANKING -> context.activity.getString(R.string.AotyRanking)
     AlbumSortBy.UNRECOGNIZED -> "???"
 }

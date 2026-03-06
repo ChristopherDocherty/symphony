@@ -250,6 +250,7 @@
     <string name="Off">Off</string>
     <string name="RefreshLastFm">Refresh Last.fm</string>
     <string name="ScrobbleCount">Scrobble Count</string>
+    <string name="AotyRanking">AOTY Ranking</string>
     <string name="LastFm">Last.fm</string>
     <string name="LastFmApiKey">API Key</string>
     <string name="LastFmUsername">Username</string>
