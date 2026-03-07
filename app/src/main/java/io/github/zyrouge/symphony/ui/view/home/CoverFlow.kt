@@ -51,6 +51,7 @@ import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.AlbumSortBy
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.ui.components.AlbumFilterDialog
 import io.github.zyrouge.symphony.ui.components.AlbumFilterField
@@ -65,6 +66,7 @@ import io.github.zyrouge.symphony.ui.components.setLastUsedReverse
 import io.github.zyrouge.symphony.ui.components.setLastUsedSortBy
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.AlbumViewRoute
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -149,6 +151,7 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
 
                 val maxPage = albumIds.size - 1
                 val currentPage = remember { Animatable(0f) }
+                var restoredPosition by remember { mutableStateOf(false) }
 
                 LaunchedEffect(maxPage) {
                     currentPage.updateBounds(0f, maxPage.toFloat())
@@ -172,6 +175,32 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                     }
                 }
 
+                // Restore the last-viewed album once when the list first loads.
+                // Read directly from DataStore (not collectAsState) to avoid a race where
+                // albumIds arrives from the Room cache before DataStore emits its first value.
+                LaunchedEffect(albumIds) {
+                    if (!restoredPosition && albumIds.isNotEmpty()) {
+                        restoredPosition = true
+                        val savedId = context.symphony.settings.data
+                            .map { it.uiCoverFlowLastAlbumId }
+                            .first()
+                        if (savedId.isNotEmpty()) {
+                            val idx = albumIds.indexOfFirst { it.toString() == savedId }
+                            if (idx >= 0) currentPage.snapTo(idx.toFloat())
+                        }
+                    }
+                }
+
+                // Persist the centred album whenever the settled page changes.
+                LaunchedEffect(settledPage) {
+                    if (restoredPosition && albumIds.isNotEmpty()) {
+                        val id = albumIds[settledPage]
+                        context.symphony.settings.updateData {
+                            it.copy { uiCoverFlowLastAlbumId = id.toString() }
+                        }
+                    }
+                }
+
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -186,8 +215,29 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                         val localDensity = LocalDensity.current
                         val albumSizeDp = minOf(maxWidth, maxHeight) * 0.55f
                         val albumSizePx = with(localDensity) { albumSizeDp.toPx() }
-                        // Distance between adjacent album centers — tight enough to overlap
-                        val spacingPx = albumSizePx * 0.42f
+                        // Max rotation 78° — steeper than before so side albums are visually
+                        // thinner (cos 78° ≈ 0.21) and more can fit on screen simultaneously.
+                        // Center-to-first-side distance: settled minimum is albumSizePx*0.583;
+                        // using 0.66 leaves a slim visible gap between center and first side album.
+                        val sideXPx = albumSizePx * 0.66f
+                        // Spacing between adjacent fully-rotated side albums.
+                        // Settled minimum is albumSizePx*0.166; using 0.18 leaves a slim gap.
+                        val sideSpacingPx = albumSizePx * 0.18f
+
+                        // Returns the x offset for a continuous album position, interpolating
+                        // between settled fan positions so albums never phase through each other.
+                        // A power curve is applied for the center→side segment (n==0) to make
+                        // the center album fan out aggressively from the very start of a swipe.
+                        fun xOffsetFor(off: Float): Float {
+                            val sign = if (off >= 0f) 1f else -1f
+                            val absOff = abs(off)
+                            val n = absOff.toInt()
+                            val frac = absOff - n
+                            val x0 = if (n == 0) 0f else sideXPx + (n - 1) * sideSpacingPx
+                            val x1 = sideXPx + n * sideSpacingPx
+                            val interpFrac = if (n == 0) Math.pow(frac.toDouble(), 0.7).toFloat() else frac
+                            return sign * lerp(x0, x1, interpFrac)
+                        }
 
                         Box(
                             modifier = Modifier
@@ -234,14 +284,17 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                                         // offset reads state lazily (layout phase, no recomposition)
                                         .offset {
                                             val off = index.toFloat() - currentPage.value
-                                            IntOffset((off * spacingPx).roundToInt(), 0)
+                                            IntOffset(xOffsetFor(off).roundToInt(), 0)
                                         }
                                         // graphicsLayer reads state lazily (draw phase, no recomposition)
                                         .graphicsLayer {
                                             val off = index.toFloat() - currentPage.value
                                             val absOff = abs(off).coerceIn(0f, 1f)
-                                            // Clamp rotation at ±65° for albums beyond ±1 position
-                                            rotationY = off.coerceIn(-1f, 1f) * -65f
+                                            // Power curve makes rotation ramp up aggressively from
+                                            // center so albums clear each other faster during swipe.
+                                            // Clamped at ±78° for albums beyond ±1 position.
+                                            val rotFrac = Math.pow(absOff.toDouble(), 0.7).toFloat()
+                                            rotationY = (if (off >= 0f) -1f else 1f) * rotFrac * 78f
                                             scaleX = lerp(0.8f, 1f, 1f - absOff)
                                             scaleY = lerp(0.8f, 1f, 1f - absOff)
                                             alpha = lerp(0.5f, 1f, 1f - absOff)

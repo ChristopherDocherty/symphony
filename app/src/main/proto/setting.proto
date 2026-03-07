@@ -291,6 +291,7 @@ message Settings {
   // --- Cover Flow album filters ---
   AlbumFilter ui_cover_flow_album_filter = 806;
   AlbumSortPreference ui_cover_flow_album_sort_by = 807;
+  string ui_cover_flow_last_album_id = 808;                 // album ID (Long.toString) last centered
 
   // --- Playback (300–399, alongside existing 901) ---
   bool fade_playback = 300;
