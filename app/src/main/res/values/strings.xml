@@ -294,6 +294,8 @@
     <string name="WishlistAlbumArtUrl">Album art URL (optional)</string>
     <string name="Priority">Priority</string>
     <string name="XWishlistAlbums">%1$s wishlist albums</string>
+    <string name="PickFromWishlist">Pick from Wishlist</string>
+    <string name="NoWishlistArtwork">No wishlist albums have artwork</string>
     <string name="ManualScrobbler">Manual Scrobbler</string>
     <string name="LastFmApiSecret">API Secret</string>
     <string name="LastFmAuthenticate">Authenticate with Last.fm</string>
