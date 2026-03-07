@@ -2,6 +2,7 @@ package io.github.zyrouge.symphony.ui.view.home
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
+import androidx.compose.material.icons.filled.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.IndeterminateCheckBox
 import androidx.compose.material.icons.filled.SelectAll
@@ -14,13 +15,18 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import io.github.zyrouge.symphony.R
+import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.ui.components.LoaderScaffold
 import io.github.zyrouge.symphony.ui.components.SongList
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
-class SongsPageState : HomePageState {
+class SongsPageState(private val context: ViewContext) : HomePageState {
     var isMultiSelectMode by mutableStateOf(false)
     var selectedSongIds by mutableStateOf<Set<String>>(emptySet())
     var showBulkEditDialog by mutableStateOf(false)
@@ -49,6 +55,11 @@ class SongsPageState : HomePageState {
 
     @Composable
     override fun DropdownItems() {
+        val coroutineScope = rememberCoroutineScope()
+        val showScrobbleCount by context.symphony.settings.data
+            .map { it.songShowScrobbleCount }
+            .collectAsState(false)
+
         if (isMultiSelectMode) {
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.Filled.SelectAll, null) },
@@ -66,6 +77,20 @@ class SongsPageState : HomePageState {
                 onClick = { exitMultiSelect() },
             )
         } else {
+            DropdownMenuItem(
+                leadingIcon = {
+                    Icon(
+                        if (showScrobbleCount) Icons.Filled.CheckBox else Icons.Filled.CheckBoxOutlineBlank,
+                        null,
+                    )
+                },
+                text = { Text(stringResource(R.string.ShowScrobbleCount)) },
+                onClick = {
+                    coroutineScope.launch {
+                        context.symphony.settings.updateData { it.copy { songShowScrobbleCount = !showScrobbleCount } }
+                    }
+                },
+            )
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.Filled.CheckBox, null) },
                 text = { Text("Select") },

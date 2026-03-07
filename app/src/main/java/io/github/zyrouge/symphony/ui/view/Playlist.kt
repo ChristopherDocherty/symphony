@@ -100,7 +100,7 @@ fun PlaylistView(context: ViewContext, route: PlaylistViewRoute) {
     val incrementUpdateCounter = {
         updateCounter = if (updateCounter > 25) 0 else updateCounter + 1
     }
-    val songPageState = remember { SongsPageState() }
+    val songPageState = remember { SongsPageState(context) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

@@ -116,7 +116,7 @@ fun FoldersView(context: ViewContext) {
                         }
                     }
                 }
-                val songPageState = remember { SongsPageState() }
+                val songPageState = remember { SongsPageState(context) }
 
                 Column {
                     Column(

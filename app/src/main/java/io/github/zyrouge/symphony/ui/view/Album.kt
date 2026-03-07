@@ -70,7 +70,7 @@ fun AlbumView(context: ViewContext, route: AlbumViewRoute) {
     val isViable by remember(allAlbumIds) {
         derivedStateOf { allAlbumIds.contains(route.albumId) }
     }
-    val songPageState = remember { SongsPageState() }
+    val songPageState = remember { SongsPageState(context) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

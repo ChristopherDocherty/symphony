@@ -98,6 +98,15 @@ fun SongCard(
     val isFavorite by remember(favoriteSongIds, song) {
         derivedStateOf { favoriteSongIds.contains(song.id) }
     }
+    val settings by context.symphony.settingsState.collectAsState()
+    val scrobbleCount = remember(settings.songShowScrobbleCount, song) {
+        if (settings.songShowScrobbleCount) {
+            context.symphony.lastFmBackup.getSongScrobbleCount(
+                song.artists.firstOrNull() ?: "",
+                song.title,
+            )
+        } else 0L
+    }
 
     Card(
         modifier = Modifier
@@ -184,6 +193,16 @@ fun SongCard(
                             song.artists.joinToString(),
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (scrobbleCount > 0L) {
+                        Text(
+                            stringResource(R.string.LastFmScrobbles, scrobbleCount),
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            ),
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }

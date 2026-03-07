@@ -61,7 +61,7 @@ fun AlbumArtistView(context: ViewContext, route: AlbumArtistViewRoute) {
     val isViable by remember(albumArtist) {
         derivedStateOf { albumArtist != null }
     }
-    val songPageState = remember { SongsPageState() }
+    val songPageState = remember { SongsPageState(context) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

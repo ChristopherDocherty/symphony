@@ -442,7 +442,7 @@ fun HomeView(context: ViewContext) {
     var showOptionsDropdown by remember { mutableStateOf(false) }
     var showTabsSheet by remember { mutableStateOf(false) }
     val pageStates = remember { mapOf(
-        HomePage.Songs to SongsPageState(),
+        HomePage.Songs to SongsPageState(context),
         HomePage.Albums to AlbumsPageState(context),
         HomePage.Artists to ArtistsPageState(),
         HomePage.Wishlist to WishlistPageState(),

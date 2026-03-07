@@ -105,7 +105,7 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
     val isViable by remember(allArtistNames) {
         derivedStateOf { allArtistNames.contains(route.artistName) }
     }
-    val songPageState = remember { SongsPageState() }
+    val songPageState = remember { SongsPageState(context) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
