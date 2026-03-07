@@ -344,6 +344,8 @@
     <string name="ZapStop">Stop</string>
     <string name="ZapSkip">Skip</string>
     <string name="ZapEmpty">Press Start to listen to random snippets</string>
+    <string name="CoverFlow">Cover Flow</string>
+    <string name="CoverFlowEmpty">No albums</string>
     <string name="GroupBy">Group by</string>
     <string name="GroupByNone">No grouping</string>
     <string name="GroupByYear">Group by year</string>
