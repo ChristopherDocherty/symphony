@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.IndeterminateCheckBox
 import androidx.compose.material.icons.filled.SelectAll
@@ -33,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.AlbumGroupBy
 import io.github.zyrouge.symphony.R
@@ -50,6 +52,7 @@ import kotlinx.coroutines.launch
 class AlbumsPageState(private val context: ViewContext) : HomePageState {
     var showFilterDialog by mutableStateOf(false)
     var isMultiSelectMode by mutableStateOf(false)
+    var isAotyEditMode by mutableStateOf(false)
     var selectedAlbumIds by mutableStateOf<Set<String>>(emptySet())
     var showBulkEditDialog by mutableStateOf(false)
     var showHideConfirmDialog by mutableStateOf(false)
@@ -67,6 +70,14 @@ class AlbumsPageState(private val context: ViewContext) : HomePageState {
         selectedAlbumIds = emptySet()
     }
 
+    fun enterAotyMode() {
+        isAotyEditMode = true
+    }
+
+    fun exitAotyMode() {
+        isAotyEditMode = false
+    }
+
     fun toggleSelection(albumId: String) {
         selectedAlbumIds = if (albumId in selectedAlbumIds)
             selectedAlbumIds - albumId
@@ -76,6 +87,10 @@ class AlbumsPageState(private val context: ViewContext) : HomePageState {
 
     @Composable
     override fun DropdownItems() {
+        val albumGroupBy by context.symphony.settings.data
+            .map { it.albumGroupBy }
+            .collectAsState(AlbumGroupBy.ALBUM_GROUP_NONE)
+
         if (isMultiSelectMode) {
             DropdownMenuItem(
                 leadingIcon = { Icon(Icons.Filled.SelectAll, null) },
@@ -103,6 +118,13 @@ class AlbumsPageState(private val context: ViewContext) : HomePageState {
                 text = { Text("Select") },
                 onClick = { enterMultiSelect() },
             )
+            if (albumGroupBy == AlbumGroupBy.ALBUM_GROUP_YEAR) {
+                DropdownMenuItem(
+                    leadingIcon = { Icon(Icons.Filled.EmojiEvents, null) },
+                    text = { Text(stringResource(R.string.AotyRanking)) },
+                    onClick = { enterAotyMode() },
+                )
+            }
         }
     }
 
@@ -180,7 +202,13 @@ fun AlbumsView(context: ViewContext, pageState: AlbumsPageState? = null) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         LoaderScaffold(context, isLoading = isUpdating) {
-            if (albumGroupBy == AlbumGroupBy.ALBUM_GROUP_NONE) {
+            if (pageState?.isAotyEditMode == true) {
+                AotyRankingView(
+                    context = context,
+                    albumIds = albumIds,
+                    onExit = { pageState.exitAotyMode() },
+                )
+            } else if (albumGroupBy == AlbumGroupBy.ALBUM_GROUP_NONE) {
                 AlbumGrid(
                     context,
                     albumIds = albumIds,
