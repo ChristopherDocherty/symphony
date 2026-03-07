@@ -308,6 +308,8 @@
     <string name="CopyToForm">Copy to form</string>
     <string name="LastFmAuthenticateFirst">Authenticate with Last.fm in settings to enable scrobbling</string>
     <string name="Timestamp">Timestamp</string>
+    <string name="SelectDate">Select date</string>
+    <string name="SelectTime">Select time</string>
     <string name="AlbumTimeline">Timeline</string>
     <string name="LastFmBackup">Backup</string>
     <string name="LastFmBackupDirectory">Backup directory</string>

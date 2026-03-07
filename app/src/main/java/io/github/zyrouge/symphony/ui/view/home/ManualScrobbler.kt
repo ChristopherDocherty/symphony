@@ -11,24 +11,36 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,9 +58,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
+private const val TWO_WEEKS_MS = 14L * 24 * 60 * 60 * 1000
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManualScrobblerView(context: ViewContext) {
     val scope = rememberCoroutineScope()
@@ -61,8 +78,17 @@ fun ManualScrobblerView(context: ViewContext) {
     var artistInput by remember { mutableStateOf("") }
     var trackInput by remember { mutableStateOf("") }
     var albumInput by remember { mutableStateOf("") }
-    var timestampInput by remember { mutableStateOf(formatTimestamp(System.currentTimeMillis() / 1000)) }
+    var selectedEpochMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var isScrobbling by remember { mutableStateOf(false) }
+
+    // Timestamp date/time picker state
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var pendingDateUtcMs by remember { mutableLongStateOf(0L) }
+
+    // Recent scrobbles day filter state
+    var filterDateMs by remember { mutableStateOf<Long?>(null) }
+    var showFilterDatePicker by remember { mutableStateOf(false) }
 
     var isLoadingRecent by remember { mutableStateOf(false) }
     var recentTracks by remember { mutableStateOf<List<LastFmRecentTrack>?>(null) }
@@ -84,7 +110,30 @@ fun ManualScrobblerView(context: ViewContext) {
             isLoadingRecent = true
             recentError = false
             val tracks = withContext(Dispatchers.IO) {
-                LastFmScrobbler.getRecentTracks(apiKey, username)
+                val date = filterDateMs
+                if (date != null) {
+                    val cal = Calendar.getInstance()
+                    cal.timeInMillis = date
+                    cal.set(Calendar.HOUR_OF_DAY, 0)
+                    cal.set(Calendar.MINUTE, 0)
+                    cal.set(Calendar.SECOND, 0)
+                    cal.set(Calendar.MILLISECOND, 0)
+                    val from = cal.timeInMillis / 1000
+                    cal.set(Calendar.HOUR_OF_DAY, 23)
+                    cal.set(Calendar.MINUTE, 59)
+                    cal.set(Calendar.SECOND, 59)
+                    val to = cal.timeInMillis / 1000
+                    LastFmScrobbler.getRecentTracksPage(
+                        apiKey = apiKey,
+                        username = username,
+                        page = 1,
+                        limit = 200,
+                        from = from,
+                        to = to,
+                    )?.tracks
+                } else {
+                    LastFmScrobbler.getRecentTracks(apiKey, username)
+                }
             }
             if (tracks == null) {
                 recentError = true
@@ -95,8 +144,155 @@ fun ManualScrobblerView(context: ViewContext) {
         }
     }
 
-    LaunchedEffect(Unit) {
+    // Reload whenever the day filter changes
+    LaunchedEffect(filterDateMs) {
         loadRecentTracks()
+    }
+
+    // Selectable date range for the timestamp picker (last 14 days only)
+    val nowMs = System.currentTimeMillis()
+    val todayUtcMidnight = utcMidnight(nowMs)
+    val minUtcMidnight = utcMidnight(nowMs - TWO_WEEKS_MS)
+
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = utcMidnight(selectedEpochMs),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis in minUtcMidnight..todayUtcMidnight
+            }
+            override fun isSelectableYear(year: Int): Boolean {
+                val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+                return year >= currentYear - 1 && year <= currentYear
+            }
+        },
+    )
+
+    LaunchedEffect(showDatePicker) {
+        if (showDatePicker) {
+            datePickerState.selectedDateMillis = utcMidnight(selectedEpochMs)
+                .coerceIn(minUtcMidnight, todayUtcMidnight)
+        }
+    }
+
+    val calForTime = Calendar.getInstance().apply { timeInMillis = selectedEpochMs }
+    val timePickerState = rememberTimePickerState(
+        initialHour = calForTime.get(Calendar.HOUR_OF_DAY),
+        initialMinute = calForTime.get(Calendar.MINUTE),
+        is24Hour = true,
+    )
+
+    // Filter date picker — no restriction except max = today
+    val filterDatePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = todayUtcMidnight,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis <= todayUtcMidnight
+            }
+            override fun isSelectableYear(year: Int): Boolean {
+                return year <= Calendar.getInstance().get(Calendar.YEAR)
+            }
+        },
+    )
+
+    LaunchedEffect(showFilterDatePicker) {
+        if (showFilterDatePicker) {
+            filterDatePickerState.selectedDateMillis =
+                filterDateMs?.let { utcMidnight(it) } ?: todayUtcMidnight
+        }
+    }
+
+    // Timestamp date picker dialog
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDatePicker = false
+                    pendingDateUtcMs = datePickerState.selectedDateMillis ?: utcMidnight(selectedEpochMs)
+                    showTimePicker = true
+                }) {
+                    Text(stringResource(R.string.Done))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(R.string.Cancel))
+                }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Timestamp time picker dialog
+    if (showTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text(stringResource(R.string.SelectTime)) },
+            text = { TimePicker(state = timePickerState) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showTimePicker = false
+                    val dateCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                        timeInMillis = pendingDateUtcMs
+                    }
+                    val combined = Calendar.getInstance().apply {
+                        set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
+                        set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
+                        set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
+                        set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                        set(Calendar.MINUTE, timePickerState.minute)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    selectedEpochMs = combined.timeInMillis.coerceAtMost(System.currentTimeMillis())
+                }) {
+                    Text(stringResource(R.string.Done))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text(stringResource(R.string.Cancel))
+                }
+            },
+        )
+    }
+
+    // Recent scrobbles filter date picker dialog
+    if (showFilterDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showFilterDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showFilterDatePicker = false
+                    filterDatePickerState.selectedDateMillis?.let { utcMs ->
+                        // Convert UTC midnight → local epoch ms for use in Calendar
+                        val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                            timeInMillis = utcMs
+                        }
+                        val localCal = Calendar.getInstance().apply {
+                            set(Calendar.YEAR, utcCal.get(Calendar.YEAR))
+                            set(Calendar.MONTH, utcCal.get(Calendar.MONTH))
+                            set(Calendar.DAY_OF_MONTH, utcCal.get(Calendar.DAY_OF_MONTH))
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        filterDateMs = localCal.timeInMillis
+                    }
+                }) {
+                    Text(stringResource(R.string.Done))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showFilterDatePicker = false }) {
+                    Text(stringResource(R.string.Cancel))
+                }
+            },
+        ) {
+            DatePicker(state = filterDatePickerState)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -153,18 +349,22 @@ fun ManualScrobblerView(context: ViewContext) {
 
             item {
                 OutlinedTextField(
-                    value = timestampInput,
-                    onValueChange = { timestampInput = it },
+                    value = formatTimestamp(selectedEpochMs / 1000),
+                    onValueChange = {},
+                    readOnly = true,
                     label = { Text(stringResource(R.string.Timestamp)) },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
+                    trailingIcon = {
+                        IconButton(onClick = { showDatePicker = true }) {
+                            Icon(Icons.Filled.CalendarMonth, stringResource(R.string.SelectDate))
+                        }
+                    },
                 )
             }
 
             item {
                 Button(
                     onClick = {
-                        val ts = parseTimestamp(timestampInput) ?: (System.currentTimeMillis() / 1000)
                         scope.launch {
                             isScrobbling = true
                             val success = withContext(Dispatchers.IO) {
@@ -175,7 +375,7 @@ fun ManualScrobblerView(context: ViewContext) {
                                     artist = artistInput,
                                     track = trackInput,
                                     album = albumInput.takeIf { it.isNotBlank() },
-                                    timestampSeconds = ts,
+                                    timestampSeconds = selectedEpochMs / 1000,
                                 )
                             }
                             snackbarMessage = if (success) {
@@ -207,6 +407,20 @@ fun ManualScrobblerView(context: ViewContext) {
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f),
                     )
+                    val activeFilter = filterDateMs
+                    if (activeFilter != null) {
+                        Text(
+                            text = formatDate(activeFilter / 1000),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        IconButton(onClick = { filterDateMs = null }) {
+                            Icon(Icons.Filled.Close, null)
+                        }
+                    }
+                    IconButton(onClick = { showFilterDatePicker = true }) {
+                        Icon(Icons.Filled.CalendarMonth, stringResource(R.string.SelectDate))
+                    }
                     IconButton(onClick = { loadRecentTracks() }) {
                         Icon(Icons.Filled.Refresh, null)
                     }
@@ -235,7 +449,7 @@ fun ManualScrobblerView(context: ViewContext) {
                             artistInput = track.artist
                             trackInput = track.track
                             albumInput = track.album
-                            timestampInput = formatTimestamp(track.timestampSeconds)
+                            selectedEpochMs = track.timestampSeconds * 1000
                         },
                     )
                 }
@@ -278,15 +492,22 @@ private fun RecentTrackCard(
     }
 }
 
+private fun utcMidnight(epochMs: Long): Long {
+    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    cal.timeInMillis = epochMs
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    return cal.timeInMillis
+}
+
 private fun formatTimestamp(epochSeconds: Long): String {
     val date = Date(epochSeconds * 1000)
     return SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(date)
 }
 
-private fun parseTimestamp(input: String): Long? {
-    return try {
-        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).parse(input)?.time?.div(1000)
-    } catch (_: Exception) {
-        input.toLongOrNull()
-    }
+private fun formatDate(epochSeconds: Long): String {
+    val date = Date(epochSeconds * 1000)
+    return SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(date)
 }
