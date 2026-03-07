@@ -155,7 +155,10 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                 }
 
                 val settledPage by remember {
-                    derivedStateOf { currentPage.value.roundToInt().coerceIn(0, maxPage) }
+                    derivedStateOf {
+                        val mp = (albumIds.size - 1).coerceAtLeast(0)
+                        currentPage.value.roundToInt().coerceIn(0, mp)
+                    }
                 }
                 val currentAlbum by remember {
                     derivedStateOf { context.symphony.groove.album.get(albumIds[settledPage]) }
@@ -164,7 +167,8 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                 val composedRange by remember {
                     derivedStateOf {
                         val cp = currentPage.value.roundToInt()
-                        (cp - 5).coerceAtLeast(0)..(cp + 5).coerceAtMost(maxPage)
+                        val mp = (albumIds.size - 1).coerceAtLeast(0)
+                        (cp - 5).coerceAtLeast(0)..(cp + 5).coerceAtMost(mp)
                     }
                 }
 
