@@ -1,6 +1,7 @@
 package io.github.zyrouge.symphony.ui.view.home
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -74,10 +75,10 @@ fun ZapView(context: ViewContext, pageState: ZapPageState? = null) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp),
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(bottom = 4.dp),
         ) {
             if (state.playedSongs.isEmpty()) {
                 item {
@@ -100,7 +101,6 @@ fun ZapView(context: ViewContext, pageState: ZapPageState? = null) {
 
         Row(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
