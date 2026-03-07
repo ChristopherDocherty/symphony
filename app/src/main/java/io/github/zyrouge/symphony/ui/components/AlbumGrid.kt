@@ -51,6 +51,7 @@ import kotlinx.coroutines.launch
 enum class AlbumGridType {
     Default,
     Artist,
+    CoverFlow,
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -292,6 +293,7 @@ internal fun AlbumGridLayoutSheet(
 fun AlbumGridType.getLastUsedSortBy(context: ViewContext) : Flow<AlbumSortBy> = when (this) {
     AlbumGridType.Default -> context.symphony.settings.data.map { it.uiDefaultAlbumSortBy.by}
     AlbumGridType.Artist -> context.symphony.settings.data.map { it.uiArtistViewAlbumSortBy.by}
+    AlbumGridType.CoverFlow -> context.symphony.settings.data.map { it.uiCoverFlowAlbumSortBy.by}
 }
 
 suspend fun AlbumGridType.setLastUsedSortBy(context: ViewContext, sort: AlbumSortBy) =
@@ -302,11 +304,15 @@ suspend fun AlbumGridType.setLastUsedSortBy(context: ViewContext, sort: AlbumSor
         AlbumGridType.Artist -> {
             context.symphony.settings.updateData { it.copy {  uiArtistViewAlbumSortBy = uiArtistViewAlbumSortBy.copy {by = sort}} }
         }
+        AlbumGridType.CoverFlow -> {
+            context.symphony.settings.updateData { it.copy { uiCoverFlowAlbumSortBy = uiCoverFlowAlbumSortBy.copy { by = sort } } }
+        }
     }
 
 fun AlbumGridType.getLastUsedReverse(context: ViewContext) : Flow<Boolean> = when (this) {
     AlbumGridType.Default -> context.symphony.settings.data.map { it.uiDefaultAlbumSortBy.reverse}
     AlbumGridType.Artist -> context.symphony.settings.data.map { it.uiArtistViewAlbumSortBy.reverse}
+    AlbumGridType.CoverFlow -> context.symphony.settings.data.map { it.uiCoverFlowAlbumSortBy.reverse}
 }
 
 suspend fun AlbumGridType.setLastUsedReverse(context: ViewContext, value: Boolean) =
@@ -316,6 +322,9 @@ suspend fun AlbumGridType.setLastUsedReverse(context: ViewContext, value: Boolea
         }
         AlbumGridType.Artist -> {
             context.symphony.settings.updateData { it.copy { uiArtistViewAlbumSortBy = uiArtistViewAlbumSortBy.copy {reverse = value}} }
+        }
+        AlbumGridType.CoverFlow -> {
+            context.symphony.settings.updateData { it.copy { uiCoverFlowAlbumSortBy = uiCoverFlowAlbumSortBy.copy { reverse = value } } }
         }
     }
 

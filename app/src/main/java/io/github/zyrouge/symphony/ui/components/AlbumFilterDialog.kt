@@ -62,10 +62,13 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
+enum class AlbumFilterField { Grid, CoverFlow }
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AlbumFilterDialog(
     context: ViewContext,
+    filterField: AlbumFilterField = AlbumFilterField.Grid,
     onDismissRequest: () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -92,7 +95,10 @@ fun AlbumFilterDialog(
 
     LaunchedEffect(Unit) {
         val settings = context.symphony.settings.data.first()
-        val filter = settings.uiAlbumGridAlbumFilter
+        val filter = when (filterField) {
+            AlbumFilterField.Grid -> settings.uiAlbumGridAlbumFilter
+            AlbumFilterField.CoverFlow -> settings.uiCoverFlowAlbumFilter
+        }
         fieldStates.forEach { (field, state) ->
             state.addAll(field.getSelected(filter))
         }
@@ -239,7 +245,10 @@ fun AlbumFilterDialog(
                     coroutineScope.launch {
                         context.symphony.settings.updateData { settings ->
                             settings.copy {
-                                uiAlbumGridAlbumFilter = buildCurrentFilter()
+                                when (filterField) {
+                                    AlbumFilterField.Grid -> uiAlbumGridAlbumFilter = buildCurrentFilter()
+                                    AlbumFilterField.CoverFlow -> uiCoverFlowAlbumFilter = buildCurrentFilter()
+                                }
                             }
                         }
                         onDismissRequest()

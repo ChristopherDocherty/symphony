@@ -288,6 +288,10 @@ message Settings {
   AlbumFilter ui_artist_view_album_filter = 804;
   repeated AlbumFilterPreset ui_artist_view_album_filter_presets = 805;
 
+  // --- Cover Flow album filters ---
+  AlbumFilter ui_cover_flow_album_filter = 806;
+  AlbumSortPreference ui_cover_flow_album_sort_by = 807;
+
   // --- Playback (300–399, alongside existing 901) ---
   bool fade_playback = 300;
   float fade_playback_duration = 301;                      // 0.0 treated as default (1.0) in code
