@@ -1,15 +1,14 @@
 package io.github.zyrouge.symphony.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.absoluteOffset
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
@@ -29,12 +28,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import io.github.zyrouge.symphony.GenreSortBy
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.groove.Groove
@@ -60,11 +60,34 @@ private object GenreTile {
 
     fun colorAt(index: Int) = colors[index % colors.size]
 
-    @Composable
-    fun cardColors(index: Int) = CardDefaults.cardColors(
-        containerColor = colorAt(index),
-        contentColor = Color.White,
+    private val artworkReleaseTypePriority = listOf(
+        "Studio Album",
+        "EP",
+        "Single",
+        "Live Album",
+        "Rarities/ B-Sides",
+        "Greatest Hits",
+        "Various Artists",
     )
+
+    fun getCollageAlbumIds(context: ViewContext, genreName: String): List<String> {
+        val symphony = context.symphony
+        val songIds = symphony.groove.genre.getSongIds(genreName)
+        val seen = mutableSetOf<String>()
+        return songIds
+            .mapNotNull { songId ->
+                val song = symphony.groove.song.get(songId) ?: return@mapNotNull null
+                symphony.groove.album.getIdFromSong(song)
+            }
+            .filter { seen.add(it) }
+            .sortedBy { albumId ->
+                val releaseTypes = symphony.groove.album.getCustomTagValues(albumId, "RELEASETYPE")
+                releaseTypes
+                    .mapNotNull { artworkReleaseTypePriority.indexOf(it).takeIf { i -> i >= 0 } }
+                    .minOrNull() ?: Int.MAX_VALUE
+            }
+            .take(3)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,52 +172,62 @@ fun GenreGrid(
                         contentType = { _, _ -> Groove.Kind.GENRE }
                     ) { i, genreName ->
                         context.symphony.groove.genre.get(genreName)?.let { genre ->
+                            val albumIds = remember(genre.name) {
+                                GenreTile.getCollageAlbumIds(context, genre.name)
+                            }
                             Card(
                                 modifier = Modifier
-                                    .height(IntrinsicSize.Min)
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
                                     .padding(
                                         start = if (i % gridData.columnsCount == 0) 12.dp else 0.dp,
                                         end = if ((i - 1) % gridData.columnsCount == 0) 12.dp else 8.dp,
                                         bottom = 8.dp,
                                     ),
-                                colors = GenreTile.cardColors(i),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = GenreTile.colorAt(i),
+                                    contentColor = Color.White,
+                                ),
                                 onClick = {
                                     context.navController.navigate(GenreViewRoute(genre.name))
                                 }
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .defaultMinSize(minHeight = 88.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Box(
+                                Column {
+                                    Row(
                                         modifier = Modifier
-                                            .align(Alignment.BottomStart)
-                                            .matchParentSize()
                                             .fillMaxWidth()
-                                            .alpha(0.25f)
-                                            .absoluteOffset(8.dp, 12.dp)
+                                            .height(88.dp)
                                     ) {
-                                        Text(
-                                            genre.name,
-                                            textAlign = TextAlign.Start,
-                                            style = MaterialTheme.typography.displaySmall
-                                                .copy(fontWeight = FontWeight.Bold),
-                                            softWrap = false,
-                                            overflow = TextOverflow.Clip,
-                                        )
+                                        for (slot in 0 until 3) {
+                                            val albumId = albumIds.getOrNull(slot)
+                                            if (albumId != null) {
+                                                AsyncImage(
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .fillMaxHeight(),
+                                                    model = context.symphony.groove.album
+                                                        .createArtworkImageRequest(albumId).build(),
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                )
+                                            } else {
+                                                Spacer(modifier = Modifier.weight(1f))
+                                            }
+                                        }
                                     }
                                     Column(
-                                        modifier = Modifier.padding(8.dp, 16.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp, vertical = 6.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.Center,
                                     ) {
                                         Text(
                                             genre.name,
                                             textAlign = TextAlign.Center,
-                                            style = MaterialTheme.typography.bodyLarge
+                                            style = MaterialTheme.typography.bodyMedium
                                                 .copy(fontWeight = FontWeight.Bold),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
                                         )
                                         Text(
                                             stringResource(R.string.XSongs, genre.numberOfTracks.toString()),
