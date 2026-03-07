@@ -2,10 +2,16 @@ package io.github.zyrouge.symphony.ui.view
 
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterExitState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavGraphBuilder
@@ -162,7 +168,27 @@ private inline fun <reified T : Any> NavGraphBuilder.baseComposable(
             }
         },
     ) {
-        content(it)
+        Box(modifier = Modifier.fillMaxSize()) {
+            content(it)
+            // Block pointer events on exiting screens so items on the outgoing
+            // composable (e.g. Queue song cards) can't be accidentally tapped
+            // while the incoming screen (e.g. NowPlaying) is animating in.
+            if (transition.targetState == EnterExitState.PostExit) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            awaitPointerEventScope {
+                                while (true) {
+                                    awaitPointerEvent(PointerEventPass.Initial)
+                                        .changes
+                                        .forEach { change -> change.consume() }
+                                }
+                            }
+                        }
+                )
+            }
+        }
     }
 }
 
