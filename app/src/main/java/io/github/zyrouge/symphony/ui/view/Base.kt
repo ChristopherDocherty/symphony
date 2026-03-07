@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -39,6 +42,9 @@ import io.github.zyrouge.symphony.ui.view.settings.PlayerSettingsView
 import io.github.zyrouge.symphony.ui.view.settings.PlayerSettingsViewRoute
 import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsView
 import io.github.zyrouge.symphony.ui.view.settings.LastFmSettingsViewRoute
+import io.github.zyrouge.symphony.ui.components.ArtistCorrectionDialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.serializer
 
@@ -52,6 +58,8 @@ fun BaseView(symphony: Symphony, activity: MainActivity) {
             navController = navController,
         )
     }
+
+    val scope = rememberCoroutineScope()
 
     SymphonyTheme(context) {
         Surface(color = MaterialTheme.colorScheme.background) {
@@ -122,6 +130,20 @@ fun BaseView(symphony: Symphony, activity: MainActivity) {
                 baseComposable<WishlistAlbumViewRoute> {
                     WishlistAlbumView(context, it.toRoute())
                 }
+            }
+
+            val artistCorrectionAlert by context.symphony.lastFm.artistCorrectionAlert.collectAsState()
+            artistCorrectionAlert?.let { (localName, canonicalName) ->
+                ArtistCorrectionDialog(
+                    localName = localName,
+                    canonicalName = canonicalName,
+                    onDismiss = { context.symphony.lastFm.dismissCorrectionAlert() },
+                    onFix = {
+                        scope.launch(Dispatchers.IO) {
+                            context.symphony.lastFm.fixArtistName(localName, canonicalName)
+                        }
+                    },
+                )
             }
         }
     }

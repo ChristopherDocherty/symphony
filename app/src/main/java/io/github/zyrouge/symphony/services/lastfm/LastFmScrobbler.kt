@@ -203,6 +203,29 @@ object LastFmScrobbler {
         }
     }
 
+    fun getArtistCorrection(apiKey: String, artistName: String): String? {
+        return try {
+            val url = buildString {
+                append("https://ws.audioscrobbler.com/2.0/")
+                append("?method=artist.getCorrection")
+                append("&artist=${enc(artistName)}")
+                append("&api_key=${enc(apiKey)}")
+                append("&format=json")
+            }
+            val body = fetch(url) ?: return null
+            val correction = body.optJSONObject("corrections")
+                ?.optJSONObject("correction")
+                ?.optJSONObject("artist")
+                ?.optString("name")
+                ?.takeIf { it.isNotEmpty() }
+                ?: return null
+            if (correction != artistName) correction else null
+        } catch (err: Exception) {
+            Logger.warn("LastFmScrobbler", "getArtistCorrection failed for $artistName", err)
+            null
+        }
+    }
+
     private fun fetch(url: String): JSONObject? {
         val req = Request.Builder().url(url).build()
         val body = HttpClient.newCall(req).execute().body?.string() ?: return null

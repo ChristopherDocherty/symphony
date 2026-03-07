@@ -331,6 +331,14 @@
     <string name="LastFmSyncNow">Sync now</string>
     <string name="LastFmRebuildPlayCounts">Rebuild play counts from backup</string>
     <string name="LastFmResetBackupState">Reset backup state</string>
+    <string name="ArtistNameCorrections">Artist Name Corrections</string>
+    <string name="ArtistCorrectionScanLibrary">Scan Library</string>
+    <string name="ArtistCorrectionScanning">Scanning %1$d / %2$d artists…</string>
+    <string name="ArtistCorrectionNoMismatches">No mismatches found</string>
+    <string name="ArtistCorrectionTitle">Artist Name on Last.fm</string>
+    <string name="ArtistCorrectionBody">Last.fm uses \"%1$s\" but your files say \"%2$s\". Fix the artist tag on all songs by this artist?</string>
+    <string name="ArtistCorrectionFix">Fix All</string>
+    <string name="ArtistCorrectionFixing">Fixing…</string>
     <string name="Zap">Zap</string>
     <string name="ZapStart">Start</string>
     <string name="ZapStop">Stop</string>

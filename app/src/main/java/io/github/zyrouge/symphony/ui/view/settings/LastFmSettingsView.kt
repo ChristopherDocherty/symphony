@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.copy
 import io.github.zyrouge.symphony.services.lastfm.LastFmScrobbler
+import io.github.zyrouge.symphony.ui.components.ArtistCorrectionDialog
 import io.github.zyrouge.symphony.ui.components.IconButtonPlaceholder
 import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.components.settings.SettingsLinkTile
@@ -85,6 +86,8 @@ fun LastFmSettingsView(context: ViewContext) {
     val isInitialPullInProgress by context.symphony.lastFmBackup.isInitialPullInProgress.collectAsState()
     val initialPullProgress by context.symphony.lastFmBackup.initialPullProgress.collectAsState()
     val isSyncing by context.symphony.lastFmBackup.isSyncing.collectAsState()
+    val correctionScanProgress by context.symphony.lastFm.correctionScanProgress.collectAsState()
+    val correctionResults by context.symphony.lastFm.correctionResults.collectAsState()
 
     val dirPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -347,6 +350,76 @@ fun LastFmSettingsView(context: ViewContext) {
                             title = { Text(stringResource(R.string.LastFmResetBackupState)) },
                             onClick = { context.symphony.lastFmBackup.resetBackupState() },
                         )
+                    }
+                    HorizontalDivider()
+                    SettingsSideHeading(stringResource(R.string.ArtistNameCorrections))
+                    val scanProgress = correctionScanProgress
+                    if (scanProgress != null) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.ArtistCorrectionScanning, scanProgress.first, scanProgress.second),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            LinearProgressIndicator(
+                                progress = { if (scanProgress.second > 0) scanProgress.first.toFloat() / scanProgress.second else 0f },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                            )
+                        }
+                    } else {
+                        val results = correctionResults
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = when {
+                                    results == null -> ""
+                                    results.isEmpty() -> stringResource(R.string.ArtistCorrectionNoMismatches)
+                                    else -> ""
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Button(
+                                onClick = { context.symphony.lastFm.scanArtistCorrections() },
+                                enabled = settings.lastFmApiKey.isNotBlank(),
+                            ) {
+                                Text(stringResource(R.string.ArtistCorrectionScanLibrary))
+                            }
+                        }
+                        if (results != null && results.isNotEmpty()) {
+                            HorizontalDivider()
+                            results.entries.forEach { (localName, canonicalName) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "\"$localName\" → \"$canonicalName\"",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    OutlinedButton(
+                                        onClick = {
+                                            context.symphony.lastFm.fixArtistName(localName, canonicalName)
+                                        },
+                                    ) {
+                                        Text(stringResource(R.string.ArtistCorrectionFix))
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

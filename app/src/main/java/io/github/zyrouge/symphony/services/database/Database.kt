@@ -15,5 +15,6 @@ class Database(symphony: Symphony) {
     val songCache get() = cache.songs()
     val lastFmCache get() = cache.lastFmCache()
     val lastFmPlayCounts get() = cache.lastFmPlayCounts()
+    val lastFmCorrections get() = cache.lastFmCorrections()
     val playlists get() = persistent.playlists()
 }
