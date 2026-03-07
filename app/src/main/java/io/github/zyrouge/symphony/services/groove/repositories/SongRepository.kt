@@ -61,7 +61,6 @@ class SongRepository(private val symphony: Symphony) {
     }
 
     internal fun setSongs(songsToSet: List<Song>) {
-        // Clear existing songs and related caches
         cache.clear()
         pathCache.clear()
         explorer = SimpleFileSystem.Folder() // Reset explorer as well
@@ -74,9 +73,9 @@ class SongRepository(private val symphony: Symphony) {
             songIds.add(song.id)
         }
 
-        _all.update { songIds } // Update with the new list of all song IDs
-        emitIds() // Emit that the IDs have changed (timestamp)
-        emitCount() // Emit the new count
+        _all.update { songIds }
+        emitIds()
+        emitCount()
     }
 
     fun reset() {
@@ -171,11 +170,9 @@ class SongRepository(private val symphony: Symphony) {
     }
 
     fun getLyricsSource(song: Song): LyricsSource {
-        // Check for a sidecar file first (most specific)
         symphony.groove.exposer.getSidecarUri(song.path)?.let { (uri, ext) ->
             return LyricsSource.Sidecar(uri, ext)
         }
-        // Fall back to embedded lyrics in cache
         val lyricsKey = song.path.substringBeforeLast('.', song.path)
         if (symphony.database.lyricsCache.get(lyricsKey) != null) {
             return LyricsSource.Embedded(song)
@@ -185,11 +182,9 @@ class SongRepository(private val symphony: Symphony) {
 
     suspend fun getLyrics(song: Song): String? {
         try {
-            // The key for the lyrics cache is the song's path without its file extension.
             val lyricsKey = song.path.substringBeforeLast('.', song.path)
             return symphony.database.lyricsCache.get(lyricsKey)
         } catch (err: Exception) {
-            // It's helpful to log which song's lyrics fetching failed.
             Logger.error("LyricsRepository", "fetch lyrics failed for ${song.path}", err)
         }
         return null

@@ -170,7 +170,6 @@ fun AlbumCoverArtDialog(
                             val url = imageUrl.trim()
                             Log.d(TAG, "songPath=${song.path}, songUri=${song.uri}")
 
-                            // Download image
                             Log.d(TAG, "Downloading from $url")
                             val req = Request.Builder().url(url).build()
                             val bytes = HttpClient.newCall(req).execute().use { resp ->
@@ -193,7 +192,6 @@ fun AlbumCoverArtDialog(
 
                             val parentDocUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentDocId)
 
-                            // Check if cover.jpg already exists in the directory
                             val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentDocId)
                             var existingCoverUri: Uri? = null
                             context.activity.contentResolver.query(

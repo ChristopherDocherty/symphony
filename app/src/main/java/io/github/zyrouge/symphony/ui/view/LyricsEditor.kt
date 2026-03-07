@@ -79,16 +79,12 @@ fun LyricsEditorView(context: ViewContext, songId: String) {
     val coroutineScope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    // Raw text content for plain-text tab (LRC with timestamps as-is)
     var rawText by remember { mutableStateOf("") }
-    // Lines (timestamp-stripped) for timing tab
     var timingLines by remember { mutableStateOf<List<String>>(emptyList()) }
-    // Timestamps per line (ms), null means no timestamp assigned yet
     val timingTimestamps = remember { mutableStateOf<SnapshotStateList<Long?>>(mutableListOf<Long?>().toMutableStateList()) }
     var timingCurrentIndex by remember { mutableIntStateOf(0) }
     var isSaving by remember { mutableStateOf(false) }
 
-    // Load initial lyrics
     LaunchedEffect(songId) {
         val lyrics = withContext(Dispatchers.IO) {
             context.symphony.groove.song.getLyrics(song)
@@ -104,7 +100,6 @@ fun LyricsEditorView(context: ViewContext, songId: String) {
         isSaving = true
         coroutineScope.launch(Dispatchers.IO) {
             try {
-                // Build final LRC content from the active tab
                 val content = when (selectedTab) {
                     0 -> rawText
                     else -> LrcSerializer.serialize(timingLines, timingTimestamps.value)
@@ -137,7 +132,6 @@ fun LyricsEditorView(context: ViewContext, songId: String) {
                                 context.symphony.groove.exposer.uris[bakPath] = createdBakUri
                             }
                         } else {
-                            // .txt sidecar: create a new .lrc alongside it
                             val audioUri = context.symphony.groove.exposer.uris[song.path] ?: song.uri
                             val basename = song.path.substringAfterLast('/').substringBeforeLast('.')
                             val newUri = LyricsFileManager.createLrcSidecar(
@@ -232,7 +226,6 @@ fun LyricsEditorView(context: ViewContext, songId: String) {
                 Tab(
                     selected = selectedTab == 1,
                     onClick = {
-                        // Sync lines from the raw text when switching to timing tab
                         val lines = LrcSerializer.toLines(rawText)
                         if (lines != timingLines) {
                             timingLines = lines
@@ -300,7 +293,6 @@ private fun TimingTab(
     val listState = rememberLazyListState()
     val allMarked = currentIndex >= lines.size
 
-    // Auto-scroll to current line
     LaunchedEffect(currentIndex) {
         if (currentIndex < lines.size) {
             listState.animateScrollToItem(currentIndex)
@@ -308,7 +300,6 @@ private fun TimingTab(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        // Lines list
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                 itemsIndexed(lines) { i, line ->
@@ -336,7 +327,6 @@ private fun TimingTab(
             }
         }
 
-        // Playback controls
         Spacer(modifier = Modifier.height(8.dp))
         NowPlayingSeekBar(context)
         Spacer(modifier = Modifier.height(8.dp))
@@ -348,7 +338,6 @@ private fun TimingTab(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Play/Pause
             IconButton(onClick = {
                 if (isPlaying) context.symphony.radio.pause()
                 else context.symphony.radio.resume()
@@ -360,7 +349,6 @@ private fun TimingTab(
                 )
             }
 
-            // Reset button
             OutlinedButton(onClick = onReset) {
                 Text(stringResource(R.string.ResetTiming))
             }
@@ -368,7 +356,6 @@ private fun TimingTab(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Mark Next Line button
         if (!allMarked) {
             Button(
                 onClick = {

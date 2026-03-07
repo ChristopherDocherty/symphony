@@ -19,28 +19,23 @@ object SettingsDefaults {
     val INSTANCE: Settings = Settings.getDefaultInstance().copy {
         settingsInitialized = true
 
-        // App
         useMetaphony = true
         artworkQuality = ArtworkQuality.ARTWORK_MEDIUM
 
-        // Appearance
         materialYou = true
         fontScale = 1f
         contentScale = 1f
 
-        // Home page
         lastHomeTab = "Songs"
         homeTabs.addAll(listOf("ForYou", "Songs", "Albums", "Artists", "Playlists"))
         forYouContents.addAll(listOf("Albums", "Artists"))
 
-        // Library — sort defaults
         albumArtistsSortBy = AlbumArtistSortBy.ALBUM_ARTIST_SORT_NAME
         genresSortBy = GenreSortBy.GENRE_SORT_GENRE
         browserSortBy = SongSortBy.SONG_FILENAME
         treePathSortBy = PathSortBy.PATH_SORT_NAME
         foldersSortBy = PathSortBy.PATH_SORT_NAME
 
-        // Library — grid column defaults
         artistsHorizontalGridColumns = ResponsiveGridColumns.DEFAULT_HORIZONTAL_COLUMNS
         artistsVerticalGridColumns = ResponsiveGridColumns.DEFAULT_VERTICAL_COLUMNS
         albumArtistsHorizontalGridColumns = ResponsiveGridColumns.DEFAULT_HORIZONTAL_COLUMNS
@@ -54,27 +49,22 @@ object SettingsDefaults {
         foldersHorizontalGridColumns = ResponsiveGridColumns.DEFAULT_HORIZONTAL_COLUMNS
         foldersVerticalGridColumns = ResponsiveGridColumns.DEFAULT_VERTICAL_COLUMNS
 
-        // Album tile display
         albumTileShowName = true
         albumTileShowArtist = true
 
-        // Content
         artistTagSeparators.addAll(listOf(";", "/", ",", "+"))
         genreTagSeparators.addAll(listOf(";", "/", ",", "+"))
 
-        // Playback
         requireAudioFocus = true
         pauseOnHeadphonesDisconnect = true
         gaplessPlayback = true
         fadePlaybackDuration = 1f
 
-        // Now playing
         nowPlayingAdditionalInfo = true
         seekBackDuration = 15
         seekForwardDuration = 30
         lyricsKeepScreenAwake = true
 
-        // Mini player
         miniPlayerTextMarquee = true
     }
 }

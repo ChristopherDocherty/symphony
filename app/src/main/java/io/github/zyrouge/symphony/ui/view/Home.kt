@@ -226,7 +226,7 @@ private fun HomeTopAppBar(
     onSearchClick: () -> Unit,
     onMoreOptionsClick: () -> Unit,
 ) {
-    var showOptionsDropdown by remember { mutableStateOf(false) } // Manage here or pass state
+    var showOptionsDropdown by remember { mutableStateOf(false) }
 
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -381,40 +381,40 @@ private fun HomeTopAppBarDropdownMenu(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class) // For detectTapGestures if still needed, or remove if swipeable is enough
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HomeBottomBar(
     context: ViewContext,
     currentTab: HomePage,
     tabs: Set<HomePage>,
     labelVisibility: HomePageBottomBarLabelVisibility,
-    onTabClick: (HomePage) -> Unit, // For setting the current tab
-    onShowTabsSheet: () -> Unit, // To trigger the modal sheet
+    onTabClick: (HomePage) -> Unit,
+    onShowTabsSheet: () -> Unit,
 ) {
     Column {
         NowPlayingBottomBar(context, false)
         NavigationBar(
             modifier = Modifier
-                .pointerInput(Unit) { // Consider if this is still the best way to show tabs sheet
+                .pointerInput(Unit) {
                     detectTapGestures {
                         onShowTabsSheet()
                     }
                 }
-                .swipeable(onSwipeUp = { // swipeable is likely from your custom components
+                .swipeable(onSwipeUp = {
                     onShowTabsSheet()
                 })
         ) {
             Spacer(modifier = Modifier.width(2.dp))
-            tabs.forEach { page -> // Use forEach for clarity if order doesn't change
+            tabs.forEach { page ->
                 val isSelected = currentTab == page
                 val label = page.label(context)
 
                 NavigationBarItem(
                     selected = isSelected,
-                    onClick = { onTabClick(page) }, // Update current tab
+                    onClick = { onTabClick(page) },
                     icon = {
                         Crossfade(
-                            label = "home-bottom-bar-icon-${page.name}", // More specific label
+                            label = "home-bottom-bar-icon-${page.name}",
                             targetState = isSelected,
                         ) { selected ->
                             Icon(
@@ -488,7 +488,7 @@ fun HomeView(context: ViewContext) {
         bottomBar = {
             HomeBottomBar(
                 context = context,
-                currentTab = currentTab, // or currentTabState
+                currentTab = currentTab,
                 tabs = tabs,
                 labelVisibility = labelVisibility,
                 onTabClick = { newTab ->

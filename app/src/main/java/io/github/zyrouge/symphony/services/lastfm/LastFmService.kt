@@ -21,7 +21,6 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
 
     data class RefreshProgress(val completed: Int, val total: Int)
 
-    // in-memory caches — keyed by albumId and artistName respectively
     private val albumScrobbles = ConcurrentHashMap<String, Long>()
     private val artistScrobbles = ConcurrentHashMap<String, Long>()
 
@@ -31,7 +30,6 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
     private val _refreshProgress = MutableStateFlow<RefreshProgress?>(null)
     val refreshProgress = _refreshProgress.asStateFlow()
 
-    // Artist name correction state
     private val artistCorrections = ConcurrentHashMap<String, String>() // localName → canonicalName
     private val checkedArtists = ConcurrentHashMap.newKeySet<String>()  // all checked (incl. no-correction)
 
@@ -226,7 +224,7 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
             var completed = 0
             _refreshProgress.value = RefreshProgress(0, total)
 
-            // Fetch albums — query each (artist, album) pair and sum for multi-artist albums
+            // Sum across all artists for multi-artist albums.
             for (albumId in albumIds) {
                 val album = symphony.groove.album.get(albumId) ?: continue
                 var totalCount: Long? = null
@@ -245,7 +243,6 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
                 _refreshProgress.value = RefreshProgress(completed, total)
             }
 
-            // Fetch artists
             for (artistName in artistNames) {
                 val count = fetchArtistScrobbles(artistName, username, apiKey)
                 if (count != null) {

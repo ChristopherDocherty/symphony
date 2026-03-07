@@ -81,12 +81,10 @@ fun ManualScrobblerView(context: ViewContext) {
     var selectedEpochMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var isScrobbling by remember { mutableStateOf(false) }
 
-    // Timestamp date/time picker state
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var pendingDateUtcMs by remember { mutableLongStateOf(0L) }
 
-    // Recent scrobbles day filter state
     var filterDateMs by remember { mutableStateOf<Long?>(null) }
     var showFilterDatePicker by remember { mutableStateOf(false) }
 
@@ -144,12 +142,10 @@ fun ManualScrobblerView(context: ViewContext) {
         }
     }
 
-    // Reload whenever the day filter changes
     LaunchedEffect(filterDateMs) {
         loadRecentTracks()
     }
 
-    // Selectable date range for the timestamp picker (last 14 days only)
     val nowMs = System.currentTimeMillis()
     val todayUtcMidnight = utcMidnight(nowMs)
     val minUtcMidnight = utcMidnight(nowMs - TWO_WEEKS_MS)
@@ -181,7 +177,6 @@ fun ManualScrobblerView(context: ViewContext) {
         is24Hour = true,
     )
 
-    // Filter date picker — no restriction except max = today
     val filterDatePickerState = rememberDatePickerState(
         initialSelectedDateMillis = todayUtcMidnight,
         selectableDates = object : SelectableDates {
@@ -201,7 +196,6 @@ fun ManualScrobblerView(context: ViewContext) {
         }
     }
 
-    // Timestamp date picker dialog
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -224,7 +218,6 @@ fun ManualScrobblerView(context: ViewContext) {
         }
     }
 
-    // Timestamp time picker dialog
     if (showTimePicker) {
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
@@ -258,7 +251,6 @@ fun ManualScrobblerView(context: ViewContext) {
         )
     }
 
-    // Recent scrobbles filter date picker dialog
     if (showFilterDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showFilterDatePicker = false },

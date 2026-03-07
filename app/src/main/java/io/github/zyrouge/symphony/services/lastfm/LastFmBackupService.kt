@@ -120,7 +120,6 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
 
             _initialPullProgress.value = fetchedCount to total
 
-            // Fresh start: fetch page 1 to get total and newestSeen
             if (total == 0L) {
                 val firstPage = LastFmScrobbler.getRecentTracksPage(apiKey, username, 1, 200) ?: return
                 total = firstPage.total
@@ -128,7 +127,6 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
 
                 if (validTracks.isNotEmpty()) {
                     if (newestSeen == 0L) newestSeen = validTracks.first().timestampSeconds
-                    // FIX #1: only advance checkpoint if write succeeded
                     if (appendToCsv(dirUri, validTracks)) {
                         fetchedCount += validTracks.size
                         oldestFetched = validTracks.last().timestampSeconds
@@ -146,7 +144,6 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
                 delay(100)
             }
 
-            // Continue fetching older pages via timestamp checkpoint
             var pullCompleted = false
             while (oldestFetched > 0) {
                 val page = LastFmScrobbler.getRecentTracksPage(
@@ -158,7 +155,6 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
                     break
                 }
 
-                // FIX #1: only advance checkpoint if write succeeded
                 if (!appendToCsv(dirUri, validTracks)) break
                 fetchedCount += validTracks.size
                 oldestFetched = validTracks.last().timestampSeconds
@@ -195,7 +191,7 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
             val dirString = settings.lastFmBackupDir
             val newestSeen = settings.lastFmBackupNewestSeen
             if (apiKey.isBlank() || username.isBlank() || dirString.isBlank()) return
-            // FIX #5: guard against corrupt state where initialComplete is true but newestSeen is 0
+            // Guard: initialComplete can be true with newestSeen=0 if state was corrupted.
             if (newestSeen == 0L) return
 
             val dirUri = Uri.parse(dirString)
@@ -211,7 +207,6 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
                 val validTracks = page.tracks.filter { it.timestampSeconds > newestSeen }
                 allNewTracks.addAll(validTracks)
                 if (currentPage >= page.totalPages || page.tracks.size < limit) {
-                    // FIX #2: only mark complete when all pages fetched successfully
                     syncCompleted = true
                     break
                 }
@@ -226,17 +221,15 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
                 return
             }
 
-            // FIX #2: abandon on partial fetch — don't write or advance newestSeen
+            // Abandon on partial fetch — don't write or advance newestSeen.
             if (!syncCompleted) {
                 Logger.warn("LastFmBackupService", "daily sync incomplete (API error), will retry next cycle")
                 return
             }
 
-            // Append oldest-first, then archive if the CSV has grown too large
             appendToCsv(dirUri, allNewTracks.reversed())
             archiveIfNeeded(dirUri)
 
-            // Update play counts
             val newCounts = mutableMapOf<String, Long>()
             for (track in allNewTracks) {
                 val key = "${track.artist.lowercase()}|${track.track.lowercase()}"
@@ -311,7 +304,6 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
                 }
             }
 
-            // FIX #3: atomic replace via @Transaction — clear and insert succeed or fail together
             symphony.database.lastFmPlayCounts.replace(counts.map { (k, v) -> LastFmPlayCountEntry(k, v) })
             playCountsCache.clear()
             playCountsCache.putAll(counts)
@@ -320,7 +312,6 @@ class LastFmBackupService(private val symphony: Symphony) : Symphony.Hooks {
         }
     }
 
-    // FIX #1: returns false on failure so callers can avoid advancing the checkpoint
     private fun appendToCsv(dirUri: Uri, tracks: List<LastFmRecentTrack>): Boolean {
         if (tracks.isEmpty()) return true
         return try {
