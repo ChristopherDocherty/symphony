@@ -38,7 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.lerp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.zyrouge.symphony.ui.helpers.TransitionDurations
+import androidx.compose.animation.core.tween
 import io.github.zyrouge.symphony.utils.TimedContent
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -191,7 +191,7 @@ private fun animateTextStyleAsState(targetValue: TextStyle): State<TextStyle> {
         previousTextStyle = textStyleState.value
         nextTextStyle = targetValue
         animation.snapTo(0f)
-        animation.animateTo(1f, TransitionDurations.Fast.asTween())
+        animation.animateTo(1f, tween(100))
     }
 
     return textStyleState

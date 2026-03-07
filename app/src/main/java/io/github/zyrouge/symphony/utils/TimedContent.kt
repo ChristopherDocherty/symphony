@@ -14,11 +14,19 @@ data class TimedContent(val pairs: List<Pair<Long, String>>) {
             val pairs = content.split(lrcLineSeparatorRegex).map { x ->
                 val match = lrcLineFilterRegex.matchEntire(x)
                 val pair = when {
-                    match != null -> Duration
-                        .ofMinutes(match.groupValues[1].toLong())
-                        .plusSeconds(match.groupValues[2].toLong())
-                        .plusMillis(match.groupValues[3].toLong())
-                        .toMillis() to match.groupValues[4].trim()
+                    match != null -> {
+                        val fracStr = match.groupValues[3]
+                        val fracMs = fracStr.toLong() * when (fracStr.length) {
+                            1 -> 100L
+                            2 -> 10L
+                            else -> 1L
+                        }
+                        Duration
+                            .ofMinutes(match.groupValues[1].toLong())
+                            .plusSeconds(match.groupValues[2].toLong())
+                            .plusMillis(fracMs)
+                            .toMillis() to match.groupValues[4].trim()
+                    }
 
                     else -> lastTime to x.trim()
                 }
