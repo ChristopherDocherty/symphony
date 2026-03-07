@@ -2,6 +2,11 @@ package io.github.zyrouge.symphony.services.groove
 
 import android.net.Uri
 
+data class WishlistListing(
+    val url: String,
+    val price: Double,
+)
+
 data class WishlistAlbum(
     val id: String,
     val artist: String,
@@ -10,4 +15,5 @@ data class WishlistAlbum(
     val priority: Int,
     val dirDocId: String,
     val artworkUri: Uri?,
+    val listings: List<WishlistListing> = emptyList(),
 )

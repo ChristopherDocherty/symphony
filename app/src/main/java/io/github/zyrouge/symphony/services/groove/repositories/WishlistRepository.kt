@@ -8,6 +8,7 @@ import coil.request.ImageRequest
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.WishlistSortBy
 import io.github.zyrouge.symphony.services.groove.WishlistAlbum
+import io.github.zyrouge.symphony.services.groove.WishlistListing
 import io.github.zyrouge.symphony.ui.helpers.Assets
 import io.github.zyrouge.symphony.utils.withCase
 import io.github.zyrouge.symphony.utils.HttpClient
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.UUID
@@ -94,6 +96,14 @@ class WishlistRepository(private val symphony: Symphony) {
                             val albumName = obj.getString("name")
                             val year = if (obj.has("year")) obj.getInt("year") else null
                             val priority = obj.optInt("priority", 0)
+                            val listingsArray = obj.optJSONArray("listings")
+                            val listings = mutableListOf<WishlistListing>()
+                            if (listingsArray != null) {
+                                for (i in 0 until listingsArray.length()) {
+                                    val l = listingsArray.getJSONObject(i)
+                                    listings.add(WishlistListing(l.getString("url"), l.getDouble("price")))
+                                }
+                            }
                             val artworkUri = coverDocId?.let {
                                 DocumentsContract.buildDocumentUriUsingTree(rootTreeUri, it)
                             }
@@ -106,6 +116,7 @@ class WishlistRepository(private val symphony: Symphony) {
                                     priority = priority,
                                     dirDocId = docId,
                                     artworkUri = artworkUri,
+                                    listings = listings,
                                 )
                             )
                         } catch (e: Exception) {
@@ -203,7 +214,7 @@ class WishlistRepository(private val symphony: Symphony) {
         }
 
         jsonDocUri?.let { uri ->
-            val json = buildAlbumJson(id, artist, name, year, priority)
+            val json = buildAlbumJson(id, artist, name, year, priority, existing.listings)
             cr.openOutputStream(uri, "wt")?.use { it.write(json.toByteArray()) }
         }
 
@@ -222,6 +233,7 @@ class WishlistRepository(private val symphony: Symphony) {
             year = year,
             priority = priority,
             artworkUri = artworkUri,
+            listings = existing.listings,
         )
         cache[id] = updated
         emitUpdateId()
@@ -244,6 +256,42 @@ class WishlistRepository(private val symphony: Symphony) {
     }
 
     fun get(id: String) = cache[id]
+
+    suspend fun updateListings(id: String, listings: List<WishlistListing>) {
+        val existing = cache[id] ?: return
+        val dirString = symphony.settingsState.value.wishlistDir
+        if (dirString.isBlank()) return
+        val cr = symphony.applicationContext.contentResolver
+        val rootTreeUri = Uri.parse(dirString)
+        val dirDocUri = DocumentsContract.buildDocumentUriUsingTree(rootTreeUri, existing.dirDocId)
+        val subChildrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(rootTreeUri, existing.dirDocId)
+
+        var jsonDocUri: Uri? = null
+        cr.query(
+            subChildrenUri,
+            arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            ),
+            null, null, null,
+        )?.use { cursor ->
+            while (cursor.moveToNext()) {
+                if (cursor.getString(1) == "album.json") {
+                    jsonDocUri = DocumentsContract.buildDocumentUriUsingTree(rootTreeUri, cursor.getString(0))
+                    break
+                }
+            }
+        }
+        if (jsonDocUri == null) {
+            jsonDocUri = DocumentsContract.createDocument(cr, dirDocUri, "application/json", "album.json")
+        }
+        jsonDocUri?.let { uri ->
+            val json = buildAlbumJson(existing.id, existing.artist, existing.name, existing.year, existing.priority, listings)
+            cr.openOutputStream(uri, "wt")?.use { it.write(json.toByteArray()) }
+        }
+        cache[id] = existing.copy(listings = listings)
+        emitUpdateId()
+    }
 
     fun sort(albumIds: List<String>, by: WishlistSortBy, reverse: Boolean): List<String> {
         val sensitive = symphony.settingsState.value.caseSensitiveSorting
@@ -268,13 +316,30 @@ class WishlistRepository(private val symphony: Symphony) {
         }
     }
 
-    private fun buildAlbumJson(id: String, artist: String, name: String, year: Int?, priority: Int): String {
+    private fun buildAlbumJson(
+        id: String,
+        artist: String,
+        name: String,
+        year: Int?,
+        priority: Int,
+        listings: List<WishlistListing> = emptyList(),
+    ): String {
         val obj = JSONObject()
         obj.put("id", id)
         obj.put("artist", artist)
         obj.put("name", name)
         year?.let { obj.put("year", it) }
         obj.put("priority", priority)
+        if (listings.isNotEmpty()) {
+            val arr = JSONArray()
+            listings.forEach { listing ->
+                val l = JSONObject()
+                l.put("url", listing.url)
+                l.put("price", listing.price)
+                arr.put(l)
+            }
+            obj.put("listings", arr)
+        }
         return obj.toString()
     }
 

@@ -293,6 +293,13 @@
     <string name="DeleteWishlistAlbum">Delete album</string>
     <string name="WishlistAlbumArtUrl">Album art URL (optional)</string>
     <string name="Priority">Priority</string>
+    <string name="WhereToBuy">Where to Buy</string>
+    <string name="AddListing">Add listing</string>
+    <string name="EditListing">Edit listing</string>
+    <string name="DeleteListing">Delete listing</string>
+    <string name="ListingUrl">URL</string>
+    <string name="Price">Price</string>
+    <string name="NoListings">No listings added yet</string>
     <string name="XWishlistAlbums">%1$s wishlist albums</string>
     <string name="PickFromWishlist">Pick from Wishlist</string>
     <string name="NoWishlistArtwork">No wishlist albums have artwork</string>
