@@ -85,6 +85,7 @@ fun LoaderScaffold(
                                         progress.total.coerceAtLeast(1)
                             },
                             modifier = Modifier.fillMaxWidth(),
+                            drawStopIndicator = {},
                         )
                     }
                     Row(
@@ -124,6 +125,7 @@ fun LoaderScaffold(
                                     progress.completed.toFloat() / progress.total
                                 },
                                 modifier = Modifier.fillMaxWidth(),
+                                drawStopIndicator = {},
                             )
                         } else {
                             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
