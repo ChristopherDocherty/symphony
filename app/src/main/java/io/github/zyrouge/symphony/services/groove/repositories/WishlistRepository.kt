@@ -251,7 +251,7 @@ class WishlistRepository(private val symphony: Symphony) {
             WishlistSortBy.WISHLIST_SORT_ARTIST -> albumIds.sortedBy { cache[it]?.artist?.withCase(sensitive) }
             WishlistSortBy.WISHLIST_SORT_NAME -> albumIds.sortedBy { cache[it]?.name?.withCase(sensitive) }
             WishlistSortBy.WISHLIST_SORT_YEAR -> albumIds.sortedBy { cache[it]?.year }
-            WishlistSortBy.WISHLIST_SORT_PRIORITY -> albumIds.sortedBy { cache[it]?.priority }
+            WishlistSortBy.WISHLIST_SORT_PRIORITY -> albumIds.sortedBy { val p = cache[it]?.priority ?: -1; if (p < 0) Int.MAX_VALUE else p }
             else -> albumIds
         }
         return if (reverse) sorted.reversed() else sorted

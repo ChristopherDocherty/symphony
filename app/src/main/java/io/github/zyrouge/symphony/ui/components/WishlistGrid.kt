@@ -106,7 +106,7 @@ fun WishlistAlbumTile(
                 )
                 val meta = buildString {
                     album.year?.let { append(it.toString()) }
-                    if (album.priority != 0) {
+                    if (album.priority >= 0) {
                         if (isNotEmpty()) append(" · ")
                         append("P${album.priority}")
                     }
@@ -403,8 +403,8 @@ private fun groupWishlistByPriority(
     noPriorityLabel: String,
 ): List<Pair<String, List<String>>> {
     val grouped = sortedIds.groupBy { id ->
-        val priority = context.symphony.groove.wishlist.get(id)?.priority ?: 0
-        if (priority == 0) noPriorityLabel else "P$priority"
+        val priority = context.symphony.groove.wishlist.get(id)?.priority ?: -1
+        if (priority < 0) noPriorityLabel else "P$priority"
     }
     val numericKeys = grouped.keys
         .filter { it != noPriorityLabel }

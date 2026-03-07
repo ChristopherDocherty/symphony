@@ -137,7 +137,7 @@ fun WishlistAlbumView(context: ViewContext, route: WishlistAlbumViewRoute) {
                                     )
                                     val meta = buildString {
                                         it.year?.let { y -> append(y.toString()) }
-                                        if (it.priority != 0) {
+                                        if (it.priority >= 0) {
                                             if (isNotEmpty()) append(" · ")
                                             append("P${it.priority}")
                                         }

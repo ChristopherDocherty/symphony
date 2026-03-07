@@ -57,7 +57,7 @@ fun AddWishlistAlbumDialog(
     var artist by remember { mutableStateOf(existingAlbum?.artist ?: "") }
     var albumName by remember { mutableStateOf(existingAlbum?.name ?: "") }
     var yearText by remember { mutableStateOf(existingAlbum?.year?.toString() ?: "") }
-    var priorityText by remember { mutableStateOf(existingAlbum?.priority?.toString() ?: "0") }
+    var priorityText by remember { mutableStateOf(existingAlbum?.priority?.takeIf { it >= 0 }?.toString() ?: "") }
     var artUrl by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -200,7 +200,7 @@ fun AddWishlistAlbumDialog(
                         return@Button
                     }
                     val year = yearText.toIntOrNull()
-                    val priority = priorityText.toIntOrNull() ?: 0
+                    val priority = priorityText.toIntOrNull() ?: -1
                     isSaving = true
                     errorMessage = null
                     coroutineScope.launch(Dispatchers.IO) {
