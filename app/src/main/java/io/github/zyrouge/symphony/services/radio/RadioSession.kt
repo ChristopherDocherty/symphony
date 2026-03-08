@@ -246,6 +246,12 @@ class RadioSession(val symphony: Symphony) {
                         )
                     }
                     putString(MediaMetadataCompat.METADATA_KEY_ALBUM, req.song.album)
+                    if (req.song.albumArtists.isNotEmpty()) {
+                        putString(
+                            MediaMetadataCompat.METADATA_KEY_ALBUM_ARTIST,
+                            req.song.albumArtists.joinToString()
+                        )
+                    }
                     req.artworkBitmap.let {
                         putBitmap(MediaMetadataCompat.METADATA_KEY_ART, it)
                         putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, it)
