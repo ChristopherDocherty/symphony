@@ -388,6 +388,15 @@ fun LastFmSettingsView(context: ViewContext) {
                                 style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.weight(1f),
                             )
+                            if (results != null) {
+                                OutlinedButton(
+                                    onClick = { context.symphony.lastFm.rescanArtistCorrections() },
+                                    enabled = settings.lastFmApiKey.isNotBlank(),
+                                ) {
+                                    Text(stringResource(R.string.ArtistCorrectionRescan))
+                                }
+                                Spacer(Modifier.width(8.dp))
+                            }
                             Button(
                                 onClick = { context.symphony.lastFm.scanArtistCorrections() },
                                 enabled = settings.lastFmApiKey.isNotBlank(),

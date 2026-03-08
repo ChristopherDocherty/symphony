@@ -333,6 +333,7 @@
     <string name="LastFmResetBackupState">Reset backup state</string>
     <string name="ArtistNameCorrections">Artist Name Corrections</string>
     <string name="ArtistCorrectionScanLibrary">Scan Library</string>
+    <string name="ArtistCorrectionRescan">Rescan All</string>
     <string name="ArtistCorrectionScanning">Scanning %1$d / %2$d artists…</string>
     <string name="ArtistCorrectionNoMismatches">No mismatches found</string>
     <string name="ArtistCorrectionTitle">Artist Name on Last.fm</string>

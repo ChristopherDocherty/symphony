@@ -191,7 +191,6 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
                 symphony.groove.fetchPaths(affectedPaths)
             }
             artistCorrections.remove(localName)
-            artistCorrections[canonicalName] = canonicalName
             checkedArtists.add(canonicalName)
             try {
                 symphony.database.lastFmCorrections.upsert(
@@ -206,6 +205,21 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
             }
             _artistCorrectionAlert.value = null
             _correctionResults.value = artistCorrections.toMap()
+        }
+    }
+
+    fun rescanArtistCorrections() {
+        if (_correctionScanProgress.value != null) return
+        symphony.viewModelScope.launch(Dispatchers.IO) {
+            try {
+                symphony.database.lastFmCorrections.clear()
+            } catch (err: Exception) {
+                Logger.error("LastFmService", "failed to clear corrections DB", err)
+            }
+            checkedArtists.clear()
+            artistCorrections.clear()
+            _correctionResults.value = null
+            scanArtistCorrections()
         }
     }
 
