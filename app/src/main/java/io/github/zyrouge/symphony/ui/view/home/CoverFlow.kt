@@ -304,7 +304,6 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                                             rotationY = (if (off >= 0f) -1f else 1f) * rotFrac * 78f
                                             scaleX = lerp(0.8f, 1f, 1f - absOff)
                                             scaleY = lerp(0.8f, 1f, 1f - absOff)
-                                            alpha = lerp(0.5f, 1f, 1f - absOff)
                                             cameraDistance = 12f * density
                                         }
                                         .clip(RoundedCornerShape(8.dp))
