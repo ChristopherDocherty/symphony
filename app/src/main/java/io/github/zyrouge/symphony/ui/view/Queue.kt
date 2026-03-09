@@ -12,7 +12,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -32,6 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,6 +63,7 @@ fun QueueView(context: ViewContext) {
     val queue by context.symphony.radio.observatory.queue.collectAsState()
     val queueIndex by context.symphony.radio.observatory.queueIndex.collectAsState()
     var showSaveDialog by remember { mutableStateOf(false) }
+    var editMode by remember { mutableStateOf(false) }
 
     data class QueueEntry(val key: Int, val songId: String)
 
@@ -114,6 +118,18 @@ fun QueueView(context: ViewContext) {
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = {
+                            editMode = !editMode
+                        }
+                    ) {
+                        Icon(
+                            Icons.Filled.Edit,
+                            null,
+                            tint = if (editMode) MaterialTheme.colorScheme.primary
+                                   else LocalContentColor.current,
+                        )
+                    }
                     IconButton(
                         onClick = {
                             showSaveDialog = !showSaveDialog
@@ -171,25 +187,41 @@ fun QueueView(context: ViewContext) {
                                                     },
                                                 )
                                             }
-                                            Icon(
-                                                Icons.Filled.DragHandle,
-                                                contentDescription = null,
-                                                modifier = Modifier
-                                                    .draggableHandle(
-                                                        onDragStopped = {
-                                                            if (dragOriginIndex != -1 && dragOriginIndex != dragCurrentIndex) {
-                                                                context.symphony.radio.queue.move(
-                                                                    dragOriginIndex,
-                                                                    dragCurrentIndex,
-                                                                )
-                                                            }
-                                                            dragOriginIndex = -1
-                                                            dragCurrentIndex = -1
-                                                        }
+                                            if (editMode) {
+                                                IconButton(
+                                                    onClick = {
+                                                        localQueue.removeAt(i)
+                                                        context.symphony.radio.queue.remove(i)
+                                                    }
+                                                ) {
+                                                    Icon(
+                                                        Icons.Filled.Delete,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.error,
+                                                        modifier = Modifier.size(24.dp),
                                                     )
-                                                    .padding(horizontal = 16.dp)
-                                                    .size(24.dp),
-                                            )
+                                                }
+                                            } else {
+                                                Icon(
+                                                    Icons.Filled.DragHandle,
+                                                    contentDescription = null,
+                                                    modifier = Modifier
+                                                        .draggableHandle(
+                                                            onDragStopped = {
+                                                                if (dragOriginIndex != -1 && dragOriginIndex != dragCurrentIndex) {
+                                                                    context.symphony.radio.queue.move(
+                                                                        dragOriginIndex,
+                                                                        dragCurrentIndex,
+                                                                    )
+                                                                }
+                                                                dragOriginIndex = -1
+                                                                dragCurrentIndex = -1
+                                                            }
+                                                        )
+                                                        .padding(horizontal = 16.dp)
+                                                        .size(24.dp),
+                                                )
+                                            }
                                         }
                                         if (i < queueIndex) {
                                             Box(
