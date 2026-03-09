@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import androidx.compose.ui.zIndex
+import android.content.res.Configuration
+import androidx.compose.ui.platform.LocalConfiguration
 import coil.compose.AsyncImage
 import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.AlbumSortBy
@@ -201,6 +203,8 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                     }
                 }
 
+                val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -213,7 +217,10 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                         contentAlignment = Alignment.Center,
                     ) {
                         val localDensity = LocalDensity.current
-                        val albumSizeDp = minOf(maxWidth, maxHeight) * 0.55f
+                        val albumSizeDp = if (isLandscape)
+                            maxHeight * 0.85f
+                        else
+                            minOf(maxWidth, maxHeight) * 0.55f
                         val albumSizePx = with(localDensity) { albumSizeDp.toPx() }
                         // Max rotation 78° — steeper than before so side albums are visually
                         // thinner (cos 78° ≈ 0.21) and more can fit on screen simultaneously.
@@ -322,33 +329,35 @@ fun CoverFlowView(context: ViewContext, pageState: CoverFlowPageState? = null) {
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    if (!isLandscape) {
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                    currentAlbum?.let { album ->
-                        Text(
-                            text = album.name,
-                            style = MaterialTheme.typography.titleLarge,
-                            textAlign = TextAlign.Center,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 32.dp),
-                        )
-                        val artist = album.albumArtists.firstOrNull() ?: album.artists.firstOrNull()
-                        if (artist != null) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                        currentAlbum?.let { album ->
                             Text(
-                                text = artist,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                text = album.name,
+                                style = MaterialTheme.typography.titleLarge,
                                 textAlign = TextAlign.Center,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.padding(horizontal = 32.dp),
                             )
+                            val artist = album.albumArtists.firstOrNull() ?: album.artists.firstOrNull()
+                            if (artist != null) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = artist,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.padding(horizontal = 32.dp),
+                                )
+                            }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
+                    }
                 }
             }
 
