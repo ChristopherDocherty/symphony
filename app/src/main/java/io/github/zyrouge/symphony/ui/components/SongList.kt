@@ -285,6 +285,7 @@ fun SongSortBy.label(context: ViewContext) = when (this) {
     SongSortBy.SONG_TRACK_NUMBER -> context.activity.getString(R.string.TrackNumber)
     SongSortBy.SONG_DATE_ADDED -> "Date Added"
     SongSortBy.SONG_DATE_MODIFIED -> "Date Modified"
+    SongSortBy.SONG_SCROBBLE_COUNT -> context.activity.getString(R.string.ScrobbleCount)
     SongSortBy.UNRECOGNIZED -> "???"
 }
 

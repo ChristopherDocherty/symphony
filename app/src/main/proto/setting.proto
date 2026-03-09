@@ -21,6 +21,7 @@ enum SongSortBy {
   SONG_FILENAME = 8;
   SONG_TRACK_NUMBER = 9;
   SONG_DATE_MODIFIED = 10;
+  SONG_SCROBBLE_COUNT = 11;
 }
 
 message SongSortPreference {

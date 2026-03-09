@@ -123,6 +123,14 @@ class SongRepository(private val symphony: Symphony) {
                 compareBy({ get(it)?.discNumber }, { get(it)?.trackNumber }),
             )
             SongSortBy.SONG_DATE_MODIFIED -> songIds.sortedBy { get(it)?.dateModified }
+            SongSortBy.SONG_SCROBBLE_COUNT -> songIds.sortedByDescending {
+                get(it)?.let { song ->
+                    symphony.lastFmBackup.getSongScrobbleCount(
+                        song.artists.firstOrNull() ?: "",
+                        song.title,
+                    )
+                } ?: 0L
+            }
             SongSortBy.UNRECOGNIZED -> songIds
         }
         return if (reverse) sorted.reversed() else sorted
