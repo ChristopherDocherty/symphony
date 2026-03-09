@@ -259,6 +259,7 @@
     <string name="LastFmScrobbles">%1$s scrobbles</string>
     <string name="ShowScrobbleCounts">Show scrobble counts</string>
     <string name="AlbumTileInfo">Album tile info</string>
+    <string name="ArtistTileInfo">Artist tile info</string>
     <string name="ShowAlbumName">Show album name</string>
     <string name="ShowArtistName">Show artist name</string>
     <string name="ShowScrobbleCount">Show scrobble count</string>

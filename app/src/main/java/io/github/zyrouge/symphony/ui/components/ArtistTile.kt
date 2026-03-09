@@ -10,7 +10,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -19,11 +21,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.AlbumFilter
+import io.github.zyrouge.symphony.AlbumSortBy
 import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.services.groove.Artist
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.utils.escapeTextForLastFmUrl
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @Composable
@@ -31,7 +36,33 @@ fun ArtistTile(context: ViewContext, artist: Artist, onClickOverride: (() -> Uni
     val scope = rememberCoroutineScope()
     val settings by context.symphony.settingsState.collectAsState()
     val minimalistMode = settings.albumTileMinimalistMode
-    val scrobbles = if (!minimalistMode && settings.showScrobbleCounts) context.symphony.lastFm.getArtistScrobbleCount(artist.name) else 0L
+    val scrobbles = if (!minimalistMode && settings.artistTileShowScrobbleCount) context.symphony.lastFm.getArtistScrobbleCount(artist.name) else 0L
+
+    val albumFilter by context.symphony.settings.data
+        .map { it.uiArtistViewAlbumFilter }
+        .collectAsState(AlbumFilter.getDefaultInstance())
+    val hiddenAlbumIds by context.symphony.settings.data
+        .map { it.hiddenAlbumIdsList.toSet() }
+        .collectAsState(emptySet())
+
+    val filteredAlbumCount by remember(artist.name, albumFilter, hiddenAlbumIds) {
+        derivedStateOf {
+            val albumIds = context.symphony.groove.artist.getAlbumIds(artist.name)
+            context.symphony.groove.album.getAlbums(albumIds, AlbumSortBy.ALBUM_NAME, false, albumFilter, hiddenAlbumIds).size
+        }
+    }
+    val filteredTrackCount by remember(artist.name, albumFilter, hiddenAlbumIds) {
+        derivedStateOf {
+            val albumIds = context.symphony.groove.artist.getAlbumIds(artist.name)
+            val filteredAlbumSet = context.symphony.groove.album.getAlbums(albumIds, AlbumSortBy.ALBUM_NAME, false, albumFilter, hiddenAlbumIds).toHashSet()
+            context.symphony.groove.artist.getSongIds(artist.name)
+                .count { songId ->
+                    val song = context.symphony.groove.song.get(songId) ?: return@count true
+                    val albumId = context.symphony.groove.album.getIdFromSong(song) ?: return@count true
+                    albumId in filteredAlbumSet
+                }
+        }
+    }
 
     SquareGrooveTile(
         image = artist.createArtworkImageRequest(context.symphony).build(),
@@ -46,13 +77,33 @@ fun ArtistTile(context: ViewContext, artist: Artist, onClickOverride: (() -> Uni
         showOptions = !minimalistMode,
         showContent = !minimalistMode,
         content = {
-            Text(
-                artist.name,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (settings.artistTileShowName) {
+                Text(
+                    artist.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (settings.artistTileShowAlbumCount) {
+                Text(
+                    stringResource(R.string.XAlbums, filteredAlbumCount.toString()),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (settings.artistTileShowTrackCount) {
+                Text(
+                    stringResource(R.string.XSongs, filteredTrackCount.toString()),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             if (scrobbles > 0) {
                 Text(
                     stringResource(R.string.LastFmScrobbles, scrobbles.toString()),

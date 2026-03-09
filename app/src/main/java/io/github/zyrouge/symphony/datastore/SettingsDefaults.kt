@@ -51,6 +51,7 @@ object SettingsDefaults {
 
         albumTileShowName = true
         albumTileShowArtist = true
+        artistTileShowName = true
 
         artistTagSeparators.addAll(listOf(";", "/", ",", "+"))
         genreTagSeparators.addAll(listOf(";", "/", ",", "+"))
