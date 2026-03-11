@@ -162,7 +162,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
         }
     }
 
-    private fun prepareNextPlayer() {
+    internal fun prepareNextPlayer() {
         if (!symphony.settingsState.value.gaplessPlayback) {
             player?.setNextMediaPlayer(null)
             nextPlayer?.destroy()
@@ -354,10 +354,14 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     private fun onSongFinish(source: SongFinishSource) {
         // Gapless path: setNextMediaPlayer() already started the next player at the hardware
         // level, so we just need to swap references and set up listeners — no start() needed.
+        // Verify the pre-prepared nextPlayer is actually the song we want next (loop mode may
+        // have changed since prepareNextPlayer() ran, e.g. switched to SINGLE_SONG).
+        val expectedNextSongId = queue.getSongIdAt(getNextSong(source).first)
         val gaplessPlayer = nextPlayer?.takeIf {
             source == SongFinishSource.Finish &&
                     symphony.settingsState.value.gaplessPlayback &&
-                    it.isPlaying
+                    it.isPlaying &&
+                    it.id == expectedNextSongId
         }
         if (gaplessPlayer != null) {
             val oldPlayer = player

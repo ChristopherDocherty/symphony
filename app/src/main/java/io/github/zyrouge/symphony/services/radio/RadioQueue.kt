@@ -51,7 +51,7 @@ class RadioQueue(private val symphony: Symphony, private val scope: CoroutineSco
                 it.copy { playbackOptions = playbackOptions.copy { loopMode = newMode } }
             }
         }
-        Logger.warn("RadioQueue", "setLoopMode -> wrote $newMode")
+        symphony.radio.prepareNextPlayer()
     }
 
     fun toggleLoopMode() {
