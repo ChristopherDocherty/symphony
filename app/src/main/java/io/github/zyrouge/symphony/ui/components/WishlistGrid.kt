@@ -193,6 +193,7 @@ fun WishlistGrid(context: ViewContext, albumIds: List<String>) {
             )
         },
         content = {
+            val currentGroupedAlbumIds = groupedAlbumIds
             when {
                 albumIds.isEmpty() -> IconTextBody(
                     icon = { modifier ->
@@ -203,8 +204,8 @@ fun WishlistGrid(context: ViewContext, albumIds: List<String>) {
                     },
                 )
 
-                groupedAlbumIds != null -> ResponsiveGrid(gridColumns) { _ ->
-                    groupedAlbumIds!!.forEach { (sectionTitle, ids) ->
+                currentGroupedAlbumIds != null -> ResponsiveGrid(gridColumns) { _ ->
+                    currentGroupedAlbumIds.forEach { (sectionTitle, ids) ->
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             GroupSectionHeader(sectionTitle)
                         }
