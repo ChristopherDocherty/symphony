@@ -32,7 +32,15 @@ class RadioShorty(private val symphony: Symphony) {
                 true
             }
 
-            else -> false
+            else -> {
+                val lastIndex = symphony.radio.queue.currentQueue.size - 1
+                if (lastIndex >= 0) {
+                    symphony.radio.play(
+                        Radio.PlayOptions(index = lastIndex, autostart = symphony.radio.isPlaying)
+                    )
+                }
+                false
+            }
         }
     }
 
