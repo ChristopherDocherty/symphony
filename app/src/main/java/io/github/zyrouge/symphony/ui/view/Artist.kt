@@ -44,7 +44,7 @@ import androidx.compose.ui.res.stringResource
 import io.github.zyrouge.symphony.R
 
 @Serializable
-data class ArtistViewRoute(val artistName: String)
+data class ArtistViewRoute(val artistName: String, val bypassAlbumFilter: Boolean = false)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,7 +80,7 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
         }
     }
     val albumFilter by context.symphony.settings.data
-        .map { it.uiArtistViewAlbumFilter }
+        .map { if (route.bypassAlbumFilter) AlbumFilter.getDefaultInstance() else it.uiArtistViewAlbumFilter }
         .collectAsState(AlbumFilter.getDefaultInstance())
     val filteredAlbumIds by remember(albumIds, albumFilter) {
         derivedStateOf {
@@ -152,7 +152,7 @@ fun ArtistView(context: ViewContext, route: ArtistViewRoute) {
                             if (albumIds.isNotEmpty()) {
                                 item {
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    AlbumRow(context, albumIds)
+                                    AlbumRow(context, albumIds, bypassFilter = route.bypassAlbumFilter)
                                     Spacer(modifier = Modifier.height(4.dp))
                                     HorizontalDivider()
                                 }

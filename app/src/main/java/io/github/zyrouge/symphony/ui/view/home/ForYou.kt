@@ -602,7 +602,7 @@ private fun SuggestedArtists(
     StatedSixGrid(context, isLoading, artists) { artist ->
         Card(
             onClick = {
-                context.navController.navigate(ArtistViewRoute(artist.name))
+                context.navController.navigate(ArtistViewRoute(artist.name, bypassAlbumFilter = true))
             }
         ) {
             AsyncImage(

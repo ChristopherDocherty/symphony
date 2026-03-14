@@ -19,7 +19,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.map
 
 @Composable
-fun AlbumRow(context: ViewContext, albumIds: List<String>) {
+fun AlbumRow(context: ViewContext, albumIds: List<String>, bypassFilter: Boolean = false) {
     BoxWithConstraints {
         val maxSize = min(
             this@BoxWithConstraints.maxHeight,
@@ -31,7 +31,7 @@ fun AlbumRow(context: ViewContext, albumIds: List<String>) {
             AlbumSortBy.ALBUM_YEAR)
         val sortReverse by context.symphony.settings.data.map { it.uiArtistViewAlbumSortBy.reverse}.collectAsState(false)
         val albumFilter by context.symphony.settings.data
-            .map { it.uiArtistViewAlbumFilter }
+            .map { if (bypassFilter) AlbumFilter.getDefaultInstance() else it.uiArtistViewAlbumFilter }
             .collectAsState(AlbumFilter.getDefaultInstance())
 
         val sortedAlbumIds = remember(albumIds, sortBy, sortReverse, albumFilter) {
