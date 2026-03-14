@@ -162,10 +162,14 @@ class MediaExposer(private val symphony: Symphony) {
             scanTotalFiles.set(scanFiles.size)
             emitScanProgress()
 
+            val pendingInserts = ConcurrentLinkedQueue<Song>()
             coroutineScope {
                 scanFiles.map { (path, file) ->
-                    async(Dispatchers.IO) { scanMediaFile(config, pruner, path, file) }
+                    async(Dispatchers.IO) { scanMediaFile(config, pruner, pendingInserts, path, file) }
                 }.awaitAll().filterNotNull().forEach { allCollectedSongs.add(it) }
+            }
+            if (pendingInserts.isNotEmpty()) {
+                symphony.database.songCache.insert(*pendingInserts.toTypedArray())
             }
 
             emitSongs(allCollectedSongs)
@@ -230,6 +234,7 @@ class MediaExposer(private val symphony: Symphony) {
             val config = ScanConfig.create(symphony)
             val pruner = CachePruner.createForPaths(symphony, idsToInvalidate)
 
+            val pendingInserts = ConcurrentLinkedQueue<Song>()
             val updatedSongs = coroutineScope {
                 paths.mapNotNull { path ->
                     // uris is only populated during a full scan; fall back to the URI stored in
@@ -237,9 +242,12 @@ class MediaExposer(private val symphony: Symphony) {
                     val uri = uris[path] ?: existingSongsByPath[path]?.uri ?: return@mapNotNull null
                     val docFile = DocumentFileX.fromSingleUri(context, uri) ?: return@mapNotNull null
                     async(Dispatchers.IO) {
-                        scanMediaFile(config, pruner, SimplePath(path), docFile)
+                        scanMediaFile(config, pruner, pendingInserts, SimplePath(path), docFile)
                     }
                 }.awaitAll().filterNotNull()
+            }
+            if (pendingInserts.isNotEmpty()) {
+                symphony.database.songCache.insert(*pendingInserts.toTypedArray())
             }
 
             val updatedByPath = updatedSongs.associateBy { it.path }
@@ -282,7 +290,7 @@ class MediaExposer(private val symphony: Symphony) {
         emitFinish()
     }
 
-    private suspend fun scanMediaFile(config: ScanConfig, pruner: CachePruner, path: SimplePath, file: DocumentFileX): Song? {
+    private suspend fun scanMediaFile(config: ScanConfig, pruner: CachePruner, pendingInserts: ConcurrentLinkedQueue<Song>, path: SimplePath, file: DocumentFileX): Song? {
         scanCompletedFiles.incrementAndGet()
         emitScanProgress()
         try {
@@ -295,7 +303,7 @@ class MediaExposer(private val symphony: Symphony) {
                     scanM3UFile(path, file)
                     return null
                 }
-                file.mimeType.startsWith("audio/") -> return scanAudioFile(config, pruner, path, file)
+                file.mimeType.startsWith("audio/") -> return scanAudioFile(config, pruner, pendingInserts, path, file)
                 else -> return null
             }
         } catch (err: Exception) {
@@ -305,7 +313,7 @@ class MediaExposer(private val symphony: Symphony) {
         }
     }
 
-    private suspend fun scanAudioFile(config: ScanConfig, pruner: CachePruner, path: SimplePath, file: DocumentFileX): Song? {
+    private suspend fun scanAudioFile(config: ScanConfig, pruner: CachePruner, pendingInserts: ConcurrentLinkedQueue<Song>, path: SimplePath, file: DocumentFileX): Song? {
         val pathString = path.pathString
         uris[pathString] = file.uri
         val lastModified = file.lastModified
@@ -324,7 +332,7 @@ class MediaExposer(private val symphony: Symphony) {
         }
 
         if (!cacheHit) {
-            symphony.database.songCache.insert(song)
+            pendingInserts.add(song)
             cached?.coverFile?.let { oldCoverFile ->
                 if (oldCoverFile != song.coverFile) {
                     if (symphony.database.artworkCache.get(oldCoverFile).delete()) {
