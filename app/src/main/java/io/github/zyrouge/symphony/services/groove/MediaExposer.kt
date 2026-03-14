@@ -291,8 +291,10 @@ class MediaExposer(private val symphony: Symphony) {
     }
 
     private suspend fun scanMediaFile(config: ScanConfig, pruner: CachePruner, pendingInserts: ConcurrentLinkedQueue<Song>, path: SimplePath, file: DocumentFileX): Song? {
-        scanCompletedFiles.incrementAndGet()
-        emitScanProgress()
+        val completed = scanCompletedFiles.incrementAndGet()
+        if (completed % 25 == 0 || completed == scanTotalFiles.get()) {
+            emitScanProgress()
+        }
         try {
             when {
                 path.extension == "lrc" || path.extension == "txt" -> {
