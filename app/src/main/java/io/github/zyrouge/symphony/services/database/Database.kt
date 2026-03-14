@@ -11,6 +11,7 @@ class Database(symphony: Symphony) {
 
     val artworkCache = ArtworkCacheStore(symphony)
     val lyricsCache = LyricsCacheStore(symphony)
+    val lyricsMtimeCache = LyricsCacheStore(symphony, "lyrics_mtime")
     val directoryArtworkCache =DirectoryArtworkCacheStore(symphony)
     val songCache get() = cache.songs()
     val lastFmCache get() = cache.lastFmCache()

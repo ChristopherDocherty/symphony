@@ -69,12 +69,14 @@ class MediaExposer(private val symphony: Symphony) {
         songCacheData: Map<String, Song>,
         artworkKeys: Collection<String>,
         lyricsKeys: Collection<String>,
+        lyricsMtimeKeys: Collection<String>,
         val existingDirArtwork: Map<String, Uri>,
     ) {
         val songCache: ConcurrentHashMap<String, Song> = ConcurrentHashMap(songCacheData)
         private val unusedSongIds = concurrentSetOf(songCacheData.values.map { it.id })
         private val unusedArtwork = concurrentSetOf(artworkKeys)
         private val unusedLyrics = concurrentSetOf(lyricsKeys)
+        private val unusedLyricsMtimes = concurrentSetOf(lyricsMtimeKeys)
         private val unusedDirArt = concurrentSetOf(existingDirArtwork.keys)
 
         fun markSongSeen(song: Song) {
@@ -83,7 +85,10 @@ class MediaExposer(private val symphony: Symphony) {
         }
 
         fun removeArtwork(file: String) = unusedArtwork.remove(file)
-        fun markLyricsSeen(key: String) = unusedLyrics.remove(key)
+        fun markLyricsSeen(key: String) {
+            unusedLyrics.remove(key)
+            unusedLyricsMtimes.remove(key)
+        }
         fun markDirArtworkSeen(parentPath: String) = unusedDirArt.remove(parentPath)
 
         suspend fun prune(symphony: Symphony) {
@@ -105,6 +110,11 @@ class MediaExposer(private val symphony: Symphony) {
                 Logger.warn("MediaExposer", "trim lyrics cache failed", err)
             }
             try {
+                symphony.database.lyricsMtimeCache.delete(unusedLyricsMtimes)
+            } catch (err: Exception) {
+                Logger.warn("MediaExposer", "trim lyrics mtime cache failed", err)
+            }
+            try {
                 symphony.database.directoryArtworkCache.delete(unusedDirArt)
             } catch (err: Exception) {
                 Logger.warn("MediaExposer", "trim directory artwork cache failed", err)
@@ -118,6 +128,7 @@ class MediaExposer(private val symphony: Symphony) {
                     songCacheData = songCache,
                     artworkKeys = symphony.database.artworkCache.all(),
                     lyricsKeys = symphony.database.lyricsCache.keys(),
+                    lyricsMtimeKeys = symphony.database.lyricsMtimeCache.keys(),
                     existingDirArtwork = symphony.database.directoryArtworkCache.entries(),
                 )
             }
@@ -357,12 +368,16 @@ class MediaExposer(private val symphony: Symphony) {
     ) {
         uris[path.pathString] = file.uri
         explorer.addChildFile(path)
+        val key = path.pathString.substringBeforeLast('.', path.pathString)
+        pruner.markLyricsSeen(key)
+        val lastModified = file.lastModified
+        val cachedMtime = symphony.database.lyricsMtimeCache.get(key)?.toLongOrNull()
+        if (cachedMtime == lastModified) return
         try {
             val lyricsContent = symphony.applicationContext.contentResolver.openInputStream(file.uri)?.bufferedReader()?.use { it.readText() }
             if (lyricsContent != null) {
-                val key = path.pathString.substringBeforeLast('.', path.pathString)
                 symphony.database.lyricsCache.put(key, lyricsContent)
-                pruner.markLyricsSeen(key)
+                symphony.database.lyricsMtimeCache.put(key, lastModified.toString())
             }
         } catch (e: Exception) {
             Logger.error("MediaExposer", "Failed to read or cache LRC file: ${path.pathString}", e)
@@ -387,6 +402,7 @@ class MediaExposer(private val symphony: Symphony) {
         symphony.database.songCache.clear()
         symphony.database.artworkCache.clear()
         symphony.database.lyricsCache.clear()
+        symphony.database.lyricsMtimeCache.clear()
         symphony.database.directoryArtworkCache.clear()
         emitSongs(emptyList())
         emitUpdate(false)

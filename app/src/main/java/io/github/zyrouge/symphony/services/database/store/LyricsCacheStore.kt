@@ -3,10 +3,10 @@ package io.github.zyrouge.symphony.services.database.store
 import io.github.zyrouge.symphony.Symphony
 import io.github.zyrouge.symphony.services.database.adapters.SQLiteKeyValueDatabaseAdapter
 
-class LyricsCacheStore(val symphony: Symphony) {
+class LyricsCacheStore(val symphony: Symphony, name: String = "lyrics") {
     private val adapter = SQLiteKeyValueDatabaseAdapter(
         SQLiteKeyValueDatabaseAdapter.Transformer.AsString(),
-        SQLiteKeyValueDatabaseAdapter.CacheOpenHelper(symphony.applicationContext, "lyrics", 1)
+        SQLiteKeyValueDatabaseAdapter.CacheOpenHelper(symphony.applicationContext, name, 1)
     )
 
     fun get(key: String) = adapter.get(key)
