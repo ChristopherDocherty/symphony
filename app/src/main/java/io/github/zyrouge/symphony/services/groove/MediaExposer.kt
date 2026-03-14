@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -146,7 +147,7 @@ class MediaExposer(private val symphony: Symphony) {
             scanTotalFiles.set(0)
             emitScanProgress()
 
-            val allFiles = mutableListOf<Pair<SimplePath, DocumentFileX>>()
+            val allFiles = ConcurrentLinkedQueue<Pair<SimplePath, DocumentFileX>>()
             for (uri in folderUris) {
                 ActivityUtils.makePersistableReadWriteUri(context, uri)
                 val docFile = DocumentFileX.fromTreeUri(context, uri) ?: continue
@@ -195,14 +196,20 @@ class MediaExposer(private val symphony: Symphony) {
         filter: MediaFilter,
         path: SimplePath,
         dir: DocumentFileX,
-        into: MutableList<Pair<SimplePath, DocumentFileX>>,
+        into: ConcurrentLinkedQueue<Pair<SimplePath, DocumentFileX>>,
     ) {
         if (!filter.isWhitelisted(path.pathString)) return
         try {
-            for (child in dir.list()) {
-                val childPath = path.join(child.name)
-                if (child.isDirectory) collectFiles(filter, childPath, child, into)
-                else into.add(childPath to child)
+            coroutineScope {
+                dir.list().map { child ->
+                    val childPath = path.join(child.name)
+                    if (child.isDirectory) {
+                        async(Dispatchers.IO) { collectFiles(filter, childPath, child, into) }
+                    } else {
+                        into.add(childPath to child)
+                        null
+                    }
+                }.filterNotNull().awaitAll()
             }
         } catch (err: Exception) {
             Logger.error("MediaExposer", "collectFiles failed for ${path.pathString}", err)
