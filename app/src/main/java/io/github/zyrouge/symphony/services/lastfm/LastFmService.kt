@@ -238,11 +238,15 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
             var completed = 0
             _refreshProgress.value = RefreshProgress(0, total)
 
-            // Sum across all artists for multi-artist albums.
+            // Sum across all artists for multi-artist albums. For VA compilations, Last.fm
+            // stores the album under "Various Artists" as a canonical entity, so query that
+            // directly rather than summing per individual track artist.
             for (albumId in albumIds) {
                 val album = symphony.groove.album.get(albumId) ?: continue
                 var totalCount: Long? = null
-                for (artist in album.artists) {
+                val vaArtist = album.albumArtists.firstOrNull { it.equals("Various Artists", ignoreCase = true) }
+                val artistsToQuery = if (vaArtist != null) listOf(vaArtist) else album.artists.toList()
+                for (artist in artistsToQuery) {
                     val count = fetchAlbumScrobbles(artist, album.name, username, apiKey)
                     if (count != null) totalCount = (totalCount ?: 0L) + count
                     delay(100) // 10 req/sec
@@ -294,7 +298,9 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
             for (albumId in albumIds) {
                 val album = symphony.groove.album.get(albumId) ?: continue
                 var totalCount: Long? = null
-                for (artist in album.artists) {
+                val vaArtist = album.albumArtists.firstOrNull { it.equals("Various Artists", ignoreCase = true) }
+                val artistsToQuery = if (vaArtist != null) listOf(vaArtist) else album.artists.toList()
+                for (artist in artistsToQuery) {
                     val count = fetchAlbumScrobbles(artist, album.name, username, apiKey)
                     if (count != null) totalCount = (totalCount ?: 0L) + count
                     delay(100) // 10 req/sec
@@ -342,7 +348,7 @@ class LastFmService(private val symphony: Symphony) : Symphony.Hooks {
             if (json.has("error")) return 0L
             json.getJSONObject("album").getString("userplaycount").toLongOrNull()
         } catch (err: Exception) {
-            Logger.warn("LastFmService", "fetchAlbumScrobbles failed for $album", err)
+            Logger.warn("LastFmService", "fetchAlbumScrobbles failed for artist=$artist album=$album", err)
             null
         }
     }
