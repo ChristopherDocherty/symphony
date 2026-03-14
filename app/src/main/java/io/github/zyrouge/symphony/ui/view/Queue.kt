@@ -190,8 +190,11 @@ fun QueueView(context: ViewContext) {
                                             if (editMode) {
                                                 IconButton(
                                                     onClick = {
-                                                        localQueue.removeAt(i)
-                                                        context.symphony.radio.queue.remove(i)
+                                                        val idx = localQueue.indexOfFirst { it.key == entry.key }
+                                                        if (idx != -1) {
+                                                            localQueue.removeAt(idx)
+                                                            context.symphony.radio.queue.remove(idx)
+                                                        }
                                                     }
                                                 ) {
                                                     Icon(
