@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.zyrouge.symphony.ui.components.SongDropdownMenu
@@ -77,95 +78,163 @@ fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData, states: No
 
     data.run {
         Column {
-            Row {
-                AnimatedContent(
-                    label = "now-playing-body-content",
-                    modifier = Modifier.weight(1f),
-                    targetState = song,
-                    transitionSpec = {
-                        FadeTransition.enterTransition()
-                            .togetherWith(FadeTransition.exitTransition())
-                    },
-                ) { targetStateSong ->
-                    Column(modifier = Modifier.padding(defaultHorizontalPadding, 0.dp)) {
-                        Text(
-                            targetStateSong.title,
-                            style = MaterialTheme.typography.headlineSmall
-                                .copy(fontWeight = FontWeight.Bold),
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
+            val abLoopActive by context.symphony.radio.abLoop.isActive.collectAsState()
+            val songInfoButtons: @Composable () -> Unit = {
+                IconButton(
+                    modifier = Modifier.offset(4.dp),
+                    onClick = {
+                        context.symphony.groove.playlist.run {
+                            when {
+                                isFavorite -> unfavorite(song.id)
+                                else -> favorite(song.id)
+                            }
+                        }
+                    }
+                ) {
+                    when {
+                        isFavorite -> Icon(
+                            Icons.Filled.Favorite,
+                            null,
+                            tint = MaterialTheme.colorScheme.primary,
                         )
-                        if (targetStateSong.artists.isNotEmpty()) {
-                            FlowRow {
-                                targetStateSong.artists.forEachIndexed { i, it ->
-                                    Text(
-                                        it,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.pointerInput(Unit) {
-                                            detectTapGestures { _ ->
-                                                context.navController.navigate(ArtistViewRoute(it))
-                                            }
-                                        },
-                                    )
-                                    if (i != targetStateSong.artists.size - 1) {
-                                        Text(", ")
+
+                        else -> Icon(Icons.Filled.FavoriteBorder, null)
+                    }
+                }
+
+                var showOptionsMenu by remember { mutableStateOf(false) }
+                IconButton(
+                    onClick = {
+                        showOptionsMenu = !showOptionsMenu
+                    }
+                ) {
+                    Icon(Icons.Filled.MoreVert, null)
+                    SongDropdownMenu(
+                        context,
+                        song,
+                        isFavorite = isFavorite,
+                        expanded = showOptionsMenu,
+                        onDismissRequest = {
+                            showOptionsMenu = false
+                        }
+                    )
+                }
+            }
+            if (abLoopActive) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    AnimatedContent(
+                        label = "now-playing-body-content",
+                        modifier = Modifier.fillMaxWidth(),
+                        targetState = song,
+                        transitionSpec = {
+                            FadeTransition.enterTransition()
+                                .togetherWith(FadeTransition.exitTransition())
+                        },
+                    ) { targetStateSong ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(defaultHorizontalPadding, 0.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                targetStateSong.title,
+                                style = MaterialTheme.typography.headlineSmall
+                                    .copy(fontWeight = FontWeight.Bold),
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center,
+                            )
+                            if (targetStateSong.artists.isNotEmpty()) {
+                                FlowRow(horizontalArrangement = Arrangement.Center) {
+                                    targetStateSong.artists.forEachIndexed { i, it ->
+                                        Text(
+                                            it,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.pointerInput(Unit) {
+                                                detectTapGestures { _ ->
+                                                    context.navController.navigate(ArtistViewRoute(it))
+                                                }
+                                            },
+                                        )
+                                        if (i != targetStateSong.artists.size - 1) {
+                                            Text(", ")
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (data.showSongAdditionalInfo) {
-                            targetStateSong.toSamplingInfoString(context.symphony)?.let {
-                                val localContentColor = LocalContentColor.current
-                                Text(
-                                    it,
-                                    style = MaterialTheme.typography.labelSmall
-                                        .copy(color = localContentColor.copy(alpha = 0.7f)),
-                                    modifier = Modifier.padding(top = 4.dp),
-                                )
-                            }
-                        }
-                    }
-                }
-                Row {
-                    IconButton(
-                        modifier = Modifier.offset(4.dp),
-                        onClick = {
-                            context.symphony.groove.playlist.run {
-                                when {
-                                    isFavorite -> unfavorite(song.id)
-                                    else -> favorite(song.id)
+                            if (data.showSongAdditionalInfo) {
+                                targetStateSong.toSamplingInfoString(context.symphony)?.let {
+                                    val localContentColor = LocalContentColor.current
+                                    Text(
+                                        it,
+                                        style = MaterialTheme.typography.labelSmall
+                                            .copy(color = localContentColor.copy(alpha = 0.7f)),
+                                        modifier = Modifier.padding(top = 4.dp),
+                                        textAlign = TextAlign.Center,
+                                    )
                                 }
                             }
                         }
-                    ) {
-                        when {
-                            isFavorite -> Icon(
-                                Icons.Filled.Favorite,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
+                    }
+                    Row(modifier = Modifier.align(Alignment.CenterEnd)) {
+                        songInfoButtons()
+                    }
+                }
+            } else {
+                Row {
+                    AnimatedContent(
+                        label = "now-playing-body-content",
+                        modifier = Modifier.weight(1f),
+                        targetState = song,
+                        transitionSpec = {
+                            FadeTransition.enterTransition()
+                                .togetherWith(FadeTransition.exitTransition())
+                        },
+                    ) { targetStateSong ->
+                        Column(modifier = Modifier.padding(defaultHorizontalPadding, 0.dp)) {
+                            Text(
+                                targetStateSong.title,
+                                style = MaterialTheme.typography.headlineSmall
+                                    .copy(fontWeight = FontWeight.Bold),
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
                             )
-
-                            else -> Icon(Icons.Filled.FavoriteBorder, null)
+                            if (targetStateSong.artists.isNotEmpty()) {
+                                FlowRow {
+                                    targetStateSong.artists.forEachIndexed { i, it ->
+                                        Text(
+                                            it,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.pointerInput(Unit) {
+                                                detectTapGestures { _ ->
+                                                    context.navController.navigate(ArtistViewRoute(it))
+                                                }
+                                            },
+                                        )
+                                        if (i != targetStateSong.artists.size - 1) {
+                                            Text(", ")
+                                        }
+                                    }
+                                }
+                            }
+                            if (data.showSongAdditionalInfo) {
+                                targetStateSong.toSamplingInfoString(context.symphony)?.let {
+                                    val localContentColor = LocalContentColor.current
+                                    Text(
+                                        it,
+                                        style = MaterialTheme.typography.labelSmall
+                                            .copy(color = localContentColor.copy(alpha = 0.7f)),
+                                        modifier = Modifier.padding(top = 4.dp),
+                                    )
+                                }
+                            }
                         }
                     }
-
-                    var showOptionsMenu by remember { mutableStateOf(false) }
-                    IconButton(
-                        onClick = {
-                            showOptionsMenu = !showOptionsMenu
-                        }
-                    ) {
-                        Icon(Icons.Filled.MoreVert, null)
-                        SongDropdownMenu(
-                            context,
-                            song,
-                            isFavorite = isFavorite,
-                            expanded = showOptionsMenu,
-                            onDismissRequest = {
-                                showOptionsMenu = false
-                            }
-                        )
+                    Row {
+                        songInfoButtons()
                     }
                 }
             }
@@ -173,13 +242,14 @@ fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData, states: No
             when (controlsLayout) {
                 NowPlayingControlsLayout.CONTROLS_COMPACT_LEFT -> NowPlayingCompactControls(
                     context,
-                    data = data
+                    data = data,
+                    modifier = if (abLoopActive) Modifier.align(Alignment.CenterHorizontally) else Modifier
                 )
 
                 NowPlayingControlsLayout.CONTROLS_COMPACT_RIGHT -> NowPlayingCompactControls(
                     context,
                     data = data,
-                    modifier = Modifier.align(Alignment.End)
+                    modifier = if (abLoopActive) Modifier.align(Alignment.CenterHorizontally) else Modifier.align(Alignment.End)
                 )
 
                 else -> NowPlayingTraditionalControls(
@@ -188,7 +258,6 @@ fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData, states: No
                 )
             }
             Spacer(modifier = Modifier.height(defaultHorizontalPadding + 8.dp))
-            val abLoopActive by context.symphony.radio.abLoop.isActive.collectAsState()
             if (abLoopActive) {
                 AbLoopSeekBar(context, context.symphony.radio.abLoop, song.duration)
             } else {
