@@ -139,6 +139,19 @@ Also in `LastFmSettingsView.kt`, below the auth section. SAF directory picker (s
 ### Zap Tab
 `ZapView` (in `ui/view/home/Zap.kt`) is a home tab that plays random 5-second snippets from the library. `ZapPageState` holds `isZapping`, `playedSongs`, and `skipTick`. Playback loop uses `LaunchedEffect(isZapping, skipTick)` — Compose cancels the coroutine on any key change, so `delay(5_000L)` is interrupted immediately on Stop or Skip; auto-advance increments `skipTick` after the delay. Each snippet starts at a random position in the middle 80% of the song (10%–90% of `song.duration`) passed via `Radio.PlayOptions(startPosition = ...)` to `queue.add()`.
 
+### A-B Loop (NowPlaying)
+`AbLoopState` (in `nowPlaying/AbLoopSeekBar.kt`) is held in `NowPlayingStates.abLoop` and created in `NowPlayingBody`'s `remember` block. It exposes `isActive`, `startMs`, `endMs` as `MutableStateFlow`s. `activate(songDuration)` sets start=0/end=duration and sets active; `deactivate()` clears active. `LaunchedEffect(data.song.id)` in `NowPlayingBodyContent` calls `deactivate()` on song change.
+
+When active:
+- Album art is hidden in both portrait and landscape (`Body.kt` gates the cover `Box` on `!abLoopActive`).
+- `NowPlayingBodyContent` renders `AbLoopSeekBar` instead of `NowPlayingSeekBar`.
+- `AbLoopSeekBar` layout (top to bottom): drum-roll time pickers for A and B, then the seek track with played/total time labels.
+- Loop enforcement: `LaunchedEffect(playbackPosition.played)` inside `AbLoopSeekBar` calls `radio.seek(startMs)` when played ≥ endMs. No changes to `Radio` or `RadioObservatory` required.
+
+**Drum-roll pickers (`PickerColumn`):** `LazyColumn` with `rememberSnapFlingBehavior` (`androidx.compose.foundation.gestures.snapping`), 3 visible items, `contentPadding = PaddingValues(vertical = itemHeight)` so item 0 is centred at scroll position 0. `firstVisibleItemIndex` = selected item. `LaunchedEffect(isScrollInProgress)` reports value on settle; `LaunchedEffect(value)` scrolls to correct position when track-drag updates time externally. Each `AbLoopTimePicker` has separate columns for minutes / seconds / tenths with `:` and `.` separators.
+
+**A-B loop entry point:** `BottomBar.kt` extra-options sheet — `Icons.Outlined.Segment` icon, primary-coloured when active, supporting text "Active" / "Disabled".
+
 ### String Resources
 `app/src/main/res/values/strings.xml`. Always add new strings here rather than using literals in composables.
 
@@ -186,3 +199,4 @@ Also in `LastFmSettingsView.kt`, below the auth section. SAF directory picker (s
 | Last.fm play count store | `services/database/store/LastFmPlayCountStore.kt` |
 | Manual scrobbler home tab | `ui/view/home/ManualScrobbler.kt` |
 | Album timeline home tab | `ui/view/home/AlbumTimeline.kt` |
+| A-B loop state + seek bar | `ui/view/nowPlaying/AbLoopSeekBar.kt` (`AbLoopState`, `AbLoopSeekBar`) |
