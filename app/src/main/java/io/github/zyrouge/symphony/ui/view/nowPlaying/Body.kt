@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +34,7 @@ fun NowPlayingBody(context: ViewContext, data: NowPlayingData) {
             showLyrics = MutableStateFlow(
                 data.lyricsLayout == NowPlayingLyricsLayout.LYRICS_REPLACE_ARTWORK && NowPlayingDefaults.showLyrics
             ),
+            abLoop = AbLoopState(),
         )
     }
 
@@ -48,19 +51,22 @@ fun NowPlayingBody(context: ViewContext, data: NowPlayingData) {
                 },
                 content = { contentPadding ->
                     Box(modifier = Modifier.padding(contentPadding)) {
+                        val abLoopActive by states.abLoop.isActive.collectAsState()
                         when (orientation) {
                             ScreenOrientation.PORTRAIT -> Column(modifier = Modifier.fillMaxSize()) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth()
-                                        .padding(bottom = 20.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    NowPlayingBodyCover(context, data, states, orientation)
+                                if (!abLoopActive) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxWidth()
+                                            .padding(bottom = 20.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        NowPlayingBodyCover(context, data, states, orientation)
+                                    }
                                 }
                                 Column {
-                                    NowPlayingBodyContent(context, data)
+                                    NowPlayingBodyContent(context, data, states)
                                     NowPlayingBodyBottomBar(context, data, states)
                                 }
                             }
@@ -69,20 +75,22 @@ fun NowPlayingBody(context: ViewContext, data: NowPlayingData) {
                                 modifier = Modifier.fillMaxSize(),
                                 horizontalArrangement = Arrangement.SpaceAround,
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                        .padding(top = 12.dp, bottom = 20.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    NowPlayingBodyCover(context, data, states, orientation)
+                                if (!abLoopActive) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxHeight()
+                                            .padding(top = 12.dp, bottom = 20.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        NowPlayingBodyCover(context, data, states, orientation)
+                                    }
                                 }
                                 Box(modifier = Modifier.weight(1f)) {
                                     Column {
                                         NowPlayingLandscapeAppBar(context)
                                         Box(modifier = Modifier.weight(1f))
-                                        NowPlayingBodyContent(context, data)
+                                        NowPlayingBodyContent(context, data, states)
                                         NowPlayingBodyBottomBar(context, data, states)
                                     }
                                 }

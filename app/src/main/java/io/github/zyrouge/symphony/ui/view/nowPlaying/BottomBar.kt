@@ -52,6 +52,7 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.LyricsEditorViewRoute
 import io.github.zyrouge.symphony.ui.view.LyricsViewRoute
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Segment
 import io.github.zyrouge.symphony.ui.view.NowPlayingData
 import io.github.zyrouge.symphony.ui.view.NowPlayingDefaults
 import io.github.zyrouge.symphony.NowPlayingLyricsLayout
@@ -354,6 +355,31 @@ fun NowPlayingBodyBottomBar(
                         },
                         headlineContent = {
                             Text(stringResource(R.string.EditLyrics))
+                        },
+                    )
+                    val abLoopActive by states.abLoop.isActive.collectAsState()
+                    ListItem(
+                        modifier = Modifier.clickable {
+                            closeBottomSheet()
+                            if (abLoopActive) states.abLoop.deactivate()
+                            else states.abLoop.activate(data.song.duration)
+                        },
+                        leadingContent = {
+                            Icon(
+                                Icons.Outlined.Segment,
+                                null,
+                                tint = if (abLoopActive) MaterialTheme.colorScheme.primary
+                                else LocalContentColor.current,
+                            )
+                        },
+                        headlineContent = {
+                            Text(stringResource(R.string.AbLoop))
+                        },
+                        supportingContent = {
+                            Text(
+                                if (abLoopActive) stringResource(R.string.AbLoopActive)
+                                else stringResource(R.string.Disabled)
+                            )
                         },
                     )
                     Spacer(modifier = Modifier.height(8.dp))

@@ -13,6 +13,7 @@ import io.github.zyrouge.symphony.services.groove.Song
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NothingPlaying
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NowPlayingBody
+import io.github.zyrouge.symphony.ui.view.nowPlaying.AbLoopState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.Serializable
 
@@ -40,6 +41,7 @@ data class NowPlayingData(
 
 data class NowPlayingStates(
     val showLyrics: MutableStateFlow<Boolean>,
+    val abLoop: AbLoopState,
 )
 
 object NowPlayingDefaults {

@@ -36,6 +36,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -57,14 +58,19 @@ import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.ArtistViewRoute
 import io.github.zyrouge.symphony.NowPlayingControlsLayout
 import io.github.zyrouge.symphony.ui.view.NowPlayingData
+import io.github.zyrouge.symphony.ui.view.NowPlayingStates
 import io.github.zyrouge.symphony.utils.DurationUtils
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData) {
+fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData, states: NowPlayingStates) {
     val favoriteSongIds by context.symphony.groove.playlist.favorites.collectAsState()
     val isFavorite by remember(data) {
         derivedStateOf { favoriteSongIds.contains(data.song.id) }
+    }
+
+    LaunchedEffect(data.song.id) {
+        states.abLoop.deactivate()
     }
 
     data.run {
@@ -180,7 +186,12 @@ fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData) {
                 )
             }
             Spacer(modifier = Modifier.height(defaultHorizontalPadding + 8.dp))
-            NowPlayingSeekBar(context)
+            val abLoopActive by states.abLoop.isActive.collectAsState()
+            if (abLoopActive) {
+                AbLoopSeekBar(context, states.abLoop, song.duration)
+            } else {
+                NowPlayingSeekBar(context)
+            }
             Spacer(modifier = Modifier.height(defaultHorizontalPadding))
         }
     }

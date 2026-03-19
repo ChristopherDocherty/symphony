@@ -278,6 +278,8 @@
     <string name="DebugMode">Debug Mode</string>
     <string name="DebugModeDescription">Expose extra diagnostic filter options in the album filter dialog</string>
     <string name="EditLyrics">Edit lyrics</string>
+    <string name="AbLoop">A-B Loop</string>
+    <string name="AbLoopActive">Active</string>
     <string name="LyricsEditor">Lyrics editor</string>
     <string name="PlainText">Plain text</string>
     <string name="TimingMode">Timing</string>
