@@ -280,6 +280,8 @@
     <string name="EditLyrics">Edit lyrics</string>
     <string name="AbLoop">A-B Loop</string>
     <string name="AbLoopActive">Active</string>
+    <string name="AbLoopSeekToA">Seek to A</string>
+    <string name="AbLoopSeekToB">Seek to B−1s</string>
     <string name="LyricsEditor">Lyrics editor</string>
     <string name="PlainText">Plain text</string>
     <string name="TimingMode">Timing</string>

@@ -21,6 +21,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,6 +45,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.services.radio.AbLoopState
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.utils.DurationUtils
@@ -59,7 +65,17 @@ fun AbLoopSeekBar(context: ViewContext, state: AbLoopState, duration: Long) {
     }
 
     Column(modifier = Modifier.padding(defaultHorizontalPadding, 0.dp)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = { context.symphony.radio.seek(startMs) }) {
+                Icon(
+                    Icons.Filled.SkipPrevious,
+                    contentDescription = context.symphony.applicationContext.getString(R.string.AbLoopSeekToA),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
             AbLoopTimePicker(
                 label = "A",
                 valueMs = startMs,
@@ -69,6 +85,7 @@ fun AbLoopSeekBar(context: ViewContext, state: AbLoopState, duration: Long) {
                 },
                 modifier = Modifier.weight(1f),
             )
+            Spacer(modifier = Modifier.width(16.dp))
             AbLoopTimePicker(
                 label = "B",
                 valueMs = endMs,
@@ -78,6 +95,13 @@ fun AbLoopSeekBar(context: ViewContext, state: AbLoopState, duration: Long) {
                 },
                 modifier = Modifier.weight(1f),
             )
+            IconButton(onClick = { context.symphony.radio.seek((endMs - 1000L).coerceAtLeast(startMs)) }) {
+                Icon(
+                    Icons.Filled.SkipNext,
+                    contentDescription = context.symphony.applicationContext.getString(R.string.AbLoopSeekToB),
+                    tint = MaterialTheme.colorScheme.secondary,
+                )
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(
