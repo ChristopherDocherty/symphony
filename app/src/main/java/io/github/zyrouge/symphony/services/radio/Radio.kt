@@ -72,6 +72,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     var sleepTimer: SleepTimer? = null
     var pauseOnCurrentSongEnd = false
     var zapMode = false
+    val abLoop = AbLoopState()
 
     init {
         nativeReceiver.start()

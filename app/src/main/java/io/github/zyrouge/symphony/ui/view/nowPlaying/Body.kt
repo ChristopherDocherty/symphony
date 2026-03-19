@@ -34,7 +34,6 @@ fun NowPlayingBody(context: ViewContext, data: NowPlayingData) {
             showLyrics = MutableStateFlow(
                 data.lyricsLayout == NowPlayingLyricsLayout.LYRICS_REPLACE_ARTWORK && NowPlayingDefaults.showLyrics
             ),
-            abLoop = AbLoopState(),
         )
     }
 
@@ -51,7 +50,7 @@ fun NowPlayingBody(context: ViewContext, data: NowPlayingData) {
                 },
                 content = { contentPadding ->
                     Box(modifier = Modifier.padding(contentPadding)) {
-                        val abLoopActive by states.abLoop.isActive.collectAsState()
+                        val abLoopActive by context.symphony.radio.abLoop.isActive.collectAsState()
                         when (orientation) {
                             ScreenOrientation.PORTRAIT -> Column(modifier = Modifier.fillMaxSize()) {
                                 if (!abLoopActive) {

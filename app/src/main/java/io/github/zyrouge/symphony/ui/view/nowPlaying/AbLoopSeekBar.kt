@@ -40,26 +40,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.zyrouge.symphony.services.radio.AbLoopState
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.utils.DurationUtils
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.math.abs
-
-class AbLoopState {
-    val isActive = MutableStateFlow(false)
-    val startMs = MutableStateFlow(0L)
-    val endMs = MutableStateFlow(0L)
-
-    fun activate(songDuration: Long) {
-        startMs.value = 0L
-        endMs.value = songDuration
-        isActive.value = true
-    }
-
-    fun deactivate() {
-        isActive.value = false
-    }
-}
 
 @Composable
 fun AbLoopSeekBar(context: ViewContext, state: AbLoopState, duration: Long) {

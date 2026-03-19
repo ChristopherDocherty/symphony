@@ -69,8 +69,10 @@ fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData, states: No
         derivedStateOf { favoriteSongIds.contains(data.song.id) }
     }
 
+    val isFirstCompose = remember { mutableStateOf(true) }
     LaunchedEffect(data.song.id) {
-        states.abLoop.deactivate()
+        if (isFirstCompose.value) isFirstCompose.value = false
+        else context.symphony.radio.abLoop.deactivate()
     }
 
     data.run {
@@ -186,9 +188,9 @@ fun NowPlayingBodyContent(context: ViewContext, data: NowPlayingData, states: No
                 )
             }
             Spacer(modifier = Modifier.height(defaultHorizontalPadding + 8.dp))
-            val abLoopActive by states.abLoop.isActive.collectAsState()
+            val abLoopActive by context.symphony.radio.abLoop.isActive.collectAsState()
             if (abLoopActive) {
-                AbLoopSeekBar(context, states.abLoop, song.duration)
+                AbLoopSeekBar(context, context.symphony.radio.abLoop, song.duration)
             } else {
                 NowPlayingSeekBar(context)
             }

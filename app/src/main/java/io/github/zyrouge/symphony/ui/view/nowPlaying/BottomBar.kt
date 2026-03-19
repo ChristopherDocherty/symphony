@@ -357,12 +357,12 @@ fun NowPlayingBodyBottomBar(
                             Text(stringResource(R.string.EditLyrics))
                         },
                     )
-                    val abLoopActive by states.abLoop.isActive.collectAsState()
+                    val abLoopActive by context.symphony.radio.abLoop.isActive.collectAsState()
                     ListItem(
                         modifier = Modifier.clickable {
                             closeBottomSheet()
-                            if (abLoopActive) states.abLoop.deactivate()
-                            else states.abLoop.activate(data.song.duration)
+                            if (abLoopActive) context.symphony.radio.abLoop.deactivate()
+                            else context.symphony.radio.abLoop.activate(data.song.duration)
                         },
                         leadingContent = {
                             Icon(
