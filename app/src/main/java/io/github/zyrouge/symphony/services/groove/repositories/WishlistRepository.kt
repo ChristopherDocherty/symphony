@@ -96,6 +96,7 @@ class WishlistRepository(private val symphony: Symphony) {
                             val albumName = obj.getString("name")
                             val year = if (obj.has("year")) obj.getInt("year") else null
                             val priority = obj.optInt("priority", 0)
+                            val pending = obj.optBoolean("pending", false)
                             val listingsArray = obj.optJSONArray("listings")
                             val listings = mutableListOf<WishlistListing>()
                             if (listingsArray != null) {
@@ -114,6 +115,7 @@ class WishlistRepository(private val symphony: Symphony) {
                                     name = albumName,
                                     year = year,
                                     priority = priority,
+                                    pending = pending,
                                     dirDocId = docId,
                                     artworkUri = artworkUri,
                                     listings = listings,
@@ -141,7 +143,7 @@ class WishlistRepository(private val symphony: Symphony) {
         _all.update { emptyList() }
     }
 
-    suspend fun add(artist: String, name: String, year: Int?, priority: Int, artUrl: String?) {
+    suspend fun add(artist: String, name: String, year: Int?, priority: Int, pending: Boolean, artUrl: String?) {
         val dirString = symphony.settingsState.value.wishlistDir
         if (dirString.isBlank()) return
         val cr = symphony.applicationContext.contentResolver
@@ -156,7 +158,7 @@ class WishlistRepository(private val symphony: Symphony) {
         val newDirDocId = DocumentsContract.getDocumentId(newDirUri)
 
         val id = UUID.randomUUID().toString()
-        writeAlbumJson(cr, newDirUri, id, artist, name, year, priority)
+        writeAlbumJson(cr, newDirUri, id, artist, name, year, priority, pending)
 
         var artworkUri: Uri? = null
         if (!artUrl.isNullOrBlank()) {
@@ -173,6 +175,7 @@ class WishlistRepository(private val symphony: Symphony) {
             name = name,
             year = year,
             priority = priority,
+            pending = pending,
             dirDocId = newDirDocId,
             artworkUri = artworkUri,
         )
@@ -180,7 +183,7 @@ class WishlistRepository(private val symphony: Symphony) {
         _all.update { it + id }
     }
 
-    suspend fun update(id: String, artist: String, name: String, year: Int?, priority: Int, artUrl: String?) {
+    suspend fun update(id: String, artist: String, name: String, year: Int?, priority: Int, pending: Boolean, artUrl: String?) {
         val existing = cache[id] ?: return
         val dirString = symphony.settingsState.value.wishlistDir
         if (dirString.isBlank()) return
@@ -214,7 +217,7 @@ class WishlistRepository(private val symphony: Symphony) {
         }
 
         jsonDocUri?.let { uri ->
-            val json = buildAlbumJson(id, artist, name, year, priority, existing.listings)
+            val json = buildAlbumJson(id, artist, name, year, priority, pending, existing.listings)
             cr.openOutputStream(uri, "wt")?.use { it.write(json.toByteArray()) }
         }
 
@@ -232,6 +235,7 @@ class WishlistRepository(private val symphony: Symphony) {
             name = name,
             year = year,
             priority = priority,
+            pending = pending,
             artworkUri = artworkUri,
             listings = existing.listings,
         )
@@ -286,7 +290,7 @@ class WishlistRepository(private val symphony: Symphony) {
             jsonDocUri = DocumentsContract.createDocument(cr, dirDocUri, "application/json", "album.json")
         }
         jsonDocUri?.let { uri ->
-            val json = buildAlbumJson(existing.id, existing.artist, existing.name, existing.year, existing.priority, listings)
+            val json = buildAlbumJson(existing.id, existing.artist, existing.name, existing.year, existing.priority, existing.pending, listings)
             cr.openOutputStream(uri, "wt")?.use { it.write(json.toByteArray()) }
         }
         cache[id] = existing.copy(listings = listings)
@@ -299,7 +303,13 @@ class WishlistRepository(private val symphony: Symphony) {
             WishlistSortBy.WISHLIST_SORT_ARTIST -> albumIds.sortedBy { cache[it]?.artist?.withCase(sensitive) }
             WishlistSortBy.WISHLIST_SORT_NAME -> albumIds.sortedBy { cache[it]?.name?.withCase(sensitive) }
             WishlistSortBy.WISHLIST_SORT_YEAR -> albumIds.sortedBy { cache[it]?.year }
-            WishlistSortBy.WISHLIST_SORT_PRIORITY -> albumIds.sortedBy { val p = cache[it]?.priority ?: -1; if (p < 0) Int.MAX_VALUE else p }
+            WishlistSortBy.WISHLIST_SORT_PRIORITY -> albumIds.sortedWith(Comparator { a, b ->
+                val albumA = cache[a]
+                val albumB = cache[b]
+                val keyA = if (albumA?.pending == true) -1 else { val p = albumA?.priority ?: -1; if (p < 0) Int.MAX_VALUE else p }
+                val keyB = if (albumB?.pending == true) -1 else { val p = albumB?.priority ?: -1; if (p < 0) Int.MAX_VALUE else p }
+                keyA.compareTo(keyB)
+            })
             else -> albumIds
         }
         return if (reverse) sorted.reversed() else sorted
@@ -322,6 +332,7 @@ class WishlistRepository(private val symphony: Symphony) {
         name: String,
         year: Int?,
         priority: Int,
+        pending: Boolean = false,
         listings: List<WishlistListing> = emptyList(),
     ): String {
         val obj = JSONObject()
@@ -330,6 +341,7 @@ class WishlistRepository(private val symphony: Symphony) {
         obj.put("name", name)
         year?.let { obj.put("year", it) }
         obj.put("priority", priority)
+        if (pending) obj.put("pending", true)
         if (listings.isNotEmpty()) {
             val arr = JSONArray()
             listings.forEach { listing ->
@@ -351,10 +363,11 @@ class WishlistRepository(private val symphony: Symphony) {
         name: String,
         year: Int?,
         priority: Int,
+        pending: Boolean = false,
     ) {
         val jsonUri = DocumentsContract.createDocument(cr, dirUri, "application/json", "album.json")
             ?: error("Failed to create album.json")
-        val json = buildAlbumJson(id, artist, name, year, priority)
+        val json = buildAlbumJson(id, artist, name, year, priority, pending)
         cr.openOutputStream(jsonUri, "wt")?.use { it.write(json.toByteArray()) }
             ?: error("Failed to write album.json")
     }

@@ -117,10 +117,14 @@ fun WishlistAlbumTile(
                     overflow = TextOverflow.Ellipsis,
                 )
                 val meta = buildString {
-                    album.year?.let { append(it.toString()) }
-                    if (album.priority >= 0) {
-                        if (isNotEmpty()) append(" · ")
-                        append("P${album.priority}")
+                    if (album.pending) {
+                        append(stringResource(R.string.Pending))
+                    } else {
+                        album.year?.let { append(it.toString()) }
+                        if (album.priority >= 0) {
+                            if (isNotEmpty()) append(" · ")
+                            append("P${album.priority}")
+                        }
                     }
                 }
                 if (meta.isNotEmpty()) {
@@ -130,6 +134,7 @@ fun WishlistAlbumTile(
                         textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        color = if (album.pending) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -178,10 +183,11 @@ fun WishlistGrid(context: ViewContext, albumIds: List<String>, pageState: Wishli
     var editAlbumId by remember { mutableStateOf<String?>(null) }
     var deleteAlbumId by remember { mutableStateOf<String?>(null) }
     val noPriorityLabel = stringResource(R.string.NoPriority)
-    val groupedAlbumIds by remember(sortedAlbumIds, groupBy, noPriorityLabel) {
+    val pendingLabel = stringResource(R.string.Pending)
+    val groupedAlbumIds by remember(sortedAlbumIds, groupBy, noPriorityLabel, pendingLabel) {
         derivedStateOf {
             if (groupBy == WishlistGroupBy.WISHLIST_GROUP_PRIORITY) {
-                groupWishlistByPriority(context, sortedAlbumIds, noPriorityLabel)
+                groupWishlistByPriority(context, sortedAlbumIds, noPriorityLabel, pendingLabel)
             } else null
         }
     }
@@ -477,15 +483,24 @@ private fun groupWishlistByPriority(
     context: ViewContext,
     sortedIds: List<String>,
     noPriorityLabel: String,
+    pendingLabel: String,
 ): List<Pair<String, List<String>>> {
     val grouped = sortedIds.groupBy { id ->
-        val priority = context.symphony.groove.wishlist.get(id)?.priority ?: -1
-        if (priority < 0) noPriorityLabel else "P$priority"
+        val album = context.symphony.groove.wishlist.get(id)
+        when {
+            album?.pending == true -> pendingLabel
+            (album?.priority ?: -1) < 0 -> noPriorityLabel
+            else -> "P${album!!.priority}"
+        }
     }
     val numericKeys = grouped.keys
-        .filter { it != noPriorityLabel }
+        .filter { it != noPriorityLabel && it != pendingLabel }
         .sortedBy { it.removePrefix("P").toIntOrNull() ?: Int.MAX_VALUE }
-    val ordered = if (noPriorityLabel in grouped) numericKeys + noPriorityLabel else numericKeys
+    val ordered = buildList {
+        if (pendingLabel in grouped) add(pendingLabel)
+        addAll(numericKeys)
+        if (noPriorityLabel in grouped) add(noPriorityLabel)
+    }
     return ordered.map { key -> key to (grouped[key] ?: emptyList()) }
 }
 

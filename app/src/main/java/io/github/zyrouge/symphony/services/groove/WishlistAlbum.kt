@@ -13,6 +13,7 @@ data class WishlistAlbum(
     val name: String,
     val year: Int?,
     val priority: Int,
+    val pending: Boolean = false,
     val dirDocId: String,
     val artworkUri: Uri?,
     val listings: List<WishlistListing> = emptyList(),

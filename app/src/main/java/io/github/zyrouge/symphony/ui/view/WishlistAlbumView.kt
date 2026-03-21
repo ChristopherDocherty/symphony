@@ -161,18 +161,26 @@ fun WishlistAlbumView(context: ViewContext, route: WishlistAlbumViewRoute) {
                                     fontWeight = FontWeight.Bold,
                                 ),
                             )
-                            val meta = buildString {
-                                it.year?.let { y -> append(y.toString()) }
-                                if (it.priority >= 0) {
-                                    if (isNotEmpty()) append(" · ")
-                                    append("P${it.priority}")
-                                }
-                            }
-                            if (meta.isNotEmpty()) {
+                            if (it.pending) {
                                 Text(
-                                    meta,
+                                    stringResource(R.string.Pending),
                                     style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
                                 )
+                            } else {
+                                val meta = buildString {
+                                    it.year?.let { y -> append(y.toString()) }
+                                    if (it.priority >= 0) {
+                                        if (isNotEmpty()) append(" · ")
+                                        append("P${it.priority}")
+                                    }
+                                }
+                                if (meta.isNotEmpty()) {
+                                    Text(
+                                        meta,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
                             }
                         }
 

@@ -1,6 +1,7 @@
 package io.github.zyrouge.symphony.ui.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,6 +52,7 @@ fun BulkWishlistEditDialog(
     val distinctPriorities = remember(albums) {
         albums.map { it.priority.takeIf { p -> p >= 0 }?.toString() ?: "" }.distinct()
     }
+    val distinctPending = remember(albums) { albums.map { it.pending }.distinct() }
 
     var artist by remember {
         mutableStateOf(if (distinctArtists.size == 1) distinctArtists[0] else "")
@@ -61,6 +65,9 @@ fun BulkWishlistEditDialog(
     }
     var priorityText by remember {
         mutableStateOf(if (distinctPriorities.size == 1) distinctPriorities[0] else "")
+    }
+    var pending by remember {
+        mutableStateOf(if (distinctPending.size == 1) distinctPending[0] else false)
     }
 
     var isSaving by remember { mutableStateOf(false) }
@@ -120,6 +127,20 @@ fun BulkWishlistEditDialog(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.Pending),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = pending,
+                        onCheckedChange = { pending = it },
+                    )
+                }
                 errorMessage?.let { msg ->
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(msg, color = MaterialTheme.colorScheme.error)
@@ -144,6 +165,7 @@ fun BulkWishlistEditDialog(
                                     name = albumName.takeIf { it.isNotBlank() } ?: album.name,
                                     year = yearText.toIntOrNull() ?: album.year,
                                     priority = priorityText.toIntOrNull() ?: album.priority,
+                                    pending = pending,
                                     artUrl = null,
                                 )
                             }

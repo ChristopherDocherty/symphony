@@ -4,6 +4,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -58,6 +60,7 @@ fun AddWishlistAlbumDialog(
     var albumName by remember { mutableStateOf(existingAlbum?.name ?: "") }
     var yearText by remember { mutableStateOf(existingAlbum?.year?.toString() ?: "") }
     var priorityText by remember { mutableStateOf(existingAlbum?.priority?.takeIf { it >= 0 }?.toString() ?: "") }
+    var pending by remember { mutableStateOf(existingAlbum?.pending ?: false) }
     var artUrl by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
@@ -149,6 +152,21 @@ fun AddWishlistAlbumDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.Pending),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = pending,
+                        onCheckedChange = { pending = it },
+                        enabled = !isSaving,
+                    )
+                }
+
                 OutlinedButton(
                     onClick = {
                         clipboardManager.setText(AnnotatedString(albumName))
@@ -207,12 +225,12 @@ fun AddWishlistAlbumDialog(
                         try {
                             if (isEdit) {
                                 context.symphony.groove.wishlist.update(
-                                    existingAlbum.id, artist, albumName, year, priority,
+                                    existingAlbum.id, artist, albumName, year, priority, pending,
                                     artUrl.trim().takeIf { it.isNotBlank() },
                                 )
                             } else {
                                 context.symphony.groove.wishlist.add(
-                                    artist, albumName, year, priority,
+                                    artist, albumName, year, priority, pending,
                                     artUrl.trim().takeIf { it.isNotBlank() },
                                 )
                             }
