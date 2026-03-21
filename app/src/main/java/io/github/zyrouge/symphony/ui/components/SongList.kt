@@ -200,7 +200,7 @@ fun SongList(
         if (pageState?.showBulkEditDialog == true && pageState.selectedSongIds.isNotEmpty()) {
             BulkSongEditDialog(
                 context = context,
-                songIds = pageState.selectedSongIds.toList(),
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
                 onDismissRequest = { pageState.showBulkEditDialog = false },
             )
         }
@@ -208,7 +208,7 @@ fun SongList(
         if (pageState?.showAutoNumberDialog == true && pageState.selectedSongIds.isNotEmpty()) {
             AutoNumberWizardDialog(
                 context = context,
-                songIds = pageState.selectedSongIds.toList(),
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
                 onDismissRequest = {
                     pageState.showAutoNumberDialog = false
                     pageState.exitMultiSelect()
@@ -219,7 +219,7 @@ fun SongList(
         if (pageState?.showRenameDialog == true && pageState.selectedSongIds.isNotEmpty()) {
             RenameFromTagsDialog(
                 context = context,
-                songIds = pageState.selectedSongIds.toList(),
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
                 onDismissRequest = {
                     pageState.showRenameDialog = false
                     pageState.exitMultiSelect()
