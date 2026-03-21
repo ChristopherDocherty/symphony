@@ -4,7 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
@@ -13,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -21,11 +25,14 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -50,6 +57,7 @@ import io.github.zyrouge.symphony.services.groove.WishlistAlbum
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.theme.ThemeColors
 import io.github.zyrouge.symphony.ui.view.WishlistAlbumViewRoute
+import io.github.zyrouge.symphony.ui.view.home.WishlistPageState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -59,9 +67,13 @@ fun WishlistAlbumTile(
     context: ViewContext,
     album: WishlistAlbum,
     updateId: Long,
+    pageState: WishlistPageState?,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val isMultiSelectMode = pageState?.isMultiSelectMode == true
+    val isSelected = pageState?.selectedAlbumIds?.contains(album.id) == true
+
     SquareGrooveTile(
         image = remember(updateId, album.id) {
             context.symphony.groove.wishlist.createArtworkImageRequest(album.id)
@@ -123,14 +135,24 @@ fun WishlistAlbumTile(
             }
         },
         onPlay = {},
-        onClick = { context.navController.navigate(WishlistAlbumViewRoute(album.id)) },
-        onLongClick = null,
+        onClick = {
+            if (isMultiSelectMode) {
+                pageState?.toggleSelection(album.id)
+            } else {
+                context.navController.navigate(WishlistAlbumViewRoute(album.id))
+            }
+        },
+        onLongClick = if (!isMultiSelectMode) {
+            { pageState?.enterMultiSelect(album.id) }
+        } else null,
+        isSelected = isSelected,
+        isMultiSelectMode = isMultiSelectMode,
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WishlistGrid(context: ViewContext, albumIds: List<String>) {
+fun WishlistGrid(context: ViewContext, albumIds: List<String>, pageState: WishlistPageState? = null) {
     val coroutineScope = rememberCoroutineScope()
     val updateId by context.symphony.groove.wishlist.updateId.collectAsState()
     val settings by context.symphony.settingsState.collectAsState()
@@ -144,6 +166,7 @@ fun WishlistGrid(context: ViewContext, albumIds: List<String>) {
             context.symphony.groove.wishlist.sort(albumIds, sortBy, sortReverse)
         }
     }
+    SideEffect { pageState?.sortedAlbumIds = sortedAlbumIds }
     val horizontalGridColumns = settings.wishlistHorizontalGridColumns
         .takeIf { it > 0 } ?: ResponsiveGridColumns.DEFAULT_HORIZONTAL_COLUMNS
     val verticalGridColumns = settings.wishlistVerticalGridColumns
@@ -163,58 +186,76 @@ fun WishlistGrid(context: ViewContext, albumIds: List<String>) {
         }
     }
 
-    MediaSortBarScaffold(
-        mediaSortBar = {
-            MediaSortBar(
-                context,
-                reverse = sortReverse,
-                onReverseChange = {
-                    coroutineScope.launch {
-                        context.symphony.settings.updateData { s ->
-                            s.copy { wishlistSortReverse = it }
+    Box(modifier = Modifier.fillMaxSize()) {
+        MediaSortBarScaffold(
+            mediaSortBar = {
+                MediaSortBar(
+                    context,
+                    reverse = sortReverse,
+                    onReverseChange = {
+                        coroutineScope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { wishlistSortReverse = it }
+                            }
                         }
-                    }
-                },
-                sort = sortBy,
-                sorts = WishlistSortBy.entries
-                    .filter { it != WishlistSortBy.UNRECOGNIZED }
-                    .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
-                onSortChange = {
-                    coroutineScope.launch {
-                        context.symphony.settings.updateData { s ->
-                            s.copy { wishlistSortBy = it }
+                    },
+                    sort = sortBy,
+                    sorts = WishlistSortBy.entries
+                        .filter { it != WishlistSortBy.UNRECOGNIZED }
+                        .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
+                    onSortChange = {
+                        coroutineScope.launch {
+                            context.symphony.settings.updateData { s ->
+                                s.copy { wishlistSortBy = it }
+                            }
                         }
-                    }
-                },
-                label = {
-                    Text(stringResource(R.string.XWishlistAlbums, sortedAlbumIds.size.toString()))
-                },
-                onShowModifyLayout = { showModifyLayoutSheet = true },
-            )
-        },
-        content = {
-            val currentGroupedAlbumIds = groupedAlbumIds
-            when {
-                albumIds.isEmpty() -> IconTextBody(
-                    icon = { modifier ->
-                        Icon(Icons.Filled.Bookmark, null, modifier = modifier)
                     },
-                    content = {
-                        Text(stringResource(R.string.WishlistEmpty))
+                    label = {
+                        Text(stringResource(R.string.XWishlistAlbums, sortedAlbumIds.size.toString()))
                     },
+                    onShowModifyLayout = { showModifyLayoutSheet = true },
                 )
+            },
+            content = {
+                val currentGroupedAlbumIds = groupedAlbumIds
+                when {
+                    albumIds.isEmpty() -> IconTextBody(
+                        icon = { modifier ->
+                            Icon(Icons.Filled.Bookmark, null, modifier = modifier)
+                        },
+                        content = {
+                            Text(stringResource(R.string.WishlistEmpty))
+                        },
+                    )
 
-                currentGroupedAlbumIds != null -> ResponsiveGrid(gridColumns) { _ ->
-                    currentGroupedAlbumIds.forEach { (sectionTitle, ids) ->
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            GroupSectionHeader(sectionTitle)
+                    currentGroupedAlbumIds != null -> ResponsiveGrid(gridColumns) { _ ->
+                        currentGroupedAlbumIds.forEach { (sectionTitle, ids) ->
+                            item(span = { GridItemSpan(maxLineSpan) }) {
+                                GroupSectionHeader(sectionTitle)
+                            }
+                            items(ids, key = { it }) { id ->
+                                context.symphony.groove.wishlist.get(id)?.let { album ->
+                                    WishlistAlbumTile(
+                                        context = context,
+                                        album = album,
+                                        updateId = updateId,
+                                        pageState = pageState,
+                                        onEdit = { editAlbumId = id },
+                                        onDelete = { deleteAlbumId = id },
+                                    )
+                                }
+                            }
                         }
-                        items(ids, key = { it }) { id ->
+                    }
+
+                    else -> ResponsiveGrid(gridColumns) {
+                        itemsIndexed(sortedAlbumIds, key = { i, x -> "$i-$x" }) { _, id ->
                             context.symphony.groove.wishlist.get(id)?.let { album ->
                                 WishlistAlbumTile(
                                     context = context,
                                     album = album,
                                     updateId = updateId,
+                                    pageState = pageState,
                                     onEdit = { editAlbumId = id },
                                     onDelete = { deleteAlbumId = id },
                                 )
@@ -223,68 +264,102 @@ fun WishlistGrid(context: ViewContext, albumIds: List<String>) {
                     }
                 }
 
-                else -> ResponsiveGrid(gridColumns) {
-                    itemsIndexed(sortedAlbumIds, key = { i, x -> "$i-$x" }) { _, id ->
-                        context.symphony.groove.wishlist.get(id)?.let { album ->
-                            WishlistAlbumTile(
-                                context = context,
-                                album = album,
-                                updateId = updateId,
-                                onEdit = { editAlbumId = id },
-                                onDelete = { deleteAlbumId = id },
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (showModifyLayoutSheet) {
-                WishlistGridLayoutSheet(
-                    context,
-                    columns = gridColumns,
-                    onColumnsChange = { cols ->
-                        coroutineScope.launch {
-                            context.symphony.settings.updateData { s ->
-                                s.copy {
-                                    wishlistHorizontalGridColumns = cols.horizontal
-                                    wishlistVerticalGridColumns = cols.vertical
-                                }
-                            }
-                        }
-                    },
-                    onDismissRequest = { showModifyLayoutSheet = false },
-                )
-            }
-
-            editAlbumId?.let { id ->
-                context.symphony.groove.wishlist.get(id)?.let { album ->
-                    AddWishlistAlbumDialog(
-                        context = context,
-                        existingAlbum = album,
-                        onDismissRequest = { editAlbumId = null },
-                    )
-                }
-            }
-
-            deleteAlbumId?.let { id ->
-                context.symphony.groove.wishlist.get(id)?.let { album ->
-                    ConfirmationDialog(
-                        context = context,
-                        title = { Text(stringResource(R.string.DeleteWishlistAlbum)) },
-                        description = { Text("${album.artist} – ${album.name}") },
-                        onResult = { confirmed ->
-                            deleteAlbumId = null
-                            if (confirmed) {
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    context.symphony.groove.wishlist.delete(id)
+                if (showModifyLayoutSheet) {
+                    WishlistGridLayoutSheet(
+                        context,
+                        columns = gridColumns,
+                        onColumnsChange = { cols ->
+                            coroutineScope.launch {
+                                context.symphony.settings.updateData { s ->
+                                    s.copy {
+                                        wishlistHorizontalGridColumns = cols.horizontal
+                                        wishlistVerticalGridColumns = cols.vertical
+                                    }
                                 }
                             }
                         },
+                        onDismissRequest = { showModifyLayoutSheet = false },
                     )
                 }
+
+                editAlbumId?.let { id ->
+                    context.symphony.groove.wishlist.get(id)?.let { album ->
+                        AddWishlistAlbumDialog(
+                            context = context,
+                            existingAlbum = album,
+                            onDismissRequest = { editAlbumId = null },
+                        )
+                    }
+                }
+
+                deleteAlbumId?.let { id ->
+                    context.symphony.groove.wishlist.get(id)?.let { album ->
+                        ConfirmationDialog(
+                            context = context,
+                            title = { Text(stringResource(R.string.DeleteWishlistAlbum)) },
+                            description = { Text("${album.artist} – ${album.name}") },
+                            onResult = { confirmed ->
+                                deleteAlbumId = null
+                                if (confirmed) {
+                                    coroutineScope.launch(Dispatchers.IO) {
+                                        context.symphony.groove.wishlist.delete(id)
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }
+            },
+        )
+
+        if (pageState?.isMultiSelectMode == true) {
+            WishlistMultiSelectBottomBar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .onSizeChanged { pageState.bottomBarHeightPx = it.height },
+                selectedCount = pageState.selectedAlbumIds.size,
+                onSelectAll = { pageState.selectedAlbumIds = pageState.sortedAlbumIds.toSet() },
+                onEdit = { pageState.showBulkEditDialog = true },
+                onExit = { pageState.exitMultiSelect() },
+            )
+        }
+    }
+}
+
+@Composable
+private fun WishlistMultiSelectBottomBar(
+    modifier: Modifier = Modifier,
+    selectedCount: Int,
+    onSelectAll: () -> Unit,
+    onEdit: () -> Unit,
+    onExit: () -> Unit,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        tonalElevation = 8.dp,
+        shadowElevation = 8.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "$selectedCount selected",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(start = 8.dp),
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            TextButton(onClick = onSelectAll) {
+                Text("Select all")
             }
-        },
-    )
+            IconButton(onClick = onEdit, enabled = selectedCount > 0) {
+                Icon(Icons.Filled.Edit, contentDescription = "Edit selected")
+            }
+            IconButton(onClick = onExit) {
+                Icon(Icons.Filled.Close, contentDescription = "Exit select mode")
+            }
+        }
+    }
 }
 
 @Composable

@@ -296,6 +296,7 @@
     <string name="ConfigureDirectory">Configure directory</string>
     <string name="AddToWishlist">Add to wishlist</string>
     <string name="EditWishlistAlbum">Edit album</string>
+    <string name="BulkEditWishlist">Edit wishlist albums</string>
     <string name="DeleteWishlistAlbum">Delete album</string>
     <string name="WishlistAlbumArtUrl">Album art URL (optional)</string>
     <string name="Priority">Priority</string>
