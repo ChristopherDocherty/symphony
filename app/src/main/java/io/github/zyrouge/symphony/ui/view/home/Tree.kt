@@ -29,8 +29,8 @@ fun TreeView(context: ViewContext) {
                 scope.launch {
                     context.symphony.settings.updateData { s ->
                         s.copy {
-                            disabledTreePaths.clear()
-                            disabledTreePaths.addAll(paths)
+                            this.disabledTreePaths.clear()
+                            this.disabledTreePaths.addAll(paths)
                         }
                     }
                 }
