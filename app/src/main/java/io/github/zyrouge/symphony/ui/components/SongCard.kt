@@ -107,6 +107,7 @@ fun SongCard(
             )
         } else 0L
     }
+    val showYear = settings.songTileShowYear
 
     Card(
         modifier = Modifier
@@ -193,6 +194,14 @@ fun SongCard(
                             song.artists.joinToString(),
                             style = MaterialTheme.typography.bodySmall,
                             maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (showYear && song.year != null) {
+                        Text(
+                            song.year.toString(),
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
