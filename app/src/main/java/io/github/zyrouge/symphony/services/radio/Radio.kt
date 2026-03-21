@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.util.Date
 import java.util.Timer
+import java.util.concurrent.atomic.AtomicBoolean
 
 class Radio(private val symphony: Symphony) : Symphony.Hooks {
     sealed class Events {
@@ -47,6 +48,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     )
 
     private val radioScope = CoroutineScope(Dispatchers.Default)
+    private val queueRestoreAttempted = AtomicBoolean(false)
 
     val onUpdate = Eventer<Events>()
     val queue = RadioQueue(symphony, radioScope)
@@ -80,6 +82,7 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     }
 
     fun ready() {
+        earlyQueueRestore()
         attachGrooveListener()
         session.start()
         observatory.start()
@@ -455,45 +458,62 @@ class Radio(private val symphony: Symphony) : Symphony.Hooks {
     }
 
     private fun restorePreviousQueue() {
-        if (!queue.isEmpty()) {
-            return
-        }
+        if (!queue.isEmpty()) return
         symphony.settingsState.value.previousSongQueue
             .takeIf { it.isNotEmpty() }
             ?.let { RadioQueue.Serialized.parse(it) }
-            ?.let { previous ->
-            var currentSongIndex = previous.currentSongIndex
-            var playedDuration = previous.playedDuration
-            val originalQueue = mutableListOf<String>()
-            val currentQueue = mutableListOf<String>()
-            previous.originalQueue.forEach { songId ->
-                if (symphony.groove.song.get(songId) != null) {
-                    originalQueue.add(songId)
-                }
-            }
-            previous.currentQueue.forEachIndexed { i, songId ->
-                if (symphony.groove.song.get(songId) != null) {
-                    currentQueue.add(songId)
-                } else {
-                    if (i < currentSongIndex) currentSongIndex--
-                }
-            }
-            if (originalQueue.isEmpty() || hasPlayer) {
-                return@let
-            }
-            if (currentSongIndex >= originalQueue.size) {
-                currentSongIndex = 0
-                playedDuration = 0
-            }
-            queue.restore(
-                RadioQueue.Serialized(
-                    currentSongIndex = currentSongIndex,
-                    playedDuration = playedDuration,
-                    originalQueue = originalQueue,
-                    currentQueue = currentQueue,
-                    shuffled = previous.shuffled,
-                )
+            ?.let { restorePreviousQueueWith(it) { id -> symphony.groove.song.get(id) != null } }
+    }
+
+    private fun restorePreviousQueueWith(
+        previous: RadioQueue.Serialized,
+        songExists: (String) -> Boolean,
+    ) {
+        if (!queueRestoreAttempted.compareAndSet(false, true)) return
+        var currentSongIndex = previous.currentSongIndex
+        var playedDuration = previous.playedDuration
+        val originalQueue = mutableListOf<String>()
+        val currentQueue = mutableListOf<String>()
+        previous.originalQueue.forEach { songId ->
+            if (songExists(songId)) originalQueue.add(songId)
+        }
+        previous.currentQueue.forEachIndexed { i, songId ->
+            if (songExists(songId)) currentQueue.add(songId)
+            else if (i < currentSongIndex) currentSongIndex--
+        }
+        if (originalQueue.isEmpty() || hasPlayer) return
+        if (currentSongIndex >= originalQueue.size) {
+            currentSongIndex = 0
+            playedDuration = 0
+        }
+        queue.restore(
+            RadioQueue.Serialized(
+                currentSongIndex = currentSongIndex,
+                playedDuration = playedDuration,
+                originalQueue = originalQueue,
+                currentQueue = currentQueue,
+                shuffled = previous.shuffled,
             )
+        )
+    }
+
+    private fun earlyQueueRestore() {
+        radioScope.launch {
+            try {
+                val raw = symphony.settingsState.value.previousSongQueue
+                if (raw.isEmpty()) return@launch
+                val previous = RadioQueue.Serialized.parse(raw) ?: return@launch
+                if (!queue.isEmpty()) return@launch
+                val allIds = (previous.originalQueue + previous.currentQueue).toSet()
+                if (allIds.isEmpty()) return@launch
+                val songs = symphony.database.songCache.getByIds(allIds)
+                if (songs.isEmpty()) return@launch
+                symphony.groove.song.seedSongs(songs)
+                if (!queue.isEmpty()) return@launch
+                restorePreviousQueueWith(previous) { id -> symphony.groove.song.get(id) != null }
+            } catch (err: Exception) {
+                Logger.warn("Radio", "earlyQueueRestore failed", err)
+            }
         }
     }
 

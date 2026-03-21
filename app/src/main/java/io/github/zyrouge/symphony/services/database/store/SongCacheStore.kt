@@ -25,6 +25,9 @@ interface SongCacheStore {
     @Query("DELETE FROM songs")
     suspend fun clear(): Int
 
+    @Query("SELECT * FROM songs WHERE id IN (:ids)")
+    suspend fun getByIds(ids: Collection<String>): List<Song>
+
     @Query("SELECT * FROM songs")
     suspend fun entriesPathMapped(): Map<@MapColumn("path") String, Song>
 }

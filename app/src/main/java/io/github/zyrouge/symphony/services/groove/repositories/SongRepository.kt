@@ -78,6 +78,13 @@ class SongRepository(private val symphony: Symphony) {
         emitCount()
     }
 
+    internal fun seedSongs(songs: List<Song>) {
+        songs.forEach { song ->
+            cache[song.id] = song
+            pathCache[song.path] = song.id
+        }
+    }
+
     fun reset() {
         cache.clear()
         pathCache.clear()

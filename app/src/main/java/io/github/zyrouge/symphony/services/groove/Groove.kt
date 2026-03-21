@@ -48,6 +48,7 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
     private suspend fun fetchFromCache() {
         coroutineScope.launch {
             exposer.loadFromCache()
+            readyDeferred.complete(true)
             playlist.fetch()
             wishlist.fetch()
         }.join()
@@ -101,7 +102,6 @@ class Groove(private val symphony: Symphony) : Symphony.Hooks {
     override fun onSymphonyReady() {
         coroutineScope.launch {
             fetchFromCache()
-            readyDeferred.complete(true)
         }
     }
 }
