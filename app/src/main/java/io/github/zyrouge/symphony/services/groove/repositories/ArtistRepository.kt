@@ -154,6 +154,29 @@ class ArtistRepository(private val symphony: Symphony) {
         fallback = Assets.placeholderDarkId,
     )
 
+    fun getBestArtworkUriForSongs(songIds: List<String>): Uri {
+        val albumIds = songIds.mapNotNull { id ->
+            symphony.groove.song.get(id)?.let { symphony.groove.album.getIdFromSong(it) }
+        }.distinct()
+        val bestAlbumId = albumIds.minByOrNull { albumId ->
+            val releaseTypes = symphony.groove.album.getCustomTagValues(albumId, "RELEASETYPE")
+            releaseTypes
+                .mapNotNull { ARTWORK_RELEASE_TYPE_PRIORITY.indexOf(it).takeIf { i -> i >= 0 } }
+                .minOrNull() ?: Int.MAX_VALUE
+        }
+        return bestAlbumId
+            ?.let { symphony.groove.album.getSongIds(it).firstOrNull() }
+            ?.let { symphony.groove.song.getArtworkUri(it) }
+            ?: songIds.firstOrNull()?.let { symphony.groove.song.getArtworkUri(it) }
+            ?: symphony.groove.song.getDefaultArtworkUri()
+    }
+
+    fun createArtworkImageRequestForSongs(songIds: List<String>) = createHandyImageRequest(
+        symphony.applicationContext,
+        image = getBestArtworkUriForSongs(songIds),
+        fallback = Assets.placeholderDarkId,
+    )
+
     fun search(artistNames: List<String>, terms: String, limit: Int = 7) = searcher
         .search(terms, artistNames, maxLength = limit)
 

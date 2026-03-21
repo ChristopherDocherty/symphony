@@ -529,7 +529,7 @@ private fun DuplicateSongGroupRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
-                firstSong.createArtworkImageRequest(context.symphony).build(),
+                context.symphony.groove.artist.createArtworkImageRequestForSongs(songs.map { it.id }).build(),
                 null,
                 modifier = Modifier
                     .size(45.dp)
