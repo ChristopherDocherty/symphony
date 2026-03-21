@@ -1,10 +1,11 @@
 package io.github.zyrouge.symphony.ui.components
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -14,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import io.github.zyrouge.symphony.AlbumFilter
 import io.github.zyrouge.symphony.AlbumSortBy
-import io.github.zyrouge.symphony.services.groove.Groove
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import kotlinx.coroutines.flow.map
 
@@ -43,12 +43,8 @@ fun AlbumRow(context: ViewContext, albumIds: List<String>, bypassFilter: Boolean
             )
         }
 
-        LazyRow {
-            itemsIndexed(
-                sortedAlbumIds, // Use sorted list here
-                key = { i, x -> "$i-$x" },
-                contentType = { _, _ -> Groove.Kind.ALBUM }
-            ) { _, albumId ->
+        Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            sortedAlbumIds.forEach { albumId ->
                 context.symphony.groove.album.get(albumId)?.let { album ->
                     Box(modifier = Modifier.width(width)) {
                         AlbumTile(context, album)
