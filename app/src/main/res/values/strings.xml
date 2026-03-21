@@ -368,4 +368,7 @@
     <string name="RenameTemplate">Filename template</string>
     <string name="RenamingProgress">Renaming %1$s of %2$s…</string>
     <string name="RenameXSongsFromTags">Rename %1$s songs from tags</string>
+    <string name="GroupDuplicates">Group duplicates</string>
+    <string name="UngroupDuplicates">Ungroup duplicates</string>
+    <string name="NFiles">%1$s files</string>
 </resources>

@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.IndeterminateCheckBox
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -18,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import io.github.zyrouge.symphony.R
+import io.github.zyrouge.symphony.ui.components.GroupedDuplicateSongList
 import io.github.zyrouge.symphony.ui.components.LoaderScaffold
 import io.github.zyrouge.symphony.ui.components.SongCardInfoDialog
 import io.github.zyrouge.symphony.ui.components.SongList
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.map
 
 class SongsPageState(private val context: ViewContext) : HomePageState {
     var isMultiSelectMode by mutableStateOf(false)
+    var isGroupDuplicatesMode by mutableStateOf(false)
     var selectedSongIds by mutableStateOf<Set<String>>(emptySet())
     var showBulkEditDialog by mutableStateOf(false)
     var showAutoNumberDialog by mutableStateOf(false)
@@ -81,6 +84,18 @@ class SongsPageState(private val context: ViewContext) : HomePageState {
                 text = { Text("Select") },
                 onClick = { enterMultiSelect() },
             )
+            DropdownMenuItem(
+                leadingIcon = { Icon(Icons.Outlined.ContentCopy, null) },
+                text = {
+                    Text(
+                        stringResource(
+                            if (isGroupDuplicatesMode) R.string.UngroupDuplicates
+                            else R.string.GroupDuplicates
+                        )
+                    )
+                },
+                onClick = { isGroupDuplicatesMode = !isGroupDuplicatesMode },
+            )
         }
     }
 
@@ -113,12 +128,20 @@ fun SongsView(context: ViewContext, pageState: SongsPageState? = null) {
     }
 
     LoaderScaffold(context, isLoading = isUpdating) {
-        SongList(
-            context,
-            songIds = visibleSongIds,
-            songsCount = visibleSongIds.size,
-            enableAddMediaFoldersHint = true,
-            pageState = pageState,
-        )
+        if (pageState?.isGroupDuplicatesMode == true) {
+            GroupedDuplicateSongList(
+                context,
+                songIds = visibleSongIds,
+                pageState = pageState,
+            )
+        } else {
+            SongList(
+                context,
+                songIds = visibleSongIds,
+                songsCount = visibleSongIds.size,
+                enableAddMediaFoldersHint = true,
+                pageState = pageState,
+            )
+        }
     }
 }

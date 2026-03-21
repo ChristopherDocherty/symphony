@@ -1,7 +1,9 @@
 package io.github.zyrouge.symphony.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,14 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DriveFileRenameOutline
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
@@ -25,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -32,11 +40,15 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import io.github.zyrouge.symphony.R
 import io.github.zyrouge.symphony.SongSortBy
 import io.github.zyrouge.symphony.copy
@@ -325,4 +337,259 @@ suspend fun SongListType.setLastUsedSortReverse(context: ViewContext, value: Boo
         context.symphony.settings.updateData { it.copy { uiAlbumViewSongsSort = uiAlbumViewSongsSort.copy {reverse = value} }}
     }
 
+}
+
+@Composable
+fun GroupedDuplicateSongList(
+    context: ViewContext,
+    songIds: List<String>,
+    pageState: SongsPageState? = null,
+) {
+    val sortBy by SongListType.Default.getLastUsedSortBy(context).collectAsState(SongSortBy.SONG_TITLE)
+    val sortReverse by SongListType.Default.getLastUsedSortReverse(context).collectAsState(false)
+    val sortedSongIds by remember(songIds, sortBy, sortReverse) {
+        derivedStateOf {
+            context.symphony.groove.song.sort(songIds, sortBy, sortReverse)
+        }
+    }
+    val groups by remember(sortedSongIds) {
+        derivedStateOf {
+            val result = linkedMapOf<String, MutableList<Song>>()
+            for (id in sortedSongIds) {
+                val song = context.symphony.groove.song.get(id) ?: continue
+                val key = "${song.artists.firstOrNull()?.lowercase() ?: ""}|${song.title.lowercase()}"
+                result.getOrPut(key) { mutableListOf() }.add(song)
+            }
+            result.values.toList()
+        }
+    }
+    val albumCount by remember(songIds) {
+        derivedStateOf {
+            songIds.mapNotNull { context.symphony.groove.song.get(it)?.album }.distinct().size
+        }
+    }
+    var expandedGroups by remember { mutableStateOf(emptySet<String>()) }
+    val coroutineScope = rememberCoroutineScope()
+
+    SideEffect {
+        pageState?.sortedSongIds = sortedSongIds
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        MediaSortBarScaffold(
+            mediaSortBar = {
+                MediaSortBar(
+                    context,
+                    reverse = sortReverse,
+                    onReverseChange = {
+                        coroutineScope.launch {
+                            SongListType.Default.setLastUsedSortReverse(context, it)
+                        }
+                    },
+                    sort = sortBy,
+                    sorts = SongSortBy.entries
+                        .filter { it != SongSortBy.UNRECOGNIZED }
+                        .associateWith { x -> ViewContext.parameterizedFn { x.label(it) } },
+                    onSortChange = { newSort ->
+                        coroutineScope.launch {
+                            SongListType.Default.setLastUsedSortBy(context, newSort)
+                        }
+                    },
+                    label = {
+                        Text(
+                            stringResource(R.string.XAlbums, albumCount.toString()) + ", " +
+                                stringResource(R.string.XSongs, songIds.size.toString())
+                        )
+                    },
+                    onShufflePlay = {
+                        context.symphony.radio.shorty.playQueue(sortedSongIds, shuffle = true)
+                    }
+                )
+            },
+            content = {
+                when {
+                    songIds.isEmpty() -> IconTextBody(
+                        icon = { modifier -> Icon(Icons.Filled.MusicNote, null, modifier = modifier) },
+                        content = { Text(stringResource(R.string.DamnThisIsSoEmpty)) }
+                    )
+                    else -> {
+                        val lazyListState = rememberLazyListState()
+                        LazyColumn(
+                            state = lazyListState,
+                            modifier = Modifier.drawScrollBar(lazyListState)
+                        ) {
+                            groups.forEach { groupSongs ->
+                                val groupKey = "${groupSongs.first().artists.firstOrNull()?.lowercase() ?: ""}|${groupSongs.first().title.lowercase()}"
+                                if (groupSongs.size == 1) {
+                                    item(key = groupSongs.first().id, contentType = Groove.Kind.SONG) {
+                                        SongCard(
+                                            context,
+                                            song = groupSongs.first(),
+                                            pageState = pageState,
+                                        ) {
+                                            context.symphony.radio.shorty.playQueue(
+                                                sortedSongIds,
+                                                Radio.PlayOptions(index = sortedSongIds.indexOf(groupSongs.first().id))
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    item(key = "group-$groupKey", contentType = "duplicate_group") {
+                                        DuplicateSongGroupRow(
+                                            context = context,
+                                            songs = groupSongs,
+                                            isExpanded = groupKey in expandedGroups,
+                                            onToggleExpand = {
+                                                expandedGroups = if (groupKey in expandedGroups)
+                                                    expandedGroups - groupKey
+                                                else
+                                                    expandedGroups + groupKey
+                                            },
+                                            allSortedSongIds = sortedSongIds,
+                                            pageState = pageState,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        )
+
+        if (pageState?.isMultiSelectMode == true) {
+            SongMultiSelectBottomBar(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                selectedCount = pageState.selectedSongIds.size,
+                onSelectAll = { pageState.selectedSongIds = pageState.sortedSongIds.toSet() },
+                onEdit = { pageState.showBulkEditDialog = true },
+                onAutoNumber = { pageState.showAutoNumberDialog = true },
+                onRename = { pageState.showRenameDialog = true },
+                onExit = { pageState.exitMultiSelect() },
+            )
+        }
+
+        if (pageState?.showBulkEditDialog == true && pageState.selectedSongIds.isNotEmpty()) {
+            BulkSongEditDialog(
+                context = context,
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
+                onDismissRequest = { pageState.showBulkEditDialog = false },
+            )
+        }
+
+        if (pageState?.showAutoNumberDialog == true && pageState.selectedSongIds.isNotEmpty()) {
+            AutoNumberWizardDialog(
+                context = context,
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
+                onDismissRequest = {
+                    pageState.showAutoNumberDialog = false
+                    pageState.exitMultiSelect()
+                },
+            )
+        }
+
+        if (pageState?.showRenameDialog == true && pageState.selectedSongIds.isNotEmpty()) {
+            RenameFromTagsDialog(
+                context = context,
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
+                onDismissRequest = {
+                    pageState.showRenameDialog = false
+                    pageState.exitMultiSelect()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun DuplicateSongGroupRow(
+    context: ViewContext,
+    songs: List<Song>,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
+    allSortedSongIds: List<String>,
+    pageState: SongsPageState?,
+) {
+    val firstSong = songs.first()
+    val settings by context.symphony.settingsState.collectAsState()
+    val scrobbleCount = remember(settings.songShowScrobbleCount, firstSong) {
+        if (settings.songShowScrobbleCount) {
+            context.symphony.lastFmBackup.getSongScrobbleCount(
+                firstSong.artists.firstOrNull() ?: "",
+                firstSong.title,
+            )
+        } else 0L
+    }
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onToggleExpand() }
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AsyncImage(
+                firstSong.createArtworkImageRequest(context.symphony).build(),
+                null,
+                modifier = Modifier
+                    .size(45.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    firstSong.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (firstSong.artists.isNotEmpty()) {
+                    Text(
+                        firstSong.artists.joinToString(),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (scrobbleCount > 0L) {
+                    Text(
+                        stringResource(R.string.LastFmScrobbles, scrobbleCount),
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                stringResource(R.string.NFiles, songs.size.toString()),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                if (isExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        AnimatedVisibility(visible = isExpanded) {
+            Column {
+                songs.forEach { song ->
+                    SongCard(
+                        context,
+                        song = song,
+                        pageState = pageState,
+                    ) {
+                        context.symphony.radio.shorty.playQueue(
+                            allSortedSongIds,
+                            Radio.PlayOptions(index = allSortedSongIds.indexOf(song.id))
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
