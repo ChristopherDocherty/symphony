@@ -292,6 +292,14 @@
     <string name="AllLinesMarked">All lines marked</string>
     <string name="LyricsSave">Save lyrics</string>
     <string name="LyricsSaved">Lyrics saved</string>
+    <string name="SearchLrcLib">Search lrclib</string>
+    <string name="LrcLibSearch">lrclib Search</string>
+    <string name="NoLrcLibResults">No results found</string>
+    <string name="UseSyncedLyrics">Use synced lyrics</string>
+    <string name="UsePlainLyrics">Use plain lyrics</string>
+    <string name="LrcLibSearchFailed">Search failed</string>
+    <string name="Search">Search</string>
+    <string name="Back">Back</string>
     <string name="Wishlist">Wishlist</string>
     <string name="WishlistEmpty">No albums in wishlist</string>
     <string name="WishlistNoDirConfigured">No storage directory configured</string>

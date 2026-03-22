@@ -1,6 +1,7 @@
 package io.github.zyrouge.symphony.ui.view
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,22 +19,29 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +69,7 @@ import io.github.zyrouge.symphony.ui.components.TopAppBarMinimalTitle
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
 import io.github.zyrouge.symphony.ui.view.nowPlaying.NowPlayingSeekBar
 import io.github.zyrouge.symphony.ui.view.nowPlaying.defaultHorizontalPadding
+import io.github.zyrouge.symphony.utils.LrcLibService
 import io.github.zyrouge.symphony.utils.LrcSerializer
 import io.github.zyrouge.symphony.utils.LyricsFileManager
 import kotlinx.coroutines.Dispatchers
@@ -84,6 +93,7 @@ fun LyricsEditorView(context: ViewContext, songId: String) {
     val timingTimestamps = remember { mutableStateOf<SnapshotStateList<Long?>>(mutableListOf<Long?>().toMutableStateList()) }
     var timingCurrentIndex by remember { mutableIntStateOf(0) }
     var isSaving by remember { mutableStateOf(false) }
+    var showLrcLibDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(songId) {
         val lyrics = withContext(Dispatchers.IO) {
@@ -202,6 +212,9 @@ fun LyricsEditorView(context: ViewContext, songId: String) {
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showLrcLibDialog = true }) {
+                        Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.SearchLrcLib))
+                    }
                     if (isSaving) {
                         IconButtonPlaceholder()
                     } else {
@@ -260,6 +273,21 @@ fun LyricsEditorView(context: ViewContext, songId: String) {
                 )
             }
         }
+    }
+
+    if (showLrcLibDialog) {
+        LrcLibSearchDialog(
+            context = context,
+            initialTrackName = song.title,
+            initialArtistName = song.artists.firstOrNull() ?: "",
+            songDurationMs = song.duration,
+            onDismiss = { showLrcLibDialog = false },
+            onLyricsSelected = { lyrics ->
+                rawText = lyrics
+                selectedTab = 0
+                showLrcLibDialog = false
+            },
+        )
     }
 }
 
@@ -385,4 +413,180 @@ private fun TimingTab(
 
         Spacer(modifier = Modifier.height(defaultHorizontalPadding))
     }
+}
+
+private sealed class LrcLibDialogState {
+    object Idle : LrcLibDialogState()
+    object Searching : LrcLibDialogState()
+    data class Results(val tracks: List<LrcLibService.Track>) : LrcLibDialogState()
+    data class Fetching(val tracks: List<LrcLibService.Track>, val selected: LrcLibService.Track) : LrcLibDialogState()
+    data class Preview(val tracks: List<LrcLibService.Track>, val track: LrcLibService.Track) : LrcLibDialogState()
+    data class Error(val message: String) : LrcLibDialogState()
+}
+
+@Composable
+private fun LrcLibSearchDialog(
+    context: ViewContext,
+    initialTrackName: String,
+    initialArtistName: String,
+    songDurationMs: Long,
+    onDismiss: () -> Unit,
+    onLyricsSelected: (String) -> Unit,
+) {
+    val coroutineScope = rememberCoroutineScope()
+    var dialogState by remember { mutableStateOf<LrcLibDialogState>(LrcLibDialogState.Idle) }
+    var trackName by remember { mutableStateOf(initialTrackName) }
+    var artistName by remember { mutableStateOf(initialArtistName) }
+
+    fun search() {
+        dialogState = LrcLibDialogState.Searching
+        coroutineScope.launch(Dispatchers.IO) {
+            val results = LrcLibService.search(trackName, artistName)
+            withContext(Dispatchers.Main) {
+                dialogState = when {
+                    results == null -> LrcLibDialogState.Error(context.activity.getString(R.string.LrcLibSearchFailed))
+                    results.isEmpty() -> LrcLibDialogState.Error(context.activity.getString(R.string.NoLrcLibResults))
+                    else -> LrcLibDialogState.Results(results)
+                }
+            }
+        }
+    }
+
+    fun selectTrack(tracks: List<LrcLibService.Track>, track: LrcLibService.Track) {
+        dialogState = LrcLibDialogState.Fetching(tracks, track)
+        coroutineScope.launch(Dispatchers.IO) {
+            val full = LrcLibService.getById(track.id)
+            withContext(Dispatchers.Main) {
+                dialogState = if (full != null) {
+                    LrcLibDialogState.Preview(tracks, full)
+                } else {
+                    LrcLibDialogState.Error(context.activity.getString(R.string.LrcLibSearchFailed))
+                }
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.LrcLibSearch)) },
+        text = {
+            when (val state = dialogState) {
+                is LrcLibDialogState.Idle -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val songSecs = (songDurationMs / 1000).toInt()
+                        Text(
+                            "%d:%02d".format(songSecs / 60, songSecs % 60),
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = LocalContentColor.current.copy(alpha = 0.7f),
+                            ),
+                        )
+                        OutlinedTextField(
+                            value = trackName,
+                            onValueChange = { trackName = it },
+                            label = { Text(stringResource(R.string.TrackName)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        OutlinedTextField(
+                            value = artistName,
+                            onValueChange = { artistName = it },
+                            label = { Text(stringResource(R.string.Artist)) },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+                is LrcLibDialogState.Searching, is LrcLibDialogState.Fetching -> {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                is LrcLibDialogState.Results -> {
+                    LazyColumn {
+                        itemsIndexed(state.tracks) { i, track ->
+                            if (i > 0) HorizontalDivider()
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { selectTrack(state.tracks, track) }
+                                    .padding(vertical = 10.dp),
+                            ) {
+                                Text(
+                                    track.trackName,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                )
+                                Text(
+                                    buildString {
+                                        append(track.artistName)
+                                        track.albumName?.let { append(" · $it") }
+                                        track.durationSecs?.let { append(" · ${it / 60}:${"%02d".format(it % 60)}") }
+                                    },
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = LocalContentColor.current.copy(alpha = 0.7f),
+                                    ),
+                                )
+                            }
+                        }
+                    }
+                }
+                is LrcLibDialogState.Preview -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            state.track.trackName,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        )
+                        Text(
+                            state.track.artistName,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = LocalContentColor.current.copy(alpha = 0.7f),
+                            ),
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Button(
+                            onClick = { onLyricsSelected(state.track.syncedLyrics!!) },
+                            enabled = state.track.syncedLyrics != null,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.UseSyncedLyrics))
+                        }
+                        OutlinedButton(
+                            onClick = { onLyricsSelected(state.track.plainLyrics!!) },
+                            enabled = state.track.plainLyrics != null,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.UsePlainLyrics))
+                        }
+                    }
+                }
+                is LrcLibDialogState.Error -> {
+                    Text(state.message)
+                }
+            }
+        },
+        confirmButton = {
+            when (val state = dialogState) {
+                is LrcLibDialogState.Idle -> {
+                    Button(onClick = { search() }, enabled = trackName.isNotBlank()) {
+                        Text(stringResource(R.string.Search))
+                    }
+                }
+                is LrcLibDialogState.Preview -> {
+                    TextButton(onClick = { dialogState = LrcLibDialogState.Results(state.tracks) }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = null)
+                    }
+                }
+                is LrcLibDialogState.Error -> {
+                    TextButton(onClick = { dialogState = LrcLibDialogState.Idle }) {
+                        Text(stringResource(R.string.Back))
+                    }
+                }
+                else -> {}
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.Cancel))
+            }
+        },
+    )
 }
