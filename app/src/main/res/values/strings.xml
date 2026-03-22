@@ -299,6 +299,16 @@
     <string name="UsePlainLyrics">Use plain lyrics</string>
     <string name="LrcLibSearchFailed">Search failed</string>
     <string name="Search">Search</string>
+    <string name="Close">Close</string>
+    <string name="FetchLyrics">Fetch lyrics</string>
+    <string name="BulkFetchLyrics">Fetch lyrics from LRCLib</string>
+    <string name="LyricsFetchPending">Pending</string>
+    <string name="LyricsFetchSearching">Searching…</string>
+    <string name="LyricsFetchFoundSynced">Synced lyrics saved</string>
+    <string name="LyricsFetchFoundPlain">Plain lyrics saved</string>
+    <string name="LyricsFetchNotFound">Not found</string>
+    <string name="LyricsFetchError">Error</string>
+    <string name="LyricsFetchSummary">Done: %1$s synced, %2$s plain, %3$s not found, %4$s errors</string>
     <string name="Back">Back</string>
     <string name="Wishlist">Wishlist</string>
     <string name="WishlistEmpty">No albums in wishlist</string>

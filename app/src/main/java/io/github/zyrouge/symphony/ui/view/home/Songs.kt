@@ -34,6 +34,7 @@ class SongsPageState(private val context: ViewContext) : HomePageState {
     var showAutoNumberDialog by mutableStateOf(false)
     var showRenameDialog by mutableStateOf(false)
     var showCardInfoDialog by mutableStateOf(false)
+    var showBulkFetchLyricsDialog by mutableStateOf(false)
 
     // Updated from SongList via SideEffect — not observed by state
     var sortedSongIds: List<String> = emptyList()

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -205,7 +206,19 @@ fun SongList(
                 onEdit = { pageState.showBulkEditDialog = true },
                 onAutoNumber = { pageState.showAutoNumberDialog = true },
                 onRename = { pageState.showRenameDialog = true },
+                onFetchLyrics = { pageState.showBulkFetchLyricsDialog = true },
                 onExit = { pageState.exitMultiSelect() },
+            )
+        }
+
+        if (pageState?.showBulkFetchLyricsDialog == true && pageState.selectedSongIds.isNotEmpty()) {
+            BulkFetchLyricsDialog(
+                context = context,
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
+                onDismissRequest = {
+                    pageState.showBulkFetchLyricsDialog = false
+                    pageState.exitMultiSelect()
+                },
             )
         }
 
@@ -249,6 +262,7 @@ private fun SongMultiSelectBottomBar(
     onEdit: () -> Unit,
     onAutoNumber: () -> Unit,
     onRename: () -> Unit,
+    onFetchLyrics: () -> Unit,
     onExit: () -> Unit,
 ) {
     Surface(
@@ -277,6 +291,9 @@ private fun SongMultiSelectBottomBar(
             }
             IconButton(onClick = onRename, enabled = selectedCount > 0) {
                 Icon(Icons.Filled.DriveFileRenameOutline, contentDescription = "Rename from tags")
+            }
+            IconButton(onClick = onFetchLyrics, enabled = selectedCount > 0) {
+                Icon(Icons.Filled.LibraryMusic, contentDescription = "Fetch lyrics")
             }
             IconButton(onClick = onExit) {
                 Icon(Icons.Filled.Close, contentDescription = "Exit select mode")
@@ -465,7 +482,19 @@ fun GroupedDuplicateSongList(
                 onEdit = { pageState.showBulkEditDialog = true },
                 onAutoNumber = { pageState.showAutoNumberDialog = true },
                 onRename = { pageState.showRenameDialog = true },
+                onFetchLyrics = { pageState.showBulkFetchLyricsDialog = true },
                 onExit = { pageState.exitMultiSelect() },
+            )
+        }
+
+        if (pageState?.showBulkFetchLyricsDialog == true && pageState.selectedSongIds.isNotEmpty()) {
+            BulkFetchLyricsDialog(
+                context = context,
+                songIds = sortedSongIds.filter { it in pageState.selectedSongIds },
+                onDismissRequest = {
+                    pageState.showBulkFetchLyricsDialog = false
+                    pageState.exitMultiSelect()
+                },
             )
         }
 
