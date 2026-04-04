@@ -340,6 +340,15 @@
     <string name="ScrobbleTrack">Scrobble</string>
     <string name="ScrobbleSuccess">Scrobbled successfully</string>
     <string name="ScrobbleFailed">Scrobble failed</string>
+    <string name="Track">Track</string>
+    <string name="ScrobbleAlbum">Scrobble Album</string>
+    <string name="AlbumStartTime">Start time</string>
+    <string name="ArtistOptional">Artist (optional)</string>
+    <string name="UnknownDuration">(unknown duration)</string>
+    <string name="NoAlbumsFound">No albums found</string>
+    <string name="AlbumSearchFailed">Album search failed</string>
+    <string name="AlbumInfoFailed">Could not load track listing</string>
+    <string name="NoTracksFound">No tracks found for this album</string>
     <string name="RecentScrobbles">Recent Scrobbles</string>
     <string name="CopyToForm">Copy to form</string>
     <string name="LastFmAuthenticateFirst">Authenticate with Last.fm in settings to enable scrobbling</string>

@@ -21,6 +21,26 @@ data class RecentTracksPage(
     val total: Long,
 )
 
+data class LastFmAlbumResult(
+    val name: String,
+    val artist: String,
+    val coverUrl: String?,
+    val mbid: String,
+)
+
+data class LastFmAlbumTrack(
+    val name: String,
+    val durationSeconds: Int,
+    val rank: Int,
+)
+
+data class LastFmAlbumInfo(
+    val name: String,
+    val artist: String,
+    val coverUrl: String?,
+    val tracks: List<LastFmAlbumTrack>,
+)
+
 object LastFmScrobbler {
 
     fun sign(params: Map<String, String>, apiSecret: String): String {
@@ -223,6 +243,149 @@ object LastFmScrobbler {
         } catch (err: Exception) {
             Logger.warn("LastFmScrobbler", "getArtistCorrection failed for $artistName", err)
             null
+        }
+    }
+
+    fun searchAlbums(apiKey: String, query: String): List<LastFmAlbumResult>? {
+        return try {
+            val url = buildString {
+                append("https://ws.audioscrobbler.com/2.0/")
+                append("?method=album.search")
+                append("&album=${enc(query)}")
+                append("&api_key=${enc(apiKey)}")
+                append("&limit=30")
+                append("&format=json")
+            }
+            val body = fetch(url) ?: return null
+            if (body.has("error")) return null
+            val albummatches = body.getJSONObject("results").getJSONObject("albummatches")
+            val albumsArray = albummatches.optJSONArray("album")
+                ?: albummatches.optJSONObject("album")?.let {
+                    org.json.JSONArray().apply { put(it) }
+                }
+                ?: return emptyList()
+            val results = mutableListOf<LastFmAlbumResult>()
+            for (i in 0 until albumsArray.length()) {
+                val a = albumsArray.getJSONObject(i)
+                val images = a.optJSONArray("image")
+                var coverUrl: String? = null
+                if (images != null) {
+                    for (j in 0 until images.length()) {
+                        val img = images.getJSONObject(j)
+                        if (img.optString("size") == "medium") {
+                            coverUrl = img.optString("#text").takeIf { it.isNotBlank() }
+                            break
+                        }
+                    }
+                }
+                results.add(
+                    LastFmAlbumResult(
+                        name = a.optString("name"),
+                        artist = a.optString("artist"),
+                        coverUrl = coverUrl,
+                        mbid = a.optString("mbid"),
+                    )
+                )
+            }
+            results
+        } catch (err: Exception) {
+            Logger.warn("LastFmScrobbler", "searchAlbums failed", err)
+            null
+        }
+    }
+
+    fun getAlbumInfo(apiKey: String, artist: String, album: String): LastFmAlbumInfo? {
+        return try {
+            val url = buildString {
+                append("https://ws.audioscrobbler.com/2.0/")
+                append("?method=album.getInfo")
+                append("&artist=${enc(artist)}")
+                append("&album=${enc(album)}")
+                append("&api_key=${enc(apiKey)}")
+                append("&format=json")
+            }
+            val body = fetch(url) ?: return null
+            if (body.has("error")) return null
+            val albumObj = body.getJSONObject("album")
+            val images = albumObj.optJSONArray("image")
+            var coverUrl: String? = null
+            if (images != null) {
+                for (j in 0 until images.length()) {
+                    val img = images.getJSONObject(j)
+                    if (img.optString("size") == "medium") {
+                        coverUrl = img.optString("#text").takeIf { it.isNotBlank() }
+                        break
+                    }
+                }
+            }
+            val tracks = mutableListOf<LastFmAlbumTrack>()
+            val tracksObj = albumObj.optJSONObject("tracks")
+            if (tracksObj != null) {
+                val tracksArray = tracksObj.optJSONArray("track")
+                    ?: tracksObj.optJSONObject("track")?.let {
+                        org.json.JSONArray().apply { put(it) }
+                    }
+                if (tracksArray != null) {
+                    for (i in 0 until tracksArray.length()) {
+                        val t = tracksArray.getJSONObject(i)
+                        val rank = t.optJSONObject("@attr")?.optString("rank")?.toIntOrNull() ?: 0
+                        val duration = t.optString("duration").toIntOrNull() ?: 0
+                        tracks.add(LastFmAlbumTrack(name = t.optString("name"), durationSeconds = duration, rank = rank))
+                    }
+                    tracks.sortBy { it.rank }
+                }
+            }
+            LastFmAlbumInfo(
+                name = albumObj.optString("name"),
+                artist = albumObj.optString("artist"),
+                coverUrl = coverUrl,
+                tracks = tracks,
+            )
+        } catch (err: Exception) {
+            Logger.warn("LastFmScrobbler", "getAlbumInfo failed", err)
+            null
+        }
+    }
+
+    fun scrobbleBatch(
+        apiKey: String,
+        apiSecret: String,
+        sessionKey: String,
+        tracks: List<Triple<String, String, Long>>,
+        album: String,
+    ): Boolean {
+        if (tracks.isEmpty()) return true
+        return try {
+            for (chunk in tracks.chunked(50)) {
+                val params = mutableMapOf(
+                    "method" to "track.scrobble",
+                    "api_key" to apiKey,
+                    "sk" to sessionKey,
+                )
+                for ((i, triple) in chunk.withIndex()) {
+                    params["artist[$i]"] = triple.first
+                    params["track[$i]"] = triple.second
+                    params["timestamp[$i]"] = triple.third.toString()
+                    params["album[$i]"] = album
+                }
+                val sig = sign(params, apiSecret)
+                val formBody = FormBody.Builder().apply {
+                    for ((k, v) in params) add(k, v)
+                    add("api_sig", sig)
+                    add("format", "json")
+                }.build()
+                val req = Request.Builder()
+                    .url("https://ws.audioscrobbler.com/2.0/")
+                    .post(formBody)
+                    .build()
+                val responseBody = HttpClient.newCall(req).execute().body?.string() ?: return false
+                val json = JSONObject(responseBody)
+                if (json.has("error")) return false
+            }
+            true
+        } catch (err: Exception) {
+            Logger.warn("LastFmScrobbler", "scrobbleBatch failed", err)
+            false
         }
     }
 

@@ -5,11 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
@@ -31,6 +35,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -40,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,10 +54,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import io.github.zyrouge.symphony.R
+import io.github.zyrouge.symphony.services.lastfm.LastFmAlbumInfo
+import io.github.zyrouge.symphony.services.lastfm.LastFmAlbumResult
 import io.github.zyrouge.symphony.services.lastfm.LastFmRecentTrack
 import io.github.zyrouge.symphony.services.lastfm.LastFmScrobbler
 import io.github.zyrouge.symphony.ui.helpers.ViewContext
@@ -75,6 +88,9 @@ fun ManualScrobblerView(context: ViewContext) {
     val apiSecret = settings.lastFmApiSecret
     val username = settings.lastFmUsername
 
+    var selectedScrobblerTab by remember { mutableIntStateOf(0) }
+
+    // --- Track tab state ---
     var artistInput by remember { mutableStateOf("") }
     var trackInput by remember { mutableStateOf("") }
     var albumInput by remember { mutableStateOf("") }
@@ -91,6 +107,22 @@ fun ManualScrobblerView(context: ViewContext) {
     var isLoadingRecent by remember { mutableStateOf(false) }
     var recentTracks by remember { mutableStateOf<List<LastFmRecentTrack>?>(null) }
     var recentError by remember { mutableStateOf(false) }
+
+    // --- Album tab state ---
+    var albumSearchQuery by remember { mutableStateOf("") }
+    var albumArtistFilter by remember { mutableStateOf("") }
+    var isSearchingAlbums by remember { mutableStateOf(false) }
+    var albumSearchResults by remember { mutableStateOf<List<LastFmAlbumResult>?>(null) }
+    var albumSearchError by remember { mutableStateOf(false) }
+    var selectedAlbum by remember { mutableStateOf<LastFmAlbumResult?>(null) }
+    var isLoadingAlbumInfo by remember { mutableStateOf(false) }
+    var albumInfo by remember { mutableStateOf<LastFmAlbumInfo?>(null) }
+    var albumInfoError by remember { mutableStateOf(false) }
+    var albumStartEpochMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var showAlbumDatePicker by remember { mutableStateOf(false) }
+    var showAlbumTimePicker by remember { mutableStateOf(false) }
+    var pendingAlbumDateUtcMs by remember { mutableLongStateOf(0L) }
+    var isBatchScrobbling by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
@@ -196,6 +228,33 @@ fun ManualScrobblerView(context: ViewContext) {
         }
     }
 
+    val albumCalForTime = Calendar.getInstance().apply { timeInMillis = albumStartEpochMs }
+    val albumDatePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = utcMidnight(albumStartEpochMs),
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis in minUtcMidnight..todayUtcMidnight
+            }
+            override fun isSelectableYear(year: Int): Boolean {
+                val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+                return year >= currentYear - 1 && year <= currentYear
+            }
+        },
+    )
+
+    LaunchedEffect(showAlbumDatePicker) {
+        if (showAlbumDatePicker) {
+            albumDatePickerState.selectedDateMillis = utcMidnight(albumStartEpochMs)
+                .coerceIn(minUtcMidnight, todayUtcMidnight)
+        }
+    }
+
+    val albumTimePickerState = rememberTimePickerState(
+        initialHour = albumCalForTime.get(Calendar.HOUR_OF_DAY),
+        initialMinute = albumCalForTime.get(Calendar.MINUTE),
+        is24Hour = true,
+    )
+
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -258,7 +317,6 @@ fun ManualScrobblerView(context: ViewContext) {
                 TextButton(onClick = {
                     showFilterDatePicker = false
                     filterDatePickerState.selectedDateMillis?.let { utcMs ->
-                        // Convert UTC midnight → local epoch ms for use in Calendar
                         val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
                             timeInMillis = utcMs
                         }
@@ -287,87 +345,304 @@ fun ManualScrobblerView(context: ViewContext) {
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+    if (showAlbumDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showAlbumDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAlbumDatePicker = false
+                    pendingAlbumDateUtcMs = albumDatePickerState.selectedDateMillis
+                        ?: utcMidnight(albumStartEpochMs)
+                    showAlbumTimePicker = true
+                }) {
+                    Text(stringResource(R.string.Done))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAlbumDatePicker = false }) {
+                    Text(stringResource(R.string.Cancel))
+                }
+            },
         ) {
-            if (sessionKey.isBlank()) {
-                item {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                        ),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.LastFmAuthenticateFirst),
-                            modifier = Modifier.padding(16.dp),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
+            DatePicker(state = albumDatePickerState)
+        }
+    }
+
+    if (showAlbumTimePicker) {
+        AlertDialog(
+            onDismissRequest = { showAlbumTimePicker = false },
+            title = { Text(stringResource(R.string.SelectTime)) },
+            text = { TimePicker(state = albumTimePickerState) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showAlbumTimePicker = false
+                    val dateCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                        timeInMillis = pendingAlbumDateUtcMs
+                    }
+                    val combined = Calendar.getInstance().apply {
+                        set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
+                        set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
+                        set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
+                        set(Calendar.HOUR_OF_DAY, albumTimePickerState.hour)
+                        set(Calendar.MINUTE, albumTimePickerState.minute)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    albumStartEpochMs = combined.timeInMillis.coerceAtMost(System.currentTimeMillis())
+                }) {
+                    Text(stringResource(R.string.Done))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAlbumTimePicker = false }) {
+                    Text(stringResource(R.string.Cancel))
+                }
+            },
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TabRow(selectedTabIndex = selectedScrobblerTab) {
+            Tab(
+                selected = selectedScrobblerTab == 0,
+                onClick = { selectedScrobblerTab = 0 },
+                text = { Text(stringResource(R.string.Track)) },
+            )
+            Tab(
+                selected = selectedScrobblerTab == 1,
+                onClick = { selectedScrobblerTab = 1 },
+                text = { Text(stringResource(R.string.Album)) },
+            )
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            when (selectedScrobblerTab) {
+                0 -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (sessionKey.isBlank()) {
+                        item {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                                ),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.LastFmAuthenticateFirst),
+                                    modifier = Modifier.padding(16.dp),
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        OutlinedTextField(
+                            value = artistInput,
+                            onValueChange = { artistInput = it },
+                            label = { Text(stringResource(R.string.Artist)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
                         )
                     }
+
+                    item {
+                        OutlinedTextField(
+                            value = trackInput,
+                            onValueChange = { trackInput = it },
+                            label = { Text(stringResource(R.string.TrackName)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+                    }
+
+                    item {
+                        OutlinedTextField(
+                            value = albumInput,
+                            onValueChange = { albumInput = it },
+                            label = { Text(stringResource(R.string.Album)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+                    }
+
+                    item {
+                        OutlinedTextField(
+                            value = formatTimestamp(selectedEpochMs / 1000),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.Timestamp)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                IconButton(onClick = { showDatePicker = true }) {
+                                    Icon(Icons.Filled.CalendarMonth, stringResource(R.string.SelectDate))
+                                }
+                            },
+                        )
+                    }
+
+                    item {
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    isScrobbling = true
+                                    val success = withContext(Dispatchers.IO) {
+                                        LastFmScrobbler.scrobble(
+                                            apiKey = apiKey,
+                                            apiSecret = apiSecret,
+                                            sessionKey = sessionKey,
+                                            artist = artistInput,
+                                            track = trackInput,
+                                            album = albumInput.takeIf { it.isNotBlank() },
+                                            timestampSeconds = selectedEpochMs / 1000,
+                                        )
+                                    }
+                                    snackbarMessage = if (success) {
+                                        context.activity.getString(R.string.ScrobbleSuccess)
+                                    } else {
+                                        context.activity.getString(R.string.ScrobbleFailed)
+                                    }
+                                    isScrobbling = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = artistInput.isNotBlank() && trackInput.isNotBlank() && sessionKey.isNotBlank() && !isScrobbling,
+                        ) {
+                            Text(stringResource(R.string.ScrobbleTrack))
+                        }
+                    }
+
+                    item {
+                        HorizontalDivider()
+                    }
+
+                    item {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.RecentScrobbles),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            val activeFilter = filterDateMs
+                            if (activeFilter != null) {
+                                Text(
+                                    text = formatDate(activeFilter / 1000),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                                IconButton(onClick = { filterDateMs = null }) {
+                                    Icon(Icons.Filled.Close, null)
+                                }
+                            }
+                            IconButton(onClick = { showFilterDatePicker = true }) {
+                                Icon(Icons.Filled.CalendarMonth, stringResource(R.string.SelectDate))
+                            }
+                            IconButton(onClick = { loadRecentTracks() }) {
+                                Icon(Icons.Filled.Refresh, null)
+                            }
+                        }
+                    }
+
+                    when {
+                        isLoadingRecent -> item {
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                        recentError -> item {
+                            Text(
+                                text = stringResource(R.string.ScrobbleFailed),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                        recentTracks != null && recentTracks!!.isEmpty() -> item {
+                            Text(stringResource(R.string.DamnThisIsSoEmpty))
+                        }
+                        recentTracks != null -> items(recentTracks!!) { track ->
+                            RecentTrackCard(
+                                track = track,
+                                onCopyToForm = {
+                                    artistInput = track.artist
+                                    trackInput = track.track
+                                    albumInput = track.album
+                                    selectedEpochMs = track.timestampSeconds * 1000
+                                },
+                            )
+                        }
+                    }
                 }
-            }
 
-            item {
-                OutlinedTextField(
-                    value = artistInput,
-                    onValueChange = { artistInput = it },
-                    label = { Text(stringResource(R.string.Artist)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                )
-            }
-
-            item {
-                OutlinedTextField(
-                    value = trackInput,
-                    onValueChange = { trackInput = it },
-                    label = { Text(stringResource(R.string.TrackName)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                )
-            }
-
-            item {
-                OutlinedTextField(
-                    value = albumInput,
-                    onValueChange = { albumInput = it },
-                    label = { Text(stringResource(R.string.Album)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                )
-            }
-
-            item {
-                OutlinedTextField(
-                    value = formatTimestamp(selectedEpochMs / 1000),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.Timestamp)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }) {
-                            Icon(Icons.Filled.CalendarMonth, stringResource(R.string.SelectDate))
+                1 -> AlbumScrobblerTabContent(
+                    sessionKey = sessionKey,
+                    albumSearchQuery = albumSearchQuery,
+                    onAlbumSearchQueryChange = { albumSearchQuery = it },
+                    albumArtistFilter = albumArtistFilter,
+                    onAlbumArtistFilterChange = { albumArtistFilter = it },
+                    isSearchingAlbums = isSearchingAlbums,
+                    albumSearchResults = albumSearchResults,
+                    albumSearchError = albumSearchError,
+                    selectedAlbum = selectedAlbum,
+                    isLoadingAlbumInfo = isLoadingAlbumInfo,
+                    albumInfo = albumInfo,
+                    albumInfoError = albumInfoError,
+                    albumStartEpochMs = albumStartEpochMs,
+                    isBatchScrobbling = isBatchScrobbling,
+                    onSearch = {
+                        scope.launch {
+                            isSearchingAlbums = true
+                            albumSearchError = false
+                            albumSearchResults = null
+                            selectedAlbum = null
+                            albumInfo = null
+                            albumInfoError = false
+                            val results = withContext(Dispatchers.IO) {
+                                LastFmScrobbler.searchAlbums(apiKey, albumSearchQuery.trim())
+                            }
+                            albumSearchResults = if (albumArtistFilter.isNotBlank()) {
+                                results?.filter { it.artist.contains(albumArtistFilter.trim(), ignoreCase = true) }
+                            } else {
+                                results
+                            }
+                            if (results == null) albumSearchError = true
+                            isSearchingAlbums = false
                         }
                     },
-                )
-            }
-
-            item {
-                Button(
-                    onClick = {
+                    onAlbumSelect = { result ->
+                        selectedAlbum = result
+                        albumInfo = null
+                        albumInfoError = false
                         scope.launch {
-                            isScrobbling = true
+                            isLoadingAlbumInfo = true
+                            val info = withContext(Dispatchers.IO) {
+                                LastFmScrobbler.getAlbumInfo(apiKey, result.artist, result.name)
+                            }
+                            albumInfo = info
+                            if (info == null) albumInfoError = true
+                            isLoadingAlbumInfo = false
+                        }
+                    },
+                    onShowAlbumDatePicker = { showAlbumDatePicker = true },
+                    onScrobbleAlbum = {
+                        scope.launch {
+                            isBatchScrobbling = true
+                            val info = albumInfo!!
+                            var cursor = albumStartEpochMs / 1000
+                            val batchInput = info.tracks.map { track ->
+                                val ts = cursor
+                                cursor += if (track.durationSeconds > 0) track.durationSeconds.toLong() else 180L
+                                Triple(info.artist, track.name, ts)
+                            }
                             val success = withContext(Dispatchers.IO) {
-                                LastFmScrobbler.scrobble(
+                                LastFmScrobbler.scrobbleBatch(
                                     apiKey = apiKey,
                                     apiSecret = apiSecret,
                                     sessionKey = sessionKey,
-                                    artist = artistInput,
-                                    track = trackInput,
-                                    album = albumInput.takeIf { it.isNotBlank() },
-                                    timestampSeconds = selectedEpochMs / 1000,
+                                    tracks = batchInput,
+                                    album = info.name,
                                 )
                             }
                             snackbarMessage = if (success) {
@@ -375,83 +650,245 @@ fun ManualScrobblerView(context: ViewContext) {
                             } else {
                                 context.activity.getString(R.string.ScrobbleFailed)
                             }
-                            isScrobbling = false
+                            isBatchScrobbling = false
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = artistInput.isNotBlank() && trackInput.isNotBlank() && sessionKey.isNotBlank() && !isScrobbling,
-                ) {
-                    Text(stringResource(R.string.ScrobbleTrack))
-                }
+                )
             }
 
-            item {
-                HorizontalDivider()
-            }
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+    }
+}
 
+@Composable
+private fun AlbumScrobblerTabContent(
+    sessionKey: String,
+    albumSearchQuery: String,
+    onAlbumSearchQueryChange: (String) -> Unit,
+    albumArtistFilter: String,
+    onAlbumArtistFilterChange: (String) -> Unit,
+    isSearchingAlbums: Boolean,
+    albumSearchResults: List<LastFmAlbumResult>?,
+    albumSearchError: Boolean,
+    selectedAlbum: LastFmAlbumResult?,
+    isLoadingAlbumInfo: Boolean,
+    albumInfo: LastFmAlbumInfo?,
+    albumInfoError: Boolean,
+    albumStartEpochMs: Long,
+    isBatchScrobbling: Boolean,
+    onSearch: () -> Unit,
+    onAlbumSelect: (LastFmAlbumResult) -> Unit,
+    onShowAlbumDatePicker: () -> Unit,
+    onScrobbleAlbum: () -> Unit,
+) {
+    val computedTimestamps: List<Long> = albumInfo?.tracks?.let { tracks ->
+        var cursor = albumStartEpochMs / 1000
+        tracks.map { track ->
+            val ts = cursor
+            cursor += if (track.durationSeconds > 0) track.durationSeconds.toLong() else 180L
+            ts
+        }
+    } ?: emptyList()
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (sessionKey.isBlank()) {
             item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                    ),
                 ) {
                     Text(
-                        text = stringResource(R.string.RecentScrobbles),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    val activeFilter = filterDateMs
-                    if (activeFilter != null) {
-                        Text(
-                            text = formatDate(activeFilter / 1000),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        IconButton(onClick = { filterDateMs = null }) {
-                            Icon(Icons.Filled.Close, null)
-                        }
-                    }
-                    IconButton(onClick = { showFilterDatePicker = true }) {
-                        Icon(Icons.Filled.CalendarMonth, stringResource(R.string.SelectDate))
-                    }
-                    IconButton(onClick = { loadRecentTracks() }) {
-                        Icon(Icons.Filled.Refresh, null)
-                    }
-                }
-            }
-
-            when {
-                isLoadingRecent -> item {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                }
-                recentError -> item {
-                    Text(
-                        text = stringResource(R.string.ScrobbleFailed),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-                recentTracks != null && recentTracks!!.isEmpty() -> item {
-                    Text(stringResource(R.string.DamnThisIsSoEmpty))
-                }
-                recentTracks != null -> items(recentTracks!!) { track ->
-                    RecentTrackCard(
-                        track = track,
-                        onCopyToForm = {
-                            artistInput = track.artist
-                            trackInput = track.track
-                            albumInput = track.album
-                            selectedEpochMs = track.timestampSeconds * 1000
-                        },
+                        text = stringResource(R.string.LastFmAuthenticateFirst),
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
                     )
                 }
             }
         }
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
+        item {
+            OutlinedTextField(
+                value = albumSearchQuery,
+                onValueChange = onAlbumSearchQueryChange,
+                label = { Text(stringResource(R.string.Album)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+        }
+
+        item {
+            OutlinedTextField(
+                value = albumArtistFilter,
+                onValueChange = onAlbumArtistFilterChange,
+                label = { Text(stringResource(R.string.ArtistOptional)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+        }
+
+        item {
+            Button(
+                onClick = onSearch,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = albumSearchQuery.isNotBlank() && !isSearchingAlbums,
+            ) {
+                Text(stringResource(R.string.Search))
+            }
+        }
+
+        when {
+            isSearchingAlbums -> item {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            albumSearchError -> item {
+                Text(
+                    text = stringResource(R.string.AlbumSearchFailed),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            albumSearchResults != null && albumSearchResults.isEmpty() -> item {
+                Text(stringResource(R.string.NoAlbumsFound))
+            }
+            albumSearchResults != null -> items(albumSearchResults) { result ->
+                AlbumResultCard(result = result, onClick = { onAlbumSelect(result) })
+            }
+        }
+
+        if (selectedAlbum != null) {
+            item { HorizontalDivider() }
+
+            item {
+                Text(
+                    text = "${selectedAlbum.name} — ${selectedAlbum.artist}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            when {
+                isLoadingAlbumInfo -> item {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
+                albumInfoError -> item {
+                    Text(
+                        text = stringResource(R.string.AlbumInfoFailed),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                albumInfo != null && albumInfo.tracks.isEmpty() -> item {
+                    Text(stringResource(R.string.NoTracksFound))
+                }
+                albumInfo != null -> {
+                    items(albumInfo.tracks.indices.toList()) { i ->
+                        val track = albumInfo.tracks[i]
+                        val timestamp = computedTimestamps.getOrElse(i) { 0L }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "${track.rank}. ${track.name}",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (track.durationSeconds == 0)
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    else
+                                        MaterialTheme.colorScheme.onSurface,
+                                )
+                                if (track.durationSeconds == 0) {
+                                    Text(
+                                        text = stringResource(R.string.UnknownDuration),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                } else {
+                                    Text(
+                                        text = formatDuration(track.durationSeconds),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                            Text(
+                                text = formatTimestamp(timestamp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+
+                    item { HorizontalDivider() }
+
+                    item {
+                        OutlinedTextField(
+                            value = formatTimestamp(albumStartEpochMs / 1000),
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text(stringResource(R.string.AlbumStartTime)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            trailingIcon = {
+                                IconButton(onClick = onShowAlbumDatePicker) {
+                                    Icon(Icons.Filled.CalendarMonth, stringResource(R.string.SelectDate))
+                                }
+                            },
+                        )
+                    }
+
+                    item {
+                        Button(
+                            onClick = onScrobbleAlbum,
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isBatchScrobbling && sessionKey.isNotBlank(),
+                        ) {
+                            Text(stringResource(R.string.ScrobbleAlbum))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AlbumResultCard(result: LastFmAlbumResult, onClick: () -> Unit) {
+    val localContext = LocalContext.current
+    Card(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (result.coverUrl != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(localContext)
+                        .data(result.coverUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(result.name, fontWeight = FontWeight.Bold)
+                Text(result.artist, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
     }
 }
 
@@ -502,4 +939,10 @@ private fun formatTimestamp(epochSeconds: Long): String {
 private fun formatDate(epochSeconds: Long): String {
     val date = Date(epochSeconds * 1000)
     return SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(date)
+}
+
+private fun formatDuration(seconds: Int): String {
+    val m = seconds / 60
+    val s = seconds % 60
+    return "%d:%02d".format(m, s)
 }
